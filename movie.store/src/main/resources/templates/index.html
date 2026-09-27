@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quản lý phim</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 24px; }
+        .form { display: flex; flex-direction: column; gap: 10px; max-width: 600px; }
+        .field { display: flex; flex-direction: column; gap: 6px; }
+        .actions { display: flex; gap: 10px; flex-wrap: wrap; }
+        .genre-filter { margin: 24px 0 16px; }
+        input, select, button { padding: 7px; }
+        table { width: 100%; max-width: 1000px; }
+        .loading-overlay {
+            position: fixed; inset: 0; z-index: 1; display: flex; align-items: center;
+            justify-content: center; flex-direction: column; gap: 12px;
+            background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(2px);
+        }
+        .loading-overlay[hidden] { display: none; }
+        .loading-spinner {
+            width: 42px; height: 42px; border: 5px solid #d9d9d9;
+            border-top-color: #1677ff; border-radius: 50%; animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+    <div id="loading-overlay" class="loading-overlay" role="status" aria-live="polite" hidden>
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <span>Đang tải dữ liệu...</span>
+    </div>
+
+    <main>
+        <h1 id="form-title">Thêm phim</h1>
+        <form class="form" id="movie-form">
+            <div class="field">
+                <label for="title">Tên phim</label>
+                <input id="title" name="title" required maxlength="150">
+            </div>
+            <div class="field">
+                <label for="duration">Thời lượng (phút)</label>
+                <input id="duration" name="duration" type="number" min="1" required>
+            </div>
+            <div class="field">
+                <label for="releaseYear">Năm phát hành</label>
+                <input id="releaseYear" name="releaseYear" type="number" min="1888" max="2100" required>
+            </div>
+            <div class="field">
+                <label for="genreId">Thể loại</label>
+                <select id="genreId" name="genreId" required>
+                    <option value="">-- Chọn thể loại --</option>
+                </select>
+            </div>
+            <div class="actions">
+                <button type="submit">Lưu</button>
+                <button type="button" onclick="onResetForm()">Hủy</button>
+            </div>
+        </form>
+
+        <h2>Danh sách phim</h2>
+        <div class="genre-filter">
+            <label for="genre-filter">Lọc theo thể loại</label>
+            <select id="genre-filter" onchange="onChangeGenre(this.value)">
+                <option value="">Tất cả thể loại</option>
+            </select>
+        </div>
+        <table border="1" cellpadding="8" cellspacing="0">
+            <thead>
+                <tr>
+                    <th>ID</th><th>Tên phim</th><th>Thời lượng</th>
+                    <th>Năm phát hành</th><th>Thể loại</th><th>Hành động</th>
+                </tr>
+            </thead>
+            <tbody id="movie-rows"></tbody>
+        </table>
+    </main>
+
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="/js/api.js"></script>
+    <script>
+        const movieRows = document.getElementById("movie-rows");
+        const movieForm = document.getElementById("movie-form");
+        const genreSelect = movieForm.elements.genreId;
+        const genreFilter = document.getElementById("genre-filter");
+        let genres = [];
+        let editingMovieId = null;
+
+        const onSetLoading = (isLoading) => {
+            document.getElementById("loading-overlay").hidden = !isLoading;
+        };
+
+        const onResetForm = () => {
+            editingMovieId = null;
+            movieForm.reset();
+            document.getElementById("form-title").textContent = "Thêm phim";
+        };
+
+        const fetchGenres = async () => {
+            const { data } = await genreApi.list();
+            genres = data;
+            const options = data.map((genre) =>
+                `<option value="${genre.id}">${genre.name}</option>`
+            ).join("");
+            genreSelect.innerHTML = `<option value="">-- Chọn thể loại --</option>${options}`;
+            genreFilter.innerHTML = `<option value="">Tất cả thể loại</option>${options}`;
+        };
+
+        const onChangeGenre = async (genreId) => fetchMovies(genreId);
+
+        const fetchMovies = async (genreId = "") => {
+            try {
+                const { data } = genreId
+                    ? await genreApi.detail(genreId).then((response) => ({ data: response.data.movies }))
+                    : await movieApi.list();
+
+                if (!data || data.length === 0) {
+                    movieRows.innerHTML = `<tr><td colspan="6">Không có dữ liệu</td></tr>`;
+                    return;
+                }
+                movieRows.innerHTML = data.map((movie) => `
+                    <tr>
+                        <td>${movie.id}</td>
+                        <td>${movie.title}</td>
+                        <td>${movie.duration} phút</td>
+                        <td>${movie.releaseYear}</td>
+                        <td>${genres.find((genre) => genre.id === movie.genreId)?.name ?? ""}</td>
+                        <td>
+                            <button type="button" onclick="onEditMovie(${movie.id})">Sửa</button>
+                            <button type="button" onclick="onDeleteMovie(${movie.id})">Xóa</button>
+                        </td>
+                    </tr>
+                `).join("");
+            } catch (error) {
+                movieRows.innerHTML = `<tr><td colspan="6">Không thể tải dữ liệu</td></tr>`;
+                console.error(error);
+            }
+        };
+
+        const onEditMovie = async (id) => {
+            onSetLoading(true);
+            try {
+                const { data } = await movieApi.detail(id);
+                editingMovieId = id;
+                document.getElementById("form-title").textContent = "Sửa phim";
+                movieForm.elements.title.value = data.title;
+                movieForm.elements.duration.value = data.duration;
+                movieForm.elements.releaseYear.value = data.releaseYear;
+                movieForm.elements.genreId.value = data.genreId;
+            } catch (error) {
+                console.error(error);
+            } finally {
+                onSetLoading(false);
+            }
+        };
+
+        const onDeleteMovie = async (id) => {
+            if (!window.confirm("Bạn có chắc muốn xóa phim này không?")) return;
+            onSetLoading(true);
+            try {
+                await movieApi.remove(id);
+                if (editingMovieId === id) onResetForm();
+                await fetchMovies(genreFilter.value);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                onSetLoading(false);
+            }
+        };
+
+        movieForm.addEventListener("submit", async () => {
+            const data = {
+                title: movieForm.elements.title.value.trim(),
+                duration: Number(movieForm.elements.duration.value),
+                releaseYear: Number(movieForm.elements.releaseYear.value),
+                genreId: Number(movieForm.elements.genreId.value),
+            };
+
+            onSetLoading(true);
+            try {
+                if (editingMovieId !== null) await movieApi.update(editingMovieId, data);
+                else await movieApi.create(data);
+                onResetForm();
+                await fetchMovies(genreFilter.value);
+            } catch (error) {
+                console.error(error);
+            } finally {
+                onSetLoading(false);
+            }
+        });
+
+        const onInitPage = async () => {
+            onSetLoading(true);
+            try {
+                await fetchGenres();
+                await fetchMovies();
+            } catch (error) {
+                movieRows.innerHTML = `<tr><td colspan="6">Không thể tải dữ liệu</td></tr>`;
+                console.error(error);
+            } finally {
+                onSetLoading(false);
+            }
+        };
+
+        onInitPage();
+    </script>
+</body>
+</html>
