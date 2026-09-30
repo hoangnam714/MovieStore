@@ -2,79 +2,65 @@ package com.btlon.movie.store.service;
 
 import com.btlon.movie.store.model.Movie;
 import com.btlon.movie.store.model.MovieGenre;
+import com.btlon.movie.store.repository.MovieGenreRepository;
+import com.btlon.movie.store.repository.MovieRepository;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
-import java.util.concurrent.atomic.AtomicLong;
 
 @Service
+@Transactional(readOnly = true)
 public class MovieService {
-    private final List<MovieGenre> genres = new ArrayList<>();
-    private final AtomicLong movieIdCounter = new AtomicLong(1);
+    private final MovieGenreRepository genreRepository;
+    private final MovieRepository movieRepository;
 
-    public MovieService() {
-        genres.add(new MovieGenre(101L, "Hành động"));
-        genres.add(new MovieGenre(102L, "Hoạt hình"));
-        genres.add(new MovieGenre(103L, "Kinh dị"));
-
-        createMovie(new Movie(null, "Avengers: Endgame", 181, 2019, 101L));
-        createMovie(new Movie(null, "John Wick: Chapter 4", 169, 2023, 101L));
-        createMovie(new Movie(null, "Inside Out 2", 96, 2024, 102L));
-        createMovie(new Movie(null, "The Conjuring", 112, 2013, 103L));
-    }
-
-    private Optional<MovieGenre> findGenreById(Long genreId) {
-        return genres.stream().filter(genre -> genre.getId().equals(genreId)).findFirst();
+    public MovieService(MovieGenreRepository genreRepository, MovieRepository movieRepository) {
+        this.genreRepository = genreRepository;
+        this.movieRepository = movieRepository;
     }
 
     public List<MovieGenre> getAllGenres() {
-        return new ArrayList<>(genres);
+        return genreRepository.findAllByOrderByNameAsc();
     }
 
     public Optional<MovieGenre> getGenreWithMovies(Long genreId) {
-        return findGenreById(genreId);
+        return genreRepository.findById(genreId);
     }
 
     public List<Movie> getAllMovies() {
-        return genres.stream().flatMap(genre -> genre.getMovies().stream()).toList();
+        return movieRepository.findAllByOrderByTitleAsc();
     }
 
     public Optional<Movie> getMovieById(Long movieId) {
-        return getAllMovies().stream().filter(movie -> movie.getId().equals(movieId)).findFirst();
+        return movieRepository.findById(movieId);
     }
 
+    @Transactional
     public Optional<Movie> createMovie(Movie movie) {
-        Optional<MovieGenre> genre = findGenreById(movie.getGenreId());
-        if (genre.isEmpty()) return Optional.empty();
-
-        movie.setId(movieIdCounter.getAndIncrement());
-        genre.get().getMovies().add(movie);
-        return Optional.of(movie);
-    }
-
-    public Optional<Movie> updateMovie(Long id, Movie updatedMovie) {
-        Optional<MovieGenre> targetGenre = findGenreById(updatedMovie.getGenreId());
-        if (targetGenre.isEmpty()) return Optional.empty();
-
-        for (MovieGenre genre : genres) {
-            List<Movie> movies = genre.getMovies();
-            for (int index = 0; index < movies.size(); index++) {
-                Movie existingMovie = movies.get(index);
-                if (existingMovie.getId().equals(id)) {
-                    updatedMovie.setId(id);
-                    movies.remove(index);
-                    targetGenre.get().getMovies().add(updatedMovie);
-                    return Optional.of(updatedMovie);
-                }
-            }
+        if (movie.getGenreId() == null || !genreRepository.existsById(movie.getGenreId())) {
+            return Optional.empty();
         }
-        return Optional.empty();
+        movie.setId(null);
+        return Optional.of(movieRepository.save(movie));
     }
 
+    @Transactional
+    public Optional<Movie> updateMovie(Long id, Movie updatedMovie) {
+        if (!movieRepository.existsById(id)
+                || updatedMovie.getGenreId() == null
+                || !genreRepository.existsById(updatedMovie.getGenreId())) {
+            return Optional.empty();
+        }
+        updatedMovie.setId(id);
+        return Optional.of(movieRepository.save(updatedMovie));
+    }
+
+    @Transactional
     public boolean deleteMovie(Long movieId) {
-        return genres.stream()
-                .anyMatch(genre -> genre.getMovies().removeIf(movie -> movie.getId().equals(movieId)));
+        if (!movieRepository.existsById(movieId)) return false;
+        movieRepository.deleteById(movieId);
+        return true;
     }
 }

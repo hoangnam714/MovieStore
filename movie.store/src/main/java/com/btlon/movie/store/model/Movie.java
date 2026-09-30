@@ -1,10 +1,29 @@
 package com.btlon.movie.store.model;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
+@Entity
+@Table(name = "movies")
 public class Movie {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
+    @Column(nullable = false, length = 150)
     private String title;
+
+    @Column(nullable = false)
     private Integer duration;
+
+    @Column(name = "release_year", nullable = false)
     private Integer releaseYear;
+
+    @Column(name = "genre_id", nullable = false)
     private Long genreId;
 
     public Movie() {
