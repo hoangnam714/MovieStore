@@ -1,4 +1,4 @@
-package com.btlon.movie.store.model;
+package com.btlon.movie.store.entity;
 
 import java.util.ArrayList;
 import java.util.List;

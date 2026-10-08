@@ -1,7 +1,6 @@
 package com.btlon.movie.store.service;
 
-import com.btlon.movie.store.model.Movie;
-import com.btlon.movie.store.model.MovieGenre;
+import com.btlon.movie.store.entity.Movie;
 import com.btlon.movie.store.repository.MovieGenreRepository;
 import com.btlon.movie.store.repository.MovieRepository;
 import org.springframework.stereotype.Service;
@@ -19,14 +18,6 @@ public class MovieService {
     public MovieService(MovieGenreRepository genreRepository, MovieRepository movieRepository) {
         this.genreRepository = genreRepository;
         this.movieRepository = movieRepository;
-    }
-
-    public List<MovieGenre> getAllGenres() {
-        return genreRepository.findAllByOrderByNameAsc();
-    }
-
-    public Optional<MovieGenre> getGenreWithMovies(Long genreId) {
-        return genreRepository.findById(genreId);
     }
 
     public List<Movie> getAllMovies() {

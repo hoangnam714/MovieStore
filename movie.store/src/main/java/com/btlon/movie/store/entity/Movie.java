@@ -1,4 +1,4 @@
-package com.btlon.movie.store.model;
+package com.btlon.movie.store.entity;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
