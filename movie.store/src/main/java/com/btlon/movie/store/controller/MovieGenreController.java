@@ -3,11 +3,14 @@ package com.btlon.movie.store.controller;
 import com.btlon.movie.store.entity.MovieGenre;
 import com.btlon.movie.store.service.MovieGenreService;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.List;
 
@@ -30,5 +33,16 @@ public class MovieGenreController {
     public ResponseEntity<MovieGenre> getGenreMovies(@PathVariable Long id) {
         return movieGenreService.getGenreWithMovies(id).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
+    }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<MovieGenre> getGenreById(@PathVariable Long id) {
+        return movieGenreService.getGenreWithMovies(id).map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
+
+    @PostMapping
+    public ResponseEntity<MovieGenre> createGenre(@RequestBody MovieGenre genre) {
+        return ResponseEntity.status(HttpStatus.CREATED).body(movieGenreService.createGenre(genre));
     }
 }

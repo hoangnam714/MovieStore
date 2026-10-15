@@ -1,6 +1,8 @@
 package com.btlon.movie.store.service;
 
 import com.btlon.movie.store.entity.Movie;
+import com.btlon.movie.store.entity.MovieGenre;
+import com.btlon.movie.store.dto.MovieRequest;
 import com.btlon.movie.store.repository.MovieGenreRepository;
 import com.btlon.movie.store.repository.MovieRepository;
 import org.springframework.stereotype.Service;
@@ -29,23 +31,33 @@ public class MovieService {
     }
 
     @Transactional
-    public Optional<Movie> createMovie(Movie movie) {
-        if (movie.getGenreId() == null || !genreRepository.existsById(movie.getGenreId())) {
+    public Optional<Movie> createMovie(MovieRequest request) {
+        if (request.getGenreId() == null) {
             return Optional.empty();
         }
-        movie.setId(null);
+        Optional<MovieGenre> genre = genreRepository.findById(request.getGenreId());
+        if (genre.isEmpty()) return Optional.empty();
+
+        Movie movie = new Movie(null, request.getTitle(), request.getDuration(),
+                request.getReleaseYear(), genre.get());
         return Optional.of(movieRepository.save(movie));
     }
 
     @Transactional
-    public Optional<Movie> updateMovie(Long id, Movie updatedMovie) {
-        if (!movieRepository.existsById(id)
-                || updatedMovie.getGenreId() == null
-                || !genreRepository.existsById(updatedMovie.getGenreId())) {
+    public Optional<Movie> updateMovie(Long id, MovieRequest request) {
+        Optional<Movie> existing = movieRepository.findById(id);
+        if (existing.isEmpty() || request.getGenreId() == null) {
             return Optional.empty();
         }
-        updatedMovie.setId(id);
-        return Optional.of(movieRepository.save(updatedMovie));
+        Optional<MovieGenre> genre = genreRepository.findById(request.getGenreId());
+        if (genre.isEmpty()) return Optional.empty();
+
+        Movie movie = existing.get();
+        movie.setTitle(request.getTitle());
+        movie.setDuration(request.getDuration());
+        movie.setReleaseYear(request.getReleaseYear());
+        movie.setGenre(genre.get());
+        return Optional.of(movieRepository.save(movie));
     }
 
     @Transactional

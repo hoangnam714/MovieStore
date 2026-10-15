@@ -24,4 +24,15 @@ public class MovieGenreService {
     public Optional<MovieGenre> getGenreWithMovies(Long genreId) {
         return movieGenreRepository.findById(genreId);
     }
+
+    @Transactional
+    public MovieGenre createGenre(MovieGenre genre) {
+        genre.setId(null);
+        // Ensure both sides are set when the request includes movies.
+        genre.getMovies().forEach(movie -> {
+            movie.setId(null);
+            movie.setGenre(genre);
+        });
+        return movieGenreRepository.save(genre);
+    }
 }

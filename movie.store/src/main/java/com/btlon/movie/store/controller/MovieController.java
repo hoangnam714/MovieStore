@@ -1,6 +1,7 @@
 package com.btlon.movie.store.controller;
 
 import com.btlon.movie.store.entity.Movie;
+import com.btlon.movie.store.dto.MovieRequest;
 import com.btlon.movie.store.service.MovieService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -38,14 +39,14 @@ public class MovieController {
     }
 
     @PostMapping
-    public ResponseEntity<Movie> createMovie(@RequestBody Movie movie) {
+    public ResponseEntity<Movie> createMovie(@RequestBody MovieRequest movie) {
         return movieService.createMovie(movie)
                 .map(created -> ResponseEntity.status(HttpStatus.CREATED).body(created))
                 .orElse(ResponseEntity.badRequest().build());
     }
 
     @PutMapping("/{id}")
-    public ResponseEntity<Movie> updateMovie(@PathVariable Long id, @RequestBody Movie movie) {
+    public ResponseEntity<Movie> updateMovie(@PathVariable Long id, @RequestBody MovieRequest movie) {
         return movieService.updateMovie(id, movie).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
