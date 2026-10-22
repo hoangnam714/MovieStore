@@ -5,6 +5,9 @@ if (!user) {
   initAdmin(user);
 }
 
+const safeText = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function cmsToast(message) { const el = document.createElement('div'); el.className = 'cms-toast'; el.textContent = message; document.body.append(el); setTimeout(() => el.remove(),5000); }
+window.addEventListener('unhandledrejection', event => { event.preventDefault(); cmsToast(event.reason?.response?.data?.message || 'Thao tác chưa thành công. Kiểm tra dữ liệu và thử lại.'); });
 function initAdmin(user) {
   let genres = [];
 
@@ -43,6 +46,7 @@ function initAdmin(user) {
       else if (view === "rooms") await renderRooms(content);
       else if (view === "showtimes") await renderShowtimes(content);
       else if (view === "tickets") await renderTickets(content);
+      content.querySelectorAll('table').forEach(table => { const wrapper = document.createElement('div'); wrapper.className = 'table-responsive'; table.before(wrapper); wrapper.append(table); });
     } catch (err) {
       handleError(err);
       content.innerHTML = "<p class='text-danger'>Không tải được dữ liệu. Kiểm tra API backend.</p>";
@@ -53,13 +57,14 @@ function initAdmin(user) {
     const [movies, rooms, showtimes, tickets] = await Promise.all([
       movieApi.list(), roomApi.list(), showtimeApi.list(), ticketApi.list(),
     ]);
-    el.innerHTML = `
-    <div class="row">
-      <div class="col-md-3"><div class="small-box bg-info"><div class="inner"><h3>${movies.data.length}</h3><p>Phim</p></div></div></div>
-      <div class="col-md-3"><div class="small-box bg-success"><div class="inner"><h3>${rooms.data.length}</h3><p>Phòng</p></div></div></div>
-      <div class="col-md-3"><div class="small-box bg-warning"><div class="inner"><h3>${showtimes.data.length}</h3><p>Suất chiếu</p></div></div></div>
-      <div class="col-md-3"><div class="small-box bg-danger"><div class="inner"><h3>${tickets.data.length}</h3><p>Vé</p></div></div></div>
-    </div>`;
+    const upcoming = showtimes.data.filter(s => new Date(s.startTime) > new Date()).sort((a,b) => a.startTime.localeCompare(b.startTime));
+    const revenue = tickets.data.reduce((sum,t) => sum + Number(t.price),0);
+    el.innerHTML = `<div class="cms-welcome"><div><h2>Hoạt động rạp chiếu</h2><p>${new Date().toLocaleDateString('vi-VN',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} · ${upcoming.length} suất chiếu đang mở bán</p></div><button class="btn" id="quick-showtime">+ Tạo suất chiếu</button></div>
+    <div class="row">${[[movies.data.length,'Phim trong danh mục','film'],[rooms.data.length,'Phòng chiếu','door-open'],[upcoming.length,'Suất chiếu sắp tới','calendar-alt'],[tickets.data.length,'Vé đã bán','ticket-alt']].map(([count,label,icon])=>`<div class="col-6 col-xl-3"><div class="stat-card"><i class="fas fa-${icon}"></i><div><strong>${count}</strong><span>${label}</span></div></div></div>`).join('')}</div>
+    <div class="row"><div class="col-lg-8"><div class="card"><div class="card-heading"><h3>Lịch chiếu tiếp theo</h3><span class="status-pill">Đang mở bán</span></div><table class="table mb-0"><thead><tr><th>Phim</th><th>Phòng</th><th>Giờ chiếu</th><th>Giá vé</th></tr></thead><tbody>${upcoming.slice(0,8).map(s=>`<tr><td><strong>${safeText(s.movieTitle)}</strong></td><td>${safeText(s.roomName)}</td><td>${formatDateTime(s.startTime)}</td><td>${formatMoney(s.ticketPrice)}</td></tr>`).join('') || '<tr><td colspan="4">Chưa có lịch chiếu.</td></tr>'}</tbody></table></div></div><div class="col-lg-4"><div class="card"><div class="card-body"><p class="text-muted">TỔNG GIÁ TRỊ VÉ ĐÃ ĐẶT</p><h2 style="font-weight:700;color:#f2674a">${formatMoney(revenue)}</h2><p class="text-muted mt-3">Tính từ giá vé lưu trong hệ thống; không đồng nghĩa với tiền đã thu.</p><hr><h6>Thao tác nhanh</h6><button class="btn btn-primary btn-block mt-3" id="quick-movies">Quản lý phim</button><button class="btn btn-light btn-block" id="quick-tickets">Xem vé đã bán</button></div></div><p class="cms-foot">Giao diện CMS dựa trên AdminLTE 3.2.</p></div></div>`;
+    document.getElementById('quick-showtime').onclick=()=>showView('showtimes');
+    document.getElementById('quick-movies').onclick=()=>showView('movies');
+    document.getElementById('quick-tickets').onclick=()=>showView('tickets');
   }
 
   async function renderGenres(el) {
