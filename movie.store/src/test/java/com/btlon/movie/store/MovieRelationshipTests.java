@@ -4,6 +4,10 @@ import com.btlon.movie.store.entity.Movie;
 import com.btlon.movie.store.entity.MovieGenre;
 import com.btlon.movie.store.repository.MovieGenreRepository;
 import com.btlon.movie.store.repository.MovieRepository;
+import com.btlon.movie.store.repository.RoomRepository;
+import com.btlon.movie.store.repository.ShowtimeRepository;
+import com.btlon.movie.store.repository.TicketRepository;
+import com.btlon.movie.store.repository.UserRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -29,6 +33,14 @@ class MovieRelationshipTests {
     @Autowired
     private MovieRepository movies;
     @Autowired
+    private TicketRepository tickets;
+    @Autowired
+    private ShowtimeRepository showtimes;
+    @Autowired
+    private UserRepository users;
+    @Autowired
+    private RoomRepository rooms;
+    @Autowired
     private TransactionTemplate transactions;
     @Autowired
     private ObjectMapper mapper;
@@ -37,7 +49,12 @@ class MovieRelationshipTests {
 
     @BeforeEach
     void cleanDatabase() {
+        tickets.deleteAll();
+        showtimes.deleteAll();
+        movies.deleteAll();
         genres.deleteAll();
+        users.deleteAll();
+        rooms.deleteAll();
     }
 
     @Test
@@ -82,18 +99,20 @@ class MovieRelationshipTests {
     @Test
     void createsGenreWithMoviesWithoutJsonRecursion() throws Exception {
         HttpResponse<String> response = request("POST", "/api/genres", """
-                {"name":"Comedy","movies":[{"title":"Demo","duration":100,"releaseYear":2026}]}
+                {"name":"Comedy"}
                 """);
         assertEquals(201, response.statusCode());
         JsonNode genre = mapper.readTree(response.body());
         long genreId = genre.get("id").asLong();
-        assertEquals(genreId, genre.get("movies").get(0).get("genreId").asLong());
+        assertEquals(201, request("POST", "/api/movies",
+                "{\"title\":\"Demo\",\"duration\":100,\"releaseYear\":2026,\"genreId\":" + genreId + "}")
+                .statusCode());
         assertEquals(1, movies.findByGenre_Id(genreId).size());
         assertEquals(200, request("GET", "/api/genres/" + genreId, null).statusCode());
     }
 
     @Test
-    void cascadesPersistenceAndDeletionAndRemovesOrphans() {
+    void cascadesPersistenceWithoutDeletingMoviesWhenGenreIsRemoved() {
         MovieGenre genre = new MovieGenre(null, "Adventure");
         genre.addMovie(new Movie(null, "First", 90, 2026, null));
         genre.addMovie(new Movie(null, "Second", 100, 2026, null));
@@ -102,13 +121,11 @@ class MovieRelationshipTests {
 
         transactions.executeWithoutResult(status -> {
             MovieGenre managed = genres.findById(genreId).orElseThrow();
-            Movie removed = managed.getMovies().get(0);
-            managed.removeMovie(removed);
-            assertNull(removed.getGenre());
+            managed.removeMovie(managed.getMovies().get(0));
         });
-        assertEquals(1, movies.findByGenre_Id(genreId).size());
-        genres.deleteById(genreId);
-        assertEquals(0, movies.count());
+        assertEquals(2, movies.count());
+        assertThrows(Exception.class, () -> genres.deleteById(genreId));
+        assertEquals(2, movies.count());
     }
 
     private String movieBody(Long genreId) {

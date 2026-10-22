@@ -10,6 +10,7 @@ import java.util.Optional;
 
 @Repository
 public interface MovieGenreRepository extends JpaRepository<MovieGenre, Long> {
+    boolean existsByName(String name);
     @EntityGraph(attributePaths = "movies")
     List<MovieGenre> findAllByOrderByNameAsc();
 

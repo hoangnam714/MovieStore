@@ -1,7 +1,11 @@
 package com.btlon.movie.store.service;
 
+import com.btlon.movie.store.dto.GenreRequest;
 import com.btlon.movie.store.entity.MovieGenre;
 import com.btlon.movie.store.repository.MovieGenreRepository;
+import com.btlon.movie.store.repository.MovieRepository;
+import com.btlon.movie.store.web.BadRequestException;
+import com.btlon.movie.store.web.ConflictException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -12,9 +16,11 @@ import java.util.Optional;
 @Transactional(readOnly = true)
 public class MovieGenreService {
     private final MovieGenreRepository movieGenreRepository;
+    private final MovieRepository movieRepository;
 
-    public MovieGenreService(MovieGenreRepository movieGenreRepository) {
+    public MovieGenreService(MovieGenreRepository movieGenreRepository, MovieRepository movieRepository) {
         this.movieGenreRepository = movieGenreRepository;
+        this.movieRepository = movieRepository;
     }
 
     public List<MovieGenre> getAllGenres() {
@@ -28,11 +34,51 @@ public class MovieGenreService {
     @Transactional
     public MovieGenre createGenre(MovieGenre genre) {
         genre.setId(null);
-        // Ensure both sides are set when the request includes movies.
         genre.getMovies().forEach(movie -> {
             movie.setId(null);
             movie.setGenre(genre);
         });
         return movieGenreRepository.save(genre);
+    }
+
+    @Transactional
+    public Optional<MovieGenre> createGenre(GenreRequest request) {
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new BadRequestException("Genre name is required");
+        }
+        String name = request.getName().trim();
+        if (movieGenreRepository.existsByName(name)) {
+            throw new ConflictException("Genre name already exists");
+        }
+        return Optional.of(movieGenreRepository.save(new MovieGenre(null, name)));
+    }
+
+    @Transactional
+    public Optional<MovieGenre> updateGenre(Long id, GenreRequest request) {
+        if (request.getName() == null || request.getName().isBlank()) {
+            throw new BadRequestException("Genre name is required");
+        }
+        Optional<MovieGenre> existing = movieGenreRepository.findById(id);
+        if (existing.isEmpty()) {
+            return Optional.empty();
+        }
+        String name = request.getName().trim();
+        if (movieGenreRepository.existsByName(name) && !existing.get().getName().equals(name)) {
+            throw new ConflictException("Genre name already exists");
+        }
+        existing.get().setName(name);
+        return Optional.of(movieGenreRepository.save(existing.get()));
+    }
+
+    @Transactional
+    public boolean deleteGenre(Long id) {
+        if (!movieGenreRepository.existsById(id)) {
+            return false;
+        }
+        if (!movieRepository.findByGenre_Id(id).isEmpty()) {
+            throw new ConflictException("Cannot delete genre with movies");
+        }
+        movieGenreRepository.deleteById(id);
+        return true;
     }
 }

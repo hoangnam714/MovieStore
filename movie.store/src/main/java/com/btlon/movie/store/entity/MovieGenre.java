@@ -24,7 +24,7 @@ public class MovieGenre {
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 
-    @OneToMany(mappedBy = "genre", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "genre", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonManagedReference
     @OrderBy("title ASC")
     private List<Movie> movies = new ArrayList<>();
@@ -42,10 +42,9 @@ public class MovieGenre {
         movie.setGenre(this);
     }
 
+    /** Phim bắt buộc có thể loại; chỉ gỡ khỏi danh sách trong bộ nhớ (không xóa phim, không null genre). */
     public void removeMovie(Movie movie) {
-        if (movies.remove(movie)) {
-            movie.setGenre(null);
-        }
+        movies.remove(movie);
     }
 
     public Long getId() { return id; }

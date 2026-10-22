@@ -2,7 +2,7 @@
 
 Dùng **6 bảng**, giữ lại 2 bảng hiện tại. Phạm vi: một rạp có nhiều phòng, khách chọn phim → suất chiếu → ghế → mua vé. Mỗi vé tương ứng với một ghế của một suất chiếu.
 
-Bản này thay thế đề xuất 8 bảng trong `database-design.sql` về mặt thiết kế. Chưa thay đổi entity Java hay cơ sở dữ liệu.
+Bản này thay thế đề xuất 8 bảng cũ. Schema SQL: `database-design.sql`, ERD: `ERD.md`. Entity Java và API đã bám theo 6 bảng dưới đây.
 
 ## 1. `movie_genres` — Thể loại phim (đã có)
 
