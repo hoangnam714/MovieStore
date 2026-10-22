@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Phim và lịch chiếu | Movie Store</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    />
+
+    <link rel="stylesheet" href="../../assets/css/customer.css" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <section class="hero">
+        <div class="hero-backdrop"></div>
+        <div class="wrap container hero-content">
+          <p class="eyebrow">PHIM NỔI BẬT</p>
+          <h1>
+            DUNE
+            <span>PART TWO</span>
+          </h1>
+          <div class="hero-meta">
+            <span>2024</span>
+            <span>166 phút</span>
+            <span>Khoa học viễn tưởng</span>
+          </div>
+          <p class="hero-description">
+            Paul Atreides cùng người Fremen viết tiếp cuộc chiến trên hành tinh cát Arrakis.
+          </p>
+          <a id="featured-book" class="btn btn-lg" href="#movies">Chọn suất chiếu</a>
+          <span class="hero-director">Một bộ phim của Denis Villeneuve</span>
+        </div>
+        <span class="hero-caption">DUNE: PART TWO / 2024</span>
+      </section>
+      <section class="catalog-section wrap container" id="movies">
+        <div class="section-head">
+          <h2>PHIM & LỊCH CHIẾU</h2>
+          <span class="muted tiny" id="film-count"></span>
+        </div>
+        <div class="catalog-toolbar row g-3">
+          <div class="col-md-8"><div id="date-tabs" class="filters"></div></div>
+          <div class="col-md-4">
+            <div class="searchbar">
+              <input
+                id="search"
+                class="input form-control"
+                placeholder="Tìm tên phim"
+                aria-label="Tìm phim"
+              />
+              <select id="genre" class="input form-select" aria-label="Thể loại">
+                <option value="">Thể loại</option>
+              </select>
+            </div>
+          </div>
+        </div>
+        <div id="movies-grid" class="movie-grid row g-4">
+          <div class="loading">Đang tải lịch chiếu…</div>
+        </div>
+      </section>
+    </main>
+    <div id="footer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="../../assets/js/common.js"></script>
+    <script src="../../assets/js/customer-layout.js"></script>
+    <script>
+      const posterPaths = {
+        "Dune: Part Two": "6izwz7rsy95ARzTR3poZ8H6c5pp.jpg",
+        "Inside Out 2": "vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg",
+        Interstellar: "gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
+        "Spirited Away": "39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
+        "Avengers: Endgame": "or06FN3Dka5tukK1e9sl16pB3iy.jpg",
+        "The Grand Budapest Hotel": "eKi8dIrr8voobbaGzDpe8w0PVbC.jpg",
+        "Your Name": "q719jXXEzOoYaps6babgKnONONX.jpg"
+      };
+      function getPoster(title) {
+        const url =
+          title === "Mai"
+            ? "https://media.senscritique.com/media/000021934906/0/mai.jpg"
+            : posterPaths[title]
+              ? "https://image.tmdb.org/t/p/w500/" + posterPaths[title]
+              : null;
+        return url
+          ? `
+            <img
+              class="film-poster"
+              src="${url}"
+              alt="Poster ${getSafeHtml(title)}"
+              loading="lazy"
+              referrerpolicy="no-referrer"
+            />
+          `
+          : `
+            <div class="poster-placeholder">${getSafeHtml(title)}</div>
+          `;
+      }
+
+      let movies = [];
+      let showtimes = [];
+      let genres = [];
+      let selectedDay = "";
+      let selectedGenre = "";
+      let searchKeyword = "";
+
+      function getHomePage() {
+        return Promise.all([movieApi.list(), showtimeApi.upcoming(), genreApi.list()])
+          .then(([movieResponse, showtimeResponse, genreResponse]) => {
+            movies = movieResponse.data;
+            showtimes = showtimeResponse.data;
+            genres = genreResponse.data;
+            const featuredMovie = movies.find((movie) => movie.title === "Dune: Part Two");
+            if (featuredMovie) {
+              document.getElementById("featured-book").href =
+                "../booking/index.html?movieId=" + featuredMovie.id;
+            }
+            document.getElementById("genre").innerHTML += genres
+              .map(function (genre) {
+                return `
+                  <option value="${genre.id}">${getSafeHtml(genre.name)}</option>
+                `;
+              })
+              .join("");
+            onDateFilters();
+            onFilterEvents();
+            onMovies();
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
+
+      function onDateFilters() {
+        const days = [...new Set(showtimes.map((showtime) => getDateKey(showtime.startTime)))].slice(
+          0,
+          7
+        );
+        document.getElementById("date-tabs").innerHTML = `
+          <button class="chip active" data-day="">Tất cả</button>
+          ${days
+            .map(
+              (day) => `
+                <button class="chip" data-day="${day}">${getSafeHtml(getDayLabel(day))}</button>
+              `
+            )
+            .join("")}
+        `;
+      }
+
+      function onFilterEvents() {
+        document.querySelectorAll("[data-day]").forEach(function (button) {
+          button.addEventListener("click", function () {
+            selectedDay = button.dataset.day;
+            document.querySelectorAll("[data-day]").forEach(function (dateButton) {
+              dateButton.classList.toggle("active", dateButton === button);
+            });
+            onMovies();
+          });
+        });
+        document.getElementById("search").addEventListener("input", function (event) {
+          searchKeyword = event.target.value.trim().toLocaleLowerCase("vi");
+          onMovies();
+        });
+        document.getElementById("genre").addEventListener("change", function (event) {
+          selectedGenre = event.target.value;
+          onMovies();
+        });
+      }
+
+      function onMovies() {
+        const filteredMovies = movies.filter(function (movie) {
+          const matchesKeyword = movie.title.toLocaleLowerCase("vi").includes(searchKeyword);
+          const matchesGenre = !selectedGenre || String(movie.genreId) === selectedGenre;
+          const matchesDay =
+            !selectedDay ||
+            showtimes.some(function (showtime) {
+              return showtime.movieId === movie.id && getDateKey(showtime.startTime) === selectedDay;
+            });
+          return matchesKeyword && matchesGenre && matchesDay;
+        });
+        document.getElementById("movies-grid").innerHTML = filteredMovies.length
+          ? filteredMovies.map(getMovieCard).join("")
+          : '<div class="empty">Không tìm thấy phim phù hợp. Thử tên phim hoặc ngày khác nhé.</div>';
+        document.getElementById("film-count").textContent =
+          filteredMovies.length + " phim trong danh mục";
+      }
+
+      function getMovieCard(movie) {
+        const movieShowtimes = showtimes.filter(function (showtime) {
+          return (
+            showtime.movieId === movie.id &&
+            (!selectedDay || getDateKey(showtime.startTime) === selectedDay)
+          );
+        });
+        const genre = genres.find((genre) => genre.id === movie.genreId);
+        const bookingUrl = "../booking/index.html?movieId=" + movie.id;
+        let bookingAction = '<span class="muted tiny">Chưa có lịch chiếu</span>';
+        if (movieShowtimes.length) {
+          const minimumPrice = Math.min(...movieShowtimes.map((showtime) => showtime.ticketPrice));
+          const dateQuery = selectedDay ? "&date=" + selectedDay : "";
+          bookingAction = `
+            <div class="film-bottom">
+              <span class="price">Từ ${getMoney(minimumPrice)}</span>
+              <a class="btn" href="${bookingUrl}${dateQuery}">Đặt vé</a>
+            </div>
+          `;
+        }
+        return `
+          <article class="col-6 col-md-4 col-lg-3">
+            <div class="movie-card">
+              <a class="poster" href="${bookingUrl}">
+                ${getPoster(movie.title)}
+                <span class="badge">2D</span>
+              </a>
+              <div class="movie-info">
+                <p class="film-category">${getSafeHtml(genre?.name || "Điện ảnh")} / ${movie.duration} phút</p>
+                <h3><a href="${bookingUrl}">${getSafeHtml(movie.title)}</a></h3>
+                ${bookingAction}
+              </div>
+            </div>
+          </article>
+        `;
+      }
+
+      getHomePage();
+    </script>
+  </body>
+</html>

@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tổng quan | Movie Store CMS</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/admin.css" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="hold-transition sidebar-mini layout-fixed" data-page="dashboard">
+    <div class="wrapper">
+      <div id="admin-layout"></div>
+      <div class="content-wrapper">
+        <section class="content-header">
+          <div class="container-fluid">
+            <h1>Tổng quan</h1>
+            <p class="cms-subtitle">MOVIE STORE / QUẢN TRỊ RẠP CHIẾU</p>
+          </div>
+        </section>
+        <section class="content">
+          <div class="container-fluid">
+            <p id="page-error" class="text-danger" role="alert"></p>
+            <div id="main-content">
+              <div class="cms-welcome">
+                <div>
+                  <h2>Hoạt động rạp chiếu</h2>
+                  <p><span id="dashboard-summary"></span></p>
+                </div>
+                <button class="btn" id="quick-showtime">+ Tạo suất chiếu</button>
+              </div>
+              <div id="dashboard-stats" class="row"></div>
+              <div class="row">
+                <div class="col-lg-8">
+                  <div class="card">
+                    <div class="card-heading">
+                      <h3>Lịch chiếu tiếp theo</h3>
+                      <span class="status-pill">Đang mở bán</span>
+                    </div>
+                    <table class="table mb-0">
+                      <thead>
+                        <tr>
+                          <th>Phim</th>
+                          <th>Phòng</th>
+                          <th>Giờ chiếu</th>
+                          <th>Giá vé</th>
+                        </tr>
+                      </thead>
+                      <tbody id="dashboard-showtimes"></tbody>
+                    </table>
+                  </div>
+                </div>
+                <div class="col-lg-4">
+                  <div class="card">
+                    <div class="card-body">
+                      <p class="text-muted">TỔNG GIÁ TRỊ VÉ ĐÃ ĐẶT</p>
+                      <h2 class="dashboard-revenue">
+                        <span id="dashboard-revenue"></span>
+                      </h2>
+                      <p class="text-muted mt-3">
+                        Tính từ giá vé lưu trong hệ thống; không đồng nghĩa với tiền đã thu.
+                      </p>
+                      <hr />
+                      <h6>Thao tác nhanh</h6>
+                      <button class="btn btn-primary btn-block mt-3" id="quick-movies">
+                        Quản lý phim
+                      </button>
+                      <button class="btn btn-light btn-block" id="quick-tickets">
+                        Xem vé đã bán
+                      </button>
+                    </div>
+                  </div>
+                  <p class="cms-foot">Giao diện CMS dựa trên AdminLTE 3.2.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script src="../../assets/js/common.js"></script>
+    <script src="../../assets/js/admin-layout.js"></script>
+    <script>
+      function onDashboard(content) {
+        return Promise.all([movieApi.list(), roomApi.list(), showtimeApi.list(), ticketApi.list()]).then(
+          ([movies, rooms, showtimes, tickets]) => {
+            const upcoming = showtimes.data
+              .filter((showtime) => new Date(showtime.startTime) > new Date())
+              .sort((a, b) => a.startTime.localeCompare(b.startTime));
+            const revenue = tickets.data.reduce((sum, ticket) => sum + Number(ticket.price), 0);
+            document.getElementById("dashboard-summary").textContent =
+              `${new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · ${upcoming.length} suất chiếu đang mở bán`;
+            document.getElementById("dashboard-stats").innerHTML = `${[
+              [movies.data.length, "Phim trong danh mục", "film"],
+              [rooms.data.length, "Phòng chiếu", "door-open"],
+              [upcoming.length, "Suất chiếu sắp tới", "calendar-alt"],
+              [tickets.data.length, "Vé đã bán", "ticket-alt"]
+            ]
+              .map(
+                ([count, label, icon]) =>
+                  `
+                    <div class="col-6 col-xl-3">
+                      <div class="stat-card">
+                        <i class="fas fa-${icon}"></i>
+                        <div>
+                          <strong>${count}</strong>
+                          <span>${label}</span>
+                        </div>
+                      </div>
+                    </div>
+                  `
+              )
+              .join("")}`;
+            document.getElementById("dashboard-showtimes").innerHTML = `${
+              upcoming
+                .slice(0, 8)
+                .map(
+                  (showtime) =>
+                    `
+                      <tr>
+                        <td>
+                          <strong>${getSafeHtml(showtime.movieTitle)}</strong>
+                        </td>
+                        <td>${getSafeHtml(showtime.roomName)}</td>
+                        <td>${getDateTime(showtime.startTime)}</td>
+                        <td>${getMoney(showtime.ticketPrice)}</td>
+                      </tr>
+                    `
+                )
+                .join("") ||
+              `
+                <tr>
+                  <td colspan="4">Chưa có lịch chiếu.</td>
+                </tr>
+              `
+            }`;
+            document.getElementById("dashboard-revenue").textContent = getMoney(revenue);
+            document.getElementById("quick-showtime").onclick = () => onAdminNavigate("showtimes");
+            document.getElementById("quick-movies").onclick = () => onAdminNavigate("movies");
+            document.getElementById("quick-tickets").onclick = () => onAdminNavigate("tickets");
+          }
+        );
+      }
+
+      onAdminPage(onDashboard);
+    </script>
+  </body>
+</html>

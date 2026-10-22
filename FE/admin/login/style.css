@@ -1,0 +1,26 @@
+.login-page {
+  background: #eef1f5;
+}
+.login-box {
+  width: 380px;
+  max-width: calc(100% - 30px);
+}
+.login-box .card-header {
+  padding: 25px;
+  background: #222d3b;
+  color: white;
+  border-radius: 0;
+}
+.login-box .card-header .text-muted {
+  color: #afbdce !important;
+}
+.login-box .card-body {
+  padding: 25px;
+}
+.login-box h1 {
+  font-size: 23px;
+}
+.input-group-text {
+  background: #f5f7fa;
+  border-color: #d0d5dd;
+}

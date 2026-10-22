@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Thể loại | Movie Store CMS</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/admin.css" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="hold-transition sidebar-mini layout-fixed" data-page="genres">
+    <div class="wrapper">
+      <div id="admin-layout"></div>
+      <div class="content-wrapper">
+        <section class="content-header">
+          <div class="container-fluid">
+            <h1>Thể loại</h1>
+            <p class="cms-subtitle">MOVIE STORE / QUẢN TRỊ RẠP CHIẾU</p>
+          </div>
+        </section>
+        <section class="content">
+          <div class="container-fluid">
+            <p id="page-error" class="text-danger" role="alert"></p>
+            <div id="main-content">
+              <div class="card">
+                <div class="card-body">
+                  <form id="genre-form" class="form-inline">
+                    <input
+                      class="form-control mr-2"
+                      id="genre-name"
+                      placeholder="Tên thể loại"
+                      required
+                    />
+                    <button class="btn btn-primary">Thêm</button>
+                  </form>
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>ID</th>
+                        <th>Tên</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="genres-rows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script src="../../assets/js/common.js"></script>
+    <script src="../../assets/js/admin-layout.js"></script>
+    <script>
+      let genres = [];
+      function onGenres(content) {
+        return genreApi.list().then((response) => {
+          const data = response.data;
+          genres = data;
+          document.getElementById("genres-rows").innerHTML = `${data
+            .map(
+              (genre) => `
+                <tr>
+                  <td>${genre.id}</td>
+                  <td>${genre.name}</td>
+                  <td>
+                    <button class="btn btn-sm btn-warning" data-edit-genre="${genre.id}">Sửa</button>
+                    <button class="btn btn-sm btn-danger" data-del-genre="${genre.id}">Xóa</button>
+                  </td>
+                </tr>
+              `
+            )
+            .join("")}`;
+          document.getElementById("genre-form").onsubmit = (e) => {
+            e.preventDefault();
+
+            return genreApi.create(document.getElementById("genre-name").value.trim()).then(() => {
+              onAdminNavigate("genres");
+            });
+          };
+          content.querySelectorAll("[data-edit-genre]").forEach((button) => {
+            button.onclick = () => {
+              const genre = data.find((item) => item.id === Number(button.dataset.editGenre));
+              const name = prompt("Tên mới", genre.name);
+              if (name) {
+                return genreApi.update(genre.id, name.trim()).then(() => {
+                  onAdminNavigate("genres");
+                });
+              }
+            };
+          });
+          content.querySelectorAll("[data-del-genre]").forEach((button) => {
+            button.onclick = () => {
+              if (confirm("Xóa thể loại?")) {
+                return genreApi
+                  .remove(button.dataset.delGenre)
+                  .then(() => {
+                    onAdminNavigate("genres");
+                  })
+                  .catch((error) => {
+                    console.error(error);
+                  });
+              }
+            };
+          });
+        });
+      }
+
+      onAdminPage(onGenres);
+    </script>
+  </body>
+</html>

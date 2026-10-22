@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Đặt vé xem phim | Movie Store</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    />
+
+    <link rel="stylesheet" href="../../assets/css/customer.css" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <p id="booking-loading" class="loading">Đang tải phòng chiếu…</p>
+      <div id="booking-content" hidden>
+        <div class="wrap">
+          <div class="section-head">
+            <div>
+              <a href="/customer/home/index.html#movies" class="muted tiny">
+                ← Quay lại danh sách phim
+              </a>
+              <h2><span data-movie-title></span></h2>
+              <p class="muted"><span id="movie-description"></span></p>
+            </div>
+            <span class="eyebrow">CHỌN SUẤT → CHỌN GHẾ → NHẬN VÉ</span>
+          </div>
+          <div class="booking-layout">
+            <section>
+              <div class="panel">
+                <span class="eyebrow">01 · LỊCH CHIẾU</span>
+                <h2>Chọn suất chiếu</h2>
+                <div class="dates" id="book-dates"></div>
+                <div class="showtimes" id="times"></div>
+              </div>
+              <div class="panel seat-panel">
+                <span class="eyebrow">02 · SƠ ĐỒ PHÒNG CHIẾU</span>
+                <h2>Chọn ghế</h2>
+                <div class="legend">
+                  <span>
+                    <i></i>
+                    Còn trống
+                  </span>
+                  <span>
+                    <i class="chosen"></i>
+                    Đang chọn
+                  </span>
+                  <span>
+                    <i class="sold"></i>
+                    Đã bán
+                  </span>
+                </div>
+                <div class="screen">MÀN HÌNH</div>
+                <div class="seat-scroll">
+                  <div class="seat-grid" id="seat-grid"></div>
+                </div>
+              </div>
+            </section>
+            <aside class="panel summary">
+              <span class="eyebrow">VÉ XEM PHIM CỦA BẠN</span>
+              <h2><span data-movie-title></span></h2>
+              <dl>
+                <div>
+                  <dt>Suất chiếu</dt>
+                  <dd id="sum-time">—</dd>
+                </div>
+                <div>
+                  <dt>Phòng</dt>
+                  <dd id="sum-room">—</dd>
+                </div>
+                <div>
+                  <dt>Ghế</dt>
+                  <dd id="sum-seats">—</dd>
+                </div>
+              </dl>
+              <div class="total">
+                <span>Tổng cộng</span>
+                <strong id="sum-total">0 ₫</strong>
+              </div>
+              <button class="btn full" id="confirm" disabled>Xác nhận đặt vé ↗</button>
+              <p class="muted tiny booking-note">
+                Kiểm tra phim, suất chiếu và ghế trước khi xác nhận. Hệ thống phát hành vé ngay sau
+                khi đặt thành công.
+              </p>
+              <div id="booking-error" class="error tiny" role="alert"></div>
+            </aside>
+          </div>
+        </div>
+        <dialog id="success" class="success">
+          <div class="checkmark">✓</div>
+          <h2>Hẹn bạn tại rạp!</h2>
+          <p>Đặt vé thành công. Thông tin đã được lưu trong tài khoản.</p>
+          <a class="btn full" href="/customer/my-tickets/index.html">Xem vé của tôi ↗</a>
+        </dialog>
+      </div>
+      <p id="page-error" class="wrap error" role="alert"></p>
+    </main>
+    <div id="footer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="../../assets/js/common.js"></script>
+    <script src="../../assets/js/customer-layout.js"></script>
+    <script>
+      const movieDescriptions = {
+        "Dune: Part Two": "Một hành trình vượt qua cát bụi, định mệnh và những vì sao.",
+        "Inside Out 2": "Bước vào thế giới cảm xúc đầy sắc màu và những bất ngờ.",
+        Mai: "Một câu chuyện về tình yêu, hy vọng và những khởi đầu mới.",
+        Interstellar: "Vượt qua không gian và thời gian để tìm đường trở về.",
+        "Spirited Away": "Lạc vào thế giới thần linh cùng một hành trình trưởng thành.",
+        "Avengers: Endgame": "Các anh hùng tập hợp cho trận chiến quyết định.",
+        "The Grand Budapest Hotel": "Một chuyến phiêu lưu tinh tế, rực rỡ và đầy bất ngờ.",
+        "Your Name": "Hai cuộc đời, một sợi dây kết nối vượt qua khoảng cách."
+      };
+      let schedule = [];
+      function onBookingMessage(message) {
+        const node = document.createElement("div");
+        node.className = "toast";
+        node.textContent = message;
+        document.body.append(node);
+        setTimeout(() => node.remove(), 4000);
+      }
+
+      let activeShowtime = null,
+        selectedSeats = new Set(),
+        occupied = new Set(),
+        seatRequest = 0;
+      function getBookingPage() {
+        const params = new URLSearchParams(location.search);
+
+        return Promise.all([showtimeApi.upcoming(), movieApi.list()])
+          .then(([showtimeResponse, movieResponse]) => {
+            schedule = showtimeResponse.data;
+            const requested = schedule.find((item) => item.id === Number(params.get("showtimeId")));
+            const movieId = Number(params.get("movieId")) || requested?.movieId;
+            const movie = movieResponse.data.find((item) => item.id === movieId);
+            if (!movie) throw new Error("Không tìm thấy phim.");
+            const movieTimes = schedule.filter((item) => item.movieId === movieId);
+            document.querySelectorAll("[data-movie-title]").forEach((element) => {
+              element.textContent = movie.title;
+            });
+            document.getElementById("movie-description").textContent =
+              movieDescriptions[movie.title] || "Khám phá câu chuyện trên màn ảnh rộng.";
+            document.getElementById("booking-loading").hidden = true;
+            document.getElementById("booking-content").hidden = false;
+            const days = [...new Set(movieTimes.map((item) => getDateKey(item.startTime)))];
+            let date = params.get("date");
+            if (!days.includes(date)) date = requested ? getDateKey(requested.startTime) : days[0];
+            function onSelectDay(selectedDate) {
+              document.getElementById("book-dates").innerHTML = days
+                .map(
+                  (item) =>
+                    `
+                      <button class="chip ${item === selectedDate ? "active" : ""}" data-date="${item}">${getSafeHtml(getDayLabel(item))}</button>
+                    `
+                )
+                .join("");
+              document
+                .getElementById("book-dates")
+                .querySelectorAll("button")
+                .forEach((button) => (button.onclick = () => onSelectDay(button.dataset.date)));
+              const todayTimes = movieTimes.filter((item) => getDateKey(item.startTime) === selectedDate);
+              document.getElementById("times").innerHTML =
+                todayTimes
+                  .map(
+                    (item) =>
+                      `
+                        <button class="showtime" data-time="${item.id}">
+                          ${getTime(item.startTime)}
+                          <small>${getSafeHtml(item.roomName)} · ${getMoney(item.ticketPrice)}</small>
+                        </button>
+                      `
+                  )
+                  .join("") || "<p>Chưa có suất chiếu.</p>";
+              document
+                .getElementById("times")
+                .querySelectorAll("button")
+                .forEach(
+                  (button) =>
+                    (button.onclick = () =>
+                      onSelectShowtime(
+                        movieTimes.find((item) => item.id === Number(button.dataset.time))
+                      ))
+                );
+              if (todayTimes.length)
+                onSelectShowtime(todayTimes.find((item) => item.id === requested?.id) || todayTimes[0]);
+            }
+            document.getElementById("confirm").onclick = onBooking;
+            onSelectDay(date);
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
+
+      function onSelectShowtime(showtime) {
+        const requestId = ++seatRequest;
+        activeShowtime = null;
+        selectedSeats.clear();
+        document.getElementById("confirm").disabled = true;
+        document.getElementById("seat-grid").innerHTML = "Đang tải ghế…";
+        document
+          .querySelectorAll("[data-time]")
+          .forEach((button) =>
+            button.classList.toggle("active", Number(button.dataset.time) === showtime.id)
+          );
+
+        return ticketApi
+          .bookedSeats(showtime.id)
+          .then((response) => {
+            const data = response.data;
+            if (requestId !== seatRequest) return;
+            activeShowtime = showtime;
+            occupied = new Set(data.map(Number));
+            onSeats();
+            onBookingSummary();
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
+
+      function onSeats() {
+        document.getElementById("seat-grid").innerHTML = Array.from(
+          { length: activeShowtime.seatCount },
+          (_, seatIndex) =>
+            `
+              <button
+                aria-label="Ghế ${getSeatLabel(seatIndex + 1)}"
+                class="seat ${selectedSeats.has(seatIndex + 1) ? "selected" : ""}"
+                data-seat="${seatIndex + 1}"
+                ${occupied.has(seatIndex + 1) ? "disabled" : ""}
+              >
+                ${getSeatLabel(seatIndex + 1)}
+              </button>
+            `
+        ).join("");
+        document
+          .getElementById("seat-grid")
+          .querySelectorAll("button:not(:disabled)")
+          .forEach(
+            (button) =>
+              (button.onclick = () => {
+                const seatNumber = Number(button.dataset.seat);
+                if (selectedSeats.has(seatNumber)) selectedSeats.delete(seatNumber);
+                else if (selectedSeats.size < 8) selectedSeats.add(seatNumber);
+                else return onBookingMessage("Mỗi lần vui lòng chọn tối đa 8 ghế.");
+                onSeats();
+                onBookingSummary();
+              })
+          );
+      }
+
+      function onBookingSummary() {
+        document.getElementById("sum-time").textContent = getDateTime(activeShowtime.startTime);
+        document.getElementById("sum-room").textContent = activeShowtime.roomName;
+        document.getElementById("sum-seats").textContent =
+          [...selectedSeats]
+            .sort((first, second) => first - second)
+            .map(getSeatLabel)
+            .join(", ") || "Chưa chọn";
+        document.getElementById("sum-total").textContent = getMoney(
+          activeShowtime.ticketPrice * selectedSeats.size
+        );
+        document.getElementById("confirm").disabled = !selectedSeats.size;
+      }
+
+      function onBooking() {
+        const currentUser = getUser();
+        if (!currentUser) {
+          location.href =
+            "/customer/login/index.html?next=" + encodeURIComponent(location.pathname + location.search);
+          return;
+        }
+        document.getElementById("confirm").disabled = true;
+        document.getElementById("booking-error").textContent = "";
+
+        return ticketApi
+          .book({
+            userId: currentUser.id,
+            showtimeId: activeShowtime.id,
+            seatNumbers: [...selectedSeats]
+          })
+          .then(() => {
+            selectedSeats.clear();
+            document.getElementById("success").showModal();
+          })
+          .catch((error) => {
+            console.error(error);
+          });
+      }
+
+      getBookingPage();
+    </script>
+  </body>
+</html>

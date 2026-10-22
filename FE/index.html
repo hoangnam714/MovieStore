@@ -1,11 +1,17 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="vi">
-<head>
-  <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0; url=customer/index.html">
-  <title>Movie Store</title>
-</head>
-<body>
-  <p>Đang chuyển tới trang khách hàng… <a href="customer/index.html">Tiếp tục</a></p>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <title>Movie Store</title>
+  </head>
+  <body>
+    <p>
+      Đang chuyển trang…
+      <a id="destination" href="/customer/home/index.html">Tiếp tục</a>
+    </p>
+    <script>
+      const destination = document.getElementById("destination");
+      location.replace(destination.href + location.search + location.hash);
+    </script>
+  </body>
 </html>

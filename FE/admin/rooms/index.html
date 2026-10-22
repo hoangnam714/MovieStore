@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Phòng chiếu | Movie Store CMS</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/admin.css" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="hold-transition sidebar-mini layout-fixed" data-page="rooms">
+    <div class="wrapper">
+      <div id="admin-layout"></div>
+      <div class="content-wrapper">
+        <section class="content-header">
+          <div class="container-fluid">
+            <h1>Phòng chiếu</h1>
+            <p class="cms-subtitle">MOVIE STORE / QUẢN TRỊ RẠP CHIẾU</p>
+          </div>
+        </section>
+        <section class="content">
+          <div class="container-fluid">
+            <p id="page-error" class="text-danger" role="alert"></p>
+            <div id="main-content">
+              <div class="card">
+                <div class="card-body">
+                  <form id="room-form" class="form-inline">
+                    <input class="form-control mr-2" name="name" placeholder="Tên phòng" required />
+                    <input
+                      class="form-control mr-2"
+                      name="seatCount"
+                      type="number"
+                      min="1"
+                      placeholder="Số ghế"
+                      required
+                    />
+                    <button class="btn btn-primary">Thêm phòng</button>
+                  </form>
+                  <table class="table table-bordered">
+                    <thead>
+                      <tr>
+                        <th>Tên</th>
+                        <th>Số ghế</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="rooms-rows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script src="../../assets/js/common.js"></script>
+    <script src="../../assets/js/admin-layout.js"></script>
+    <script>
+      function onRooms(content) {
+        return roomApi.list().then((response) => {
+          const data = response.data;
+          document.getElementById("rooms-rows").innerHTML = `${data
+            .map(
+              (room) => `
+                <tr>
+                  <td>${room.name}</td>
+                  <td>${room.seatCount}</td>
+                  <td>
+                    <button class="btn btn-sm btn-danger" data-del-room="${room.id}">Xóa</button>
+                  </td>
+                </tr>
+              `
+            )
+            .join("")}`;
+          document.getElementById("room-form").onsubmit = (e) => {
+            e.preventDefault();
+            const form = e.target;
+
+            return roomApi
+              .create({
+                name: form.name.value.trim(),
+                seatCount: Number(form.seatCount.value)
+              })
+              .then(() => {
+                onAdminNavigate("rooms");
+              });
+          };
+          content.querySelectorAll("[data-del-room]").forEach((button) => {
+            button.onclick = () => {
+              if (confirm("Xóa phòng?")) {
+                return roomApi
+                  .remove(button.dataset.delRoom)
+                  .then(() => {
+                    onAdminNavigate("rooms");
+                  })
+                  .catch((error) => {
+                    console.error(error);
+                  });
+              }
+            };
+          });
+        });
+      }
+
+      onAdminPage(onRooms);
+    </script>
+  </body>
+</html>

@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Suất chiếu | Movie Store CMS</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/admin.css" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="hold-transition sidebar-mini layout-fixed" data-page="showtimes">
+    <div class="wrapper">
+      <div id="admin-layout"></div>
+      <div class="content-wrapper">
+        <section class="content-header">
+          <div class="container-fluid">
+            <h1>Suất chiếu</h1>
+            <p class="cms-subtitle">MOVIE STORE / QUẢN TRỊ RẠP CHIẾU</p>
+          </div>
+        </section>
+        <section class="content">
+          <div class="container-fluid">
+            <p id="page-error" class="text-danger" role="alert"></p>
+            <div id="main-content">
+              <div class="card">
+                <div class="card-body">
+                  <form id="st-form">
+                    <div class="form-row">
+                      <div class="col-md-3">
+                        <select class="form-control" name="movieId" required>
+                          <option value="">Phim</option>
+                        </select>
+                      </div>
+                      <div class="col-md-2">
+                        <select class="form-control" name="roomId" required>
+                          <option value="">Phòng</option>
+                        </select>
+                      </div>
+                      <div class="col-md-3">
+                        <input
+                          class="form-control"
+                          name="startTime"
+                          type="datetime-local"
+                          required
+                        />
+                      </div>
+                      <div class="col-md-2">
+                        <input
+                          class="form-control"
+                          name="ticketPrice"
+                          type="number"
+                          min="0"
+                          step="1000"
+                          placeholder="Giá vé"
+                          required
+                        />
+                      </div>
+                      <div class="col-md-2">
+                        <button class="btn btn-primary btn-block">Tạo suất</button>
+                      </div>
+                    </div>
+                  </form>
+                  <table class="table table-sm table-hover">
+                    <thead>
+                      <tr>
+                        <th>Phim</th>
+                        <th>Phòng</th>
+                        <th>Bắt đầu</th>
+                        <th>Giá</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="showtimes-rows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script src="../../assets/js/common.js"></script>
+    <script src="../../assets/js/admin-layout.js"></script>
+    <script>
+      function onShowtimes(content) {
+        return Promise.all([showtimeApi.list(), movieApi.list(), roomApi.list()]).then(
+          ([showtimeResponse, movies, rooms]) => {
+            const movieOpts = movies.data
+              .map(
+                (movie) => `
+                  <option value="${movie.id}">${movie.title}</option>
+                `
+              )
+              .join("");
+            const roomOpts = rooms.data
+              .map(
+                (room) => `
+                  <option value="${room.id}">${room.name}</option>
+                `
+              )
+              .join("");
+            document.querySelector('select[name="movieId"]').insertAdjacentHTML("beforeend", movieOpts);
+            document.querySelector('select[name="roomId"]').insertAdjacentHTML("beforeend", roomOpts);
+            document.getElementById("showtimes-rows").innerHTML = `${showtimeResponse.data
+              .map(
+                (showtime) => `
+                  <tr>
+                    <td>${showtime.movieTitle}</td>
+                    <td>${showtime.roomName}</td>
+                    <td>${getDateTime(showtime.startTime)}</td>
+                    <td>${getMoney(showtime.ticketPrice)}</td>
+                    <td>
+                      <button class="btn btn-sm btn-danger" data-del-st="${showtime.id}">Xóa</button>
+                    </td>
+                  </tr>
+                `
+              )
+              .join("")}`;
+            document.getElementById("st-form").onsubmit = (e) => {
+              e.preventDefault();
+              const form = e.target;
+              const local = form.startTime.value;
+              const startTime = local.length === 16 ? `${local}:00` : local;
+
+              return showtimeApi
+                .create({
+                  movieId: Number(form.movieId.value),
+                  roomId: Number(form.roomId.value),
+                  startTime,
+                  ticketPrice: Number(form.ticketPrice.value)
+                })
+                .then(() => {
+                  onAdminNavigate("showtimes");
+                });
+            };
+            content.querySelectorAll("[data-del-st]").forEach((button) => {
+              button.onclick = () => {
+                if (confirm("Xóa suất chiếu?")) {
+                  return showtimeApi
+                    .remove(button.dataset.delSt)
+                    .then(() => {
+                      onAdminNavigate("showtimes");
+                    })
+                    .catch((error) => {
+                      console.error(error);
+                    });
+                }
+              };
+            });
+          }
+        );
+      }
+
+      onAdminPage(onShowtimes);
+    </script>
+  </body>
+</html>

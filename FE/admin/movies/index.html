@@ -1,0 +1,157 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Phim | Movie Store CMS</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/admin.css" />
+    <link rel="stylesheet" href="./style.css" />
+  </head>
+  <body class="hold-transition sidebar-mini layout-fixed" data-page="movies">
+    <div class="wrapper">
+      <div id="admin-layout"></div>
+      <div class="content-wrapper">
+        <section class="content-header">
+          <div class="container-fluid">
+            <h1>Phim</h1>
+            <p class="cms-subtitle">MOVIE STORE / QUẢN TRỊ RẠP CHIẾU</p>
+          </div>
+        </section>
+        <section class="content">
+          <div class="container-fluid">
+            <p id="page-error" class="text-danger" role="alert"></p>
+            <div id="main-content">
+              <div class="card">
+                <div class="card-body">
+                  <form id="movie-form">
+                    <div class="form-row">
+                      <div class="col-md-3">
+                        <input class="form-control" name="title" placeholder="Tên phim" required />
+                      </div>
+                      <div class="col-md-2">
+                        <input
+                          class="form-control"
+                          name="duration"
+                          type="number"
+                          min="1"
+                          placeholder="Phút"
+                          required
+                        />
+                      </div>
+                      <div class="col-md-2">
+                        <input
+                          class="form-control"
+                          name="releaseYear"
+                          type="number"
+                          placeholder="Năm"
+                          required
+                        />
+                      </div>
+                      <div class="col-md-3">
+                        <select class="form-control" name="genreId" required>
+                          <option value="">Thể loại</option>
+                        </select>
+                      </div>
+                      <div class="col-md-2">
+                        <button class="btn btn-primary btn-block">Thêm phim</button>
+                      </div>
+                    </div>
+                  </form>
+                  <table class="table table-striped">
+                    <thead>
+                      <tr>
+                        <th>Tên</th>
+                        <th>Phút</th>
+                        <th>Năm</th>
+                        <th>Thể loại</th>
+                        <th></th>
+                      </tr>
+                    </thead>
+                    <tbody id="movies-rows"></tbody>
+                  </table>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script src="../../assets/js/common.js"></script>
+    <script src="../../assets/js/admin-layout.js"></script>
+    <script>
+      let genres = [];
+      function onMovies(content) {
+        return Promise.all([genreApi.list(), movieApi.list()]).then(([genreResponse, movieResponse]) => {
+          genres = genreResponse.data;
+          const data = movieResponse.data;
+          const genreOpts = genres
+            .map(
+              (genre) => `
+                <option value="${genre.id}">${genre.name}</option>
+              `
+            )
+            .join("");
+          document.querySelector('select[name="genreId"]').insertAdjacentHTML("beforeend", genreOpts);
+          document.getElementById("movies-rows").innerHTML = `${data
+            .map(
+              (movie) => `
+                <tr>
+                  <td>${movie.title}</td>
+                  <td>${movie.duration}</td>
+                  <td>${movie.releaseYear}</td>
+                  <td>${genres.find((genre) => genre.id === movie.genreId)?.name ?? ""}</td>
+                  <td>
+                    <button class="btn btn-sm btn-danger" data-del-movie="${movie.id}">Xóa</button>
+                  </td>
+                </tr>
+              `
+            )
+            .join("")}`;
+          document.getElementById("movie-form").onsubmit = (e) => {
+            e.preventDefault();
+            const form = e.target;
+
+            return movieApi
+              .create({
+                title: form.title.value.trim(),
+                duration: Number(form.duration.value),
+                releaseYear: Number(form.releaseYear.value),
+                genreId: Number(form.genreId.value)
+              })
+              .then(() => {
+                onAdminNavigate("movies");
+              });
+          };
+          content.querySelectorAll("[data-del-movie]").forEach((button) => {
+            button.onclick = () => {
+              if (confirm("Xóa phim?")) {
+                return movieApi
+                  .remove(button.dataset.delMovie)
+                  .then(() => {
+                    onAdminNavigate("movies");
+                  })
+                  .catch((error) => {
+                    console.error(error);
+                  });
+              }
+            };
+          });
+        });
+      }
+
+      onAdminPage(onMovies);
+    </script>
+  </body>
+</html>

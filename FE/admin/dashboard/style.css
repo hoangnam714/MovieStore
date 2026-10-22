@@ -1,0 +1,108 @@
+.cms-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 24px;
+  padding-bottom: 22px;
+  border-bottom: 1px solid #dce1e8;
+}
+.cms-welcome h2 {
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 7px;
+}
+.cms-welcome p {
+  margin: 0;
+  color: #7c8798;
+  font-size: 12px;
+}
+.cms-welcome .btn {
+  background: #3675d1;
+  color: white;
+}
+.stat-card {
+  display: flex;
+  gap: 18px;
+  align-items: center;
+  background: #fff;
+  border: 1px solid #dce1e8;
+  border-radius: 3px;
+  padding: 20px;
+  margin-bottom: 24px;
+}
+.stat-card i {
+  background: #edf3fd;
+  color: #3675d1;
+  width: 45px;
+  height: 45px;
+  display: grid;
+  place-items: center;
+  font-size: 20px;
+  border-radius: 3px;
+}
+.stat-card strong {
+  font-size: 28px;
+  font-weight: 500;
+  display: block;
+  line-height: 1.2;
+}
+.stat-card span {
+  font-size: 11px;
+  color: #7c8798;
+}
+.card-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid #edf0f4;
+}
+.card-heading h3 {
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+.status-pill {
+  font-size: 10px;
+  padding: 4px 7px;
+  background: #e9f6ee;
+  color: #4b8961;
+  border-radius: 2px;
+}
+.cms-foot {
+  font-size: 11px;
+  color: #9ba3af;
+}
+.content h2[style] {
+  color: #3675d1 !important;
+  font-size: 29px;
+  font-weight: 500 !important;
+}
+@media (max-width: 767px) {
+  .cms-welcome {
+    display: block;
+  }
+  .cms-welcome .btn {
+    margin-top: 16px;
+  }
+  .stat-card {
+    padding: 14px;
+    gap: 10px;
+  }
+  .stat-card i {
+    width: 32px;
+    height: 36px;
+    font-size: 16px;
+  }
+  .stat-card strong {
+    font-size: 23px;
+  }
+  .stat-card span {
+    font-size: 10px;
+  }
+}
+.dashboard-revenue {
+  color: #3675d1;
+  font-size: 29px;
+  font-weight: 500;
+}

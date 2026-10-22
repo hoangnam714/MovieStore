@@ -1,13 +1,13 @@
 # MovieStore — chạy và kiểm tra
 
-Project được cập nhật tại `C:\Users\admin\Documents\Report\MovieStore`.
+Chạy các lệnh từ thư mục gốc của repository `MovieStore`.
 
 ## Chạy trong Eclipse
 
 1. Chọn project `movie.store`, nhấn F5.
 2. Run > Run Configurations > Launch Group > MovieStore - Full Stack > Run.
-3. Khách hàng: http://localhost:8080/customer/index.html
-4. Admin: http://localhost:8080/admin/login.html
+3. Khách hàng: http://localhost:8080/customer/home/index.html
+4. Admin: http://localhost:8080/admin/login/index.html
 5. Backend: http://localhost:5173/api (ví dụ GET /api/movies).
 
 ## Tài khoản mẫu local
@@ -28,6 +28,32 @@ Cơ sở dữ liệu thực tế sau seed: 8 phim, 5 phòng, 75 suất sắp t�
 Một vé demo cho Interstellar, ghế số 1 (A1), được đặt khi kiểm tra bằng tài khoản khách mẫu.
 
 ## Frontend
+
+Mỗi chức năng là một module chứa `index.html` và `style.css` khi có CSS riêng. JavaScript riêng nằm trong thẻ `<script>` cuối `index.html`.
+
+```text
+FE/
+  customer/
+    home/  login/  register/  booking/  my-tickets/
+  admin/
+    login/  dashboard/  movies/  genres/  rooms/  showtimes/  tickets/
+  assets/
+    css/  # customer.css và admin.css
+    js/   # common.js, customer-layout.js và admin-layout.js
+  server.cjs
+```
+
+HTML chứa bố cục và form của trang; thẻ `<script>` cuối trang tải dữ liệu, dựng danh sách động và xử lý sự kiện.
+
+CSS riêng nằm cạnh HTML. Trang đăng nhập và đăng ký khách dùng chung CSS form trong `assets/css/customer.css`, không tạo file CSS riêng rỗng.
+
+`assets/js/common.js` gom các hàm gọi API, quản lý phiên đăng nhập và định dạng. Hai file layout chứa header/footer khách và sidebar admin.
+
+Các lời gọi API dùng `.then()` và `.catch()`. Hàm lấy dữ liệu dùng tiền tố `get`; hàm xử lý thao tác và cập nhật giao diện dùng tiền tố `on`.
+
+Các thư viện CDN vẫn khai báo trực tiếp để giữ thứ tự tải rõ ràng. Trang khách và trang đăng nhập admin chỉ dùng Axios. Các trang quản lý dùng thêm jQuery, Bootstrap 4 và AdminLTE 3; không nạp cùng thư viện hai lần trong một trang.
+
+Chạy frontend: `node FE/server.cjs`. Chạy backend trong terminal khác: vào `movie.store`, chạy `.\mvnw.cmd spring-boot:run`. Các URL `.html` cũ chuyển tiếp sang module mới và giữ tham số đặt vé.
 
 - HTML, CSS, JavaScript thuần; khách dùng lưới và form Bootstrap 5.3.3.
 - Admin dựa trên AdminLTE 3.2 (Bootstrap 4), có sidebar, dashboard và bảng quản lý.
