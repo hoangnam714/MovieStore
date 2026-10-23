@@ -31,7 +31,7 @@
             <div id="main-content">
               <div class="card">
                 <div class="card-body">
-                  <form id="room-form" class="form-inline">
+                  <form id="room-form" onsubmit="onCreateRoom(event)" class="form-inline">
                     <input class="form-control mr-2" name="name" placeholder="Tên phòng" required />
                     <input
                       class="form-control mr-2"
@@ -67,7 +67,7 @@
     <script src="../../assets/js/common.js"></script>
     <script src="../../assets/js/admin-layout.js"></script>
     <script>
-      function onRooms(content) {
+      function onRooms() {
         return roomApi.list().then((response) => {
           const data = response.data;
           document.getElementById("rooms-rows").innerHTML = `${data
@@ -77,40 +77,39 @@
                   <td>${room.name}</td>
                   <td>${room.seatCount}</td>
                   <td>
-                    <button class="btn btn-sm btn-danger" data-del-room="${room.id}">Xóa</button>
+                    <button class="btn btn-sm btn-danger" onclick="onDeleteRoom(${room.id})">Xóa</button>
                   </td>
                 </tr>
               `
             )
             .join("")}`;
-          document.getElementById("room-form").onsubmit = (e) => {
-            e.preventDefault();
-            const form = e.target;
-
-            return roomApi
-              .create({
-                name: form.name.value.trim(),
-                seatCount: Number(form.seatCount.value)
-              })
-              .then(() => {
-                onAdminNavigate("rooms");
-              });
-          };
-          content.querySelectorAll("[data-del-room]").forEach((button) => {
-            button.onclick = () => {
-              if (confirm("Xóa phòng?")) {
-                return roomApi
-                  .remove(button.dataset.delRoom)
-                  .then(() => {
-                    onAdminNavigate("rooms");
-                  })
-                  .catch((error) => {
-                    console.error(error);
-                  });
-              }
-            };
-          });
         });
+      }
+
+      function onCreateRoom(event) {
+        event.preventDefault();
+        const form = event.target;
+
+        return roomApi
+          .create({
+            name: form.name.value.trim(),
+            seatCount: Number(form.seatCount.value)
+          })
+          .then(() => {
+            onAdminNavigate("rooms");
+          });
+      }
+
+      function onDeleteRoom(id) {
+        if (!confirm("Xóa phòng?")) return;
+        return roomApi
+          .remove(id)
+          .then(() => {
+            onAdminNavigate("rooms");
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       }
 
       onAdminPage(onRooms);

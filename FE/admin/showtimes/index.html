@@ -31,7 +31,7 @@
             <div id="main-content">
               <div class="card">
                 <div class="card-body">
-                  <form id="st-form">
+                  <form id="st-form" onsubmit="onCreateShowtime(event)">
                     <div class="form-row">
                       <div class="col-md-3">
                         <select id="showtime-movie" class="form-control" name="movieId" required>
@@ -93,7 +93,7 @@
     <script src="../../assets/js/common.js"></script>
     <script src="../../assets/js/admin-layout.js"></script>
     <script>
-      function onShowtimes(content) {
+      function onShowtimes() {
         return Promise.all([showtimeApi.list(), movieApi.list(), roomApi.list()]).then(
           ([showtimeResponse, movies, rooms]) => {
             const movieOpts = movies.data
@@ -121,45 +121,44 @@
                     <td>${getDateTime(showtime.startTime)}</td>
                     <td>${getMoney(showtime.ticketPrice)}</td>
                     <td>
-                      <button class="btn btn-sm btn-danger" data-del-st="${showtime.id}">Xóa</button>
+                      <button class="btn btn-sm btn-danger" onclick="onDeleteShowtime(${showtime.id})">Xóa</button>
                     </td>
                   </tr>
                 `
               )
               .join("")}`;
-            document.getElementById("st-form").onsubmit = (e) => {
-              e.preventDefault();
-              const form = e.target;
-              const local = form.startTime.value;
-              const startTime = local.length === 16 ? `${local}:00` : local;
-
-              return showtimeApi
-                .create({
-                  movieId: Number(form.movieId.value),
-                  roomId: Number(form.roomId.value),
-                  startTime,
-                  ticketPrice: Number(form.ticketPrice.value)
-                })
-                .then(() => {
-                  onAdminNavigate("showtimes");
-                });
-            };
-            content.querySelectorAll("[data-del-st]").forEach((button) => {
-              button.onclick = () => {
-                if (confirm("Xóa suất chiếu?")) {
-                  return showtimeApi
-                    .remove(button.dataset.delSt)
-                    .then(() => {
-                      onAdminNavigate("showtimes");
-                    })
-                    .catch((error) => {
-                      console.error(error);
-                    });
-                }
-              };
-            });
           }
         );
+      }
+
+      function onCreateShowtime(event) {
+        event.preventDefault();
+        const form = event.target;
+        const local = form.startTime.value;
+        const startTime = local.length === 16 ? `${local}:00` : local;
+
+        return showtimeApi
+          .create({
+            movieId: Number(form.movieId.value),
+            roomId: Number(form.roomId.value),
+            startTime,
+            ticketPrice: Number(form.ticketPrice.value)
+          })
+          .then(() => {
+            onAdminNavigate("showtimes");
+          });
+      }
+
+      function onDeleteShowtime(id) {
+        if (!confirm("Xóa suất chiếu?")) return;
+        return showtimeApi
+          .remove(id)
+          .then(() => {
+            onAdminNavigate("showtimes");
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       }
 
       onAdminPage(onShowtimes);

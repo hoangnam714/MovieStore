@@ -34,7 +34,9 @@
                   <h2>Hoạt động rạp chiếu</h2>
                   <p><span id="dashboard-summary"></span></p>
                 </div>
-                <button class="btn" id="quick-showtime">+ Tạo suất chiếu</button>
+                <button class="btn" id="quick-showtime" onclick="onAdminNavigate('showtimes')">
+                  + Tạo suất chiếu
+                </button>
               </div>
               <div id="dashboard-stats" class="row"></div>
               <div class="row">
@@ -69,10 +71,18 @@
                       </p>
                       <hr />
                       <h6>Thao tác nhanh</h6>
-                      <button class="btn btn-primary btn-block mt-3" id="quick-movies">
+                      <button
+                        class="btn btn-primary btn-block mt-3"
+                        id="quick-movies"
+                        onclick="onAdminNavigate('movies')"
+                      >
                         Quản lý phim
                       </button>
-                      <button class="btn btn-light btn-block" id="quick-tickets">
+                      <button
+                        class="btn btn-light btn-block"
+                        id="quick-tickets"
+                        onclick="onAdminNavigate('tickets')"
+                      >
                         Xem vé đã bán
                       </button>
                     </div>
@@ -99,16 +109,17 @@
               .filter((showtime) => new Date(showtime.startTime) > new Date())
               .sort((a, b) => a.startTime.localeCompare(b.startTime));
             const revenue = tickets.data.reduce((sum, ticket) => sum + Number(ticket.price), 0);
+
             document.getElementById("dashboard-summary").textContent =
               `${new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · ${upcoming.length} suất chiếu đang mở bán`;
+
             document.getElementById("dashboard-stats").innerHTML = `${[
               [movies.data.length, "Phim trong danh mục", "film"],
               [rooms.data.length, "Phòng chiếu", "door-open"],
               [upcoming.length, "Suất chiếu sắp tới", "calendar-alt"],
               [tickets.data.length, "Vé đã bán", "ticket-alt"]
             ]
-              .map(
-                ([count, label, icon]) =>
+              .map(([count, label, icon]) =>
                   `
                     <div class="col-6 col-xl-3">
                       <div class="stat-card">
@@ -122,6 +133,7 @@
                   `
               )
               .join("")}`;
+
             document.getElementById("dashboard-showtimes").innerHTML = `${
               upcoming
                 .slice(0, 8)
@@ -146,9 +158,6 @@
               `
             }`;
             document.getElementById("dashboard-revenue").textContent = getMoney(revenue);
-            document.getElementById("quick-showtime").onclick = () => onAdminNavigate("showtimes");
-            document.getElementById("quick-movies").onclick = () => onAdminNavigate("movies");
-            document.getElementById("quick-tickets").onclick = () => onAdminNavigate("tickets");
           }
         );
       }

@@ -80,7 +80,9 @@
                 <span>Tổng cộng</span>
                 <strong id="sum-total">0 ₫</strong>
               </div>
-              <button class="btn full" id="confirm" disabled>Xác nhận đặt vé ↗</button>
+              <button class="btn full" id="confirm" onclick="onBooking()" disabled>
+                Xác nhận đặt vé ↗
+              </button>
               <p class="muted tiny booking-note">
                 Kiểm tra phim, suất chiếu và ghế trước khi xác nhận. Hệ thống phát hành vé ngay sau
                 khi đặt thành công.
@@ -114,6 +116,9 @@
         "Your Name": "Hai cuộc đời, một sợi dây kết nối vượt qua khoảng cách."
       };
       let schedule = [];
+      let movieTimes = [];
+      let bookingDays = [];
+      let requestedShowtimeId = null;
 
       function onBookingMessage(message) {
         const node = document.createElement("div");
@@ -138,58 +143,19 @@
             const movieId = Number(params.get("movieId")) || requested?.movieId;
             const movie = movieResponse.data.find((item) => item.id === movieId);
             if (!movie) throw new Error("Không tìm thấy phim.");
-            const movieTimes = schedule.filter((item) => item.movieId === movieId);
+            movieTimes = schedule.filter((item) => item.movieId === movieId);
             document.getElementById("movie-title").textContent = movie.title;
             document.getElementById("summary-movie-title").textContent = movie.title;
             document.getElementById("movie-description").textContent =
               movieDescriptions[movie.title] || "Khám phá câu chuyện trên màn ảnh rộng.";
             document.getElementById("booking-loading").hidden = true;
             document.getElementById("booking-content").hidden = false;
-            const days = [...new Set(movieTimes.map((item) => getDateKey(item.startTime)))];
+            bookingDays = [...new Set(movieTimes.map((item) => getDateKey(item.startTime)))];
+            requestedShowtimeId = requested?.id;
             let date = params.get("date");
-            if (!days.includes(date)) date = requested ? getDateKey(requested.startTime) : days[0];
+            if (!bookingDays.includes(date))
+              date = requested ? getDateKey(requested.startTime) : bookingDays[0];
 
-            function onSelectDay(selectedDate) {
-              document.getElementById("book-dates").innerHTML = days
-                .map(
-                  (item) =>
-                    `
-                      <button class="chip ${item === selectedDate ? "active" : ""}" data-date="${item}">${getSafeHtml(getDayLabel(item))}</button>
-                    `
-                )
-                .join("");
-              document
-                .getElementById("book-dates")
-                .querySelectorAll("button")
-                .forEach((button) => (button.onclick = () => onSelectDay(button.dataset.date)));
-              const todayTimes = movieTimes.filter((item) => getDateKey(item.startTime) === selectedDate);
-              document.getElementById("times").innerHTML =
-                todayTimes
-                  .map(
-                    (item) =>
-                      `
-                        <button class="showtime" data-time="${item.id}">
-                          ${getTime(item.startTime)}
-                          <small>${getSafeHtml(item.roomName)} · ${getMoney(item.ticketPrice)}</small>
-                        </button>
-                      `
-                  )
-                  .join("") || "<p>Chưa có suất chiếu.</p>";
-              document
-                .getElementById("times")
-                .querySelectorAll("button")
-                .forEach(
-                  (button) =>
-                    (button.onclick = () =>
-                      onSelectShowtime(
-                        movieTimes.find((item) => item.id === Number(button.dataset.time))
-                      ))
-                );
-              if (todayTimes.length)
-                onSelectShowtime(todayTimes.find((item) => item.id === requested?.id) || todayTimes[0]);
-            }
-
-            document.getElementById("confirm").onclick = onBooking;
             onSelectDay(date);
           })
           .catch((error) => {
@@ -197,7 +163,35 @@
           });
       }
 
-      function onSelectShowtime(showtime) {
+      function onSelectDay(selectedDate) {
+        document.getElementById("book-dates").innerHTML = bookingDays
+          .map(
+            (day) => `
+              <button class="chip ${day === selectedDate ? "active" : ""}" onclick="onSelectDay('${day}')">${getSafeHtml(getDayLabel(day))}</button>
+            `
+          )
+          .join("");
+        const todayTimes = movieTimes.filter((item) => getDateKey(item.startTime) === selectedDate);
+        document.getElementById("times").innerHTML =
+          todayTimes
+            .map(
+              (item) => `
+                <button class="showtime" data-time="${item.id}" onclick="onSelectShowtime(${item.id})">
+                  ${getTime(item.startTime)}
+                  <small>${getSafeHtml(item.roomName)} · ${getMoney(item.ticketPrice)}</small>
+                </button>
+              `
+            )
+            .join("") || "<p>Chưa có suất chiếu.</p>";
+        if (todayTimes.length) {
+          const showtime = todayTimes.find((item) => item.id === requestedShowtimeId) || todayTimes[0];
+          onSelectShowtime(showtime.id);
+        }
+      }
+
+      function onSelectShowtime(id) {
+        const showtime = schedule.find((item) => item.id === id);
+        if (!showtime) return;
         const requestId = ++seatRequest;
         activeShowtime = null;
         selectedSeats.clear();
@@ -233,27 +227,22 @@
               <button
                 aria-label="Ghế ${getSeatLabel(seatIndex + 1)}"
                 class="seat ${selectedSeats.has(seatIndex + 1) ? "selected" : ""}"
-                data-seat="${seatIndex + 1}"
+                onclick="onSelectSeat(${seatIndex + 1})"
                 ${occupied.has(seatIndex + 1) ? "disabled" : ""}
               >
                 ${getSeatLabel(seatIndex + 1)}
               </button>
             `
         ).join("");
-        document
-          .getElementById("seat-grid")
-          .querySelectorAll("button:not(:disabled)")
-          .forEach(
-            (button) =>
-              (button.onclick = () => {
-                const seatNumber = Number(button.dataset.seat);
-                if (selectedSeats.has(seatNumber)) selectedSeats.delete(seatNumber);
-                else if (selectedSeats.size < 8) selectedSeats.add(seatNumber);
-                else return onBookingMessage("Mỗi lần vui lòng chọn tối đa 8 ghế.");
-                onSeats();
-                onBookingSummary();
-              })
-          );
+      }
+
+      function onSelectSeat(seatNumber) {
+        if (!activeShowtime || occupied.has(seatNumber)) return;
+        if (selectedSeats.has(seatNumber)) selectedSeats.delete(seatNumber);
+        else if (selectedSeats.size < 8) selectedSeats.add(seatNumber);
+        else return onBookingMessage("Mỗi lần vui lòng chọn tối đa 8 ghế.");
+        onSeats();
+        onBookingSummary();
       }
 
       function onBookingSummary() {

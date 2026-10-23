@@ -32,7 +32,7 @@
           <span class="eyebrow">MOVIE STORE MEMBERS</span>
           <h1>Đăng nhập</h1>
           <p class="muted">Sử dụng email và mật khẩu của bạn.</p>
-          <form id="auth-form">
+          <form id="auth-form" onsubmit="onLogin(event)">
             <label class="field">
               Email
               <input
@@ -74,7 +74,7 @@
       const form = document.getElementById("auth-form");
       const errorMessage = document.getElementById("auth-error");
 
-      form.addEventListener("submit", function (event) {
+      function onLogin(event) {
         event.preventDefault();
         const submitButton = document.getElementById("auth-submit");
         submitButton.disabled = true;
@@ -97,7 +97,7 @@
           .catch((error) => {
             console.error(error);
           });
-      });
+      }
     </script>
   </body>
 </html>

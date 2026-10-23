@@ -3,7 +3,7 @@
   const accountLinks = currentUser
     ? `
       <span>${getSafeHtml(currentUser.fullName)}</span>
-      <button class="btn light" id="logout">Đăng xuất</button>
+      <button class="btn light" id="logout" onclick="onCustomerLogout()">Đăng xuất</button>
     `
     : `
       <a href="/customer/register/index.html">Đăng ký</a>
@@ -26,14 +26,11 @@
       </div>
     </nav>
   `;
+}
 
-  const logoutButton = document.getElementById("logout");
-  if (logoutButton) {
-    logoutButton.addEventListener("click", function () {
-      onLogout();
-      location.href = "/customer/home/index.html";
-    });
-  }
+function onCustomerLogout() {
+  onLogout();
+  location.href = "/customer/home/index.html";
 }
 
 function onCustomerFooter() {

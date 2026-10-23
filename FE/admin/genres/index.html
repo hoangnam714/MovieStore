@@ -31,7 +31,7 @@
             <div id="main-content">
               <div class="card">
                 <div class="card-body">
-                  <form id="genre-form" class="form-inline">
+                  <form id="genre-form" onsubmit="onCreateGenre(event)" class="form-inline">
                     <input
                       class="form-control mr-2"
                       id="genre-name"
@@ -64,12 +64,9 @@
     <script src="../../assets/js/common.js"></script>
     <script src="../../assets/js/admin-layout.js"></script>
     <script>
-      let genres = [];
-
-      function onGenres(content) {
+      function onGenres() {
         return genreApi.list().then((response) => {
           const data = response.data;
-          genres = data;
           document.getElementById("genres-rows").innerHTML = `${data
             .map(
               (genre) => `
@@ -77,45 +74,46 @@
                   <td>${genre.id}</td>
                   <td>${genre.name}</td>
                   <td>
-                    <button class="btn btn-sm btn-warning" data-edit-genre="${genre.id}">Sửa</button>
-                    <button class="btn btn-sm btn-danger" data-del-genre="${genre.id}">Xóa</button>
+                    <button class="btn btn-sm btn-warning" onclick="onEditGenre(${genre.id})">Sửa</button>
+                    <button class="btn btn-sm btn-danger" onclick="onDeleteGenre(${genre.id})">Xóa</button>
                   </td>
                 </tr>
               `
             )
             .join("")}`;
-          document.getElementById("genre-form").onsubmit = (e) => {
-            e.preventDefault();
+        });
+      }
 
-            return genreApi.create(document.getElementById("genre-name").value.trim()).then(() => {
-              onAdminNavigate("genres");
-            });
-          };
-          content.querySelectorAll("[data-edit-genre]").forEach((button) => {
-            button.onclick = () => {
-              const genre = data.find((item) => item.id === Number(button.dataset.editGenre));
-              const name = prompt("Tên mới", genre.name);
-              if (name) {
-                return genreApi.update(genre.id, name.trim()).then(() => {
-                  onAdminNavigate("genres");
-                });
-              }
-            };
+      function onEditGenre(id) {
+        const name = prompt("Nhập tên thể loại mới");
+        if (!name) return;
+        return genreApi
+          .update(id, name.trim())
+          .then(() => {
+            onAdminNavigate("genres");
+          })
+          .catch((error) => {
+            console.error(error);
           });
-          content.querySelectorAll("[data-del-genre]").forEach((button) => {
-            button.onclick = () => {
-              if (confirm("Xóa thể loại?")) {
-                return genreApi
-                  .remove(button.dataset.delGenre)
-                  .then(() => {
-                    onAdminNavigate("genres");
-                  })
-                  .catch((error) => {
-                    console.error(error);
-                  });
-              }
-            };
+      }
+
+      function onDeleteGenre(id) {
+        if (!confirm("Xóa thể loại?")) return;
+        return genreApi
+          .remove(id)
+          .then(() => {
+            onAdminNavigate("genres");
+          })
+          .catch((error) => {
+            console.error(error);
           });
+      }
+
+      function onCreateGenre(event) {
+        event.preventDefault();
+
+        return genreApi.create(document.getElementById("genre-name").value.trim()).then(() => {
+          onAdminNavigate("genres");
         });
       }
 

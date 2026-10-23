@@ -31,7 +31,7 @@
             <div id="main-content">
               <div class="card">
                 <div class="card-body">
-                  <form id="movie-form">
+                  <form id="movie-form" onsubmit="onCreateMovie(event)">
                     <div class="form-row">
                       <div class="col-md-3">
                         <input class="form-control" name="title" placeholder="Tên phim" required />
@@ -93,7 +93,7 @@
     <script>
       let genres = [];
 
-      function onMovies(content) {
+      function onMovies() {
         return Promise.all([genreApi.list(), movieApi.list()]).then(([genreResponse, movieResponse]) => {
           genres = genreResponse.data;
           const data = movieResponse.data;
@@ -114,42 +114,41 @@
                   <td>${movie.releaseYear}</td>
                   <td>${genres.find((genre) => genre.id === movie.genreId)?.name ?? ""}</td>
                   <td>
-                    <button class="btn btn-sm btn-danger" data-del-movie="${movie.id}">Xóa</button>
+                    <button class="btn btn-sm btn-danger" onclick="onDeleteMovie(${movie.id})">Xóa</button>
                   </td>
                 </tr>
               `
             )
             .join("")}`;
-          document.getElementById("movie-form").onsubmit = (e) => {
-            e.preventDefault();
-            const form = e.target;
-
-            return movieApi
-              .create({
-                title: form.title.value.trim(),
-                duration: Number(form.duration.value),
-                releaseYear: Number(form.releaseYear.value),
-                genreId: Number(form.genreId.value)
-              })
-              .then(() => {
-                onAdminNavigate("movies");
-              });
-          };
-          content.querySelectorAll("[data-del-movie]").forEach((button) => {
-            button.onclick = () => {
-              if (confirm("Xóa phim?")) {
-                return movieApi
-                  .remove(button.dataset.delMovie)
-                  .then(() => {
-                    onAdminNavigate("movies");
-                  })
-                  .catch((error) => {
-                    console.error(error);
-                  });
-              }
-            };
-          });
         });
+      }
+
+      function onCreateMovie(event) {
+        event.preventDefault();
+        const form = event.target;
+
+        return movieApi
+          .create({
+            title: form.title.value.trim(),
+            duration: Number(form.duration.value),
+            releaseYear: Number(form.releaseYear.value),
+            genreId: Number(form.genreId.value)
+          })
+          .then(() => {
+            onAdminNavigate("movies");
+          });
+      }
+
+      function onDeleteMovie(id) {
+        if (!confirm("Xóa phim?")) return;
+        return movieApi
+          .remove(id)
+          .then(() => {
+            onAdminNavigate("movies");
+          })
+          .catch((error) => {
+            console.error(error);
+          });
       }
 
       onAdminPage(onMovies);

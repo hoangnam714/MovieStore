@@ -21,7 +21,7 @@ function onAdminLayout() {
           <span class="nav-link" id="admin-name"></span>
         </li>
         <li class="nav-item">
-          <button class="btn btn-link nav-link" id="logout-btn">Đăng xuất</button>
+          <button class="btn btn-link nav-link" id="logout-btn" onclick="onAdminLogout()">Đăng xuất</button>
         </li>
       </ul>
     </nav>
@@ -74,10 +74,7 @@ function onAdminLayout() {
     </aside>
   `;
   document.getElementById("admin-name").textContent = adminUser.fullName;
-  document.getElementById("logout-btn").addEventListener("click", function () {
-    onLogout();
-    location.href = "/admin/login/index.html";
-  });
+
   const currentPage = document.body.dataset.page;
   document
     .getElementById("admin-menu")
@@ -85,6 +82,11 @@ function onAdminLayout() {
     .forEach(function (link) {
       link.classList.toggle("active", link.dataset.view === currentPage);
     });
+}
+
+function onAdminLogout() {
+  onLogout();
+  location.href = "/admin/login/index.html";
 }
 
 function onAdminNavigate(page) {

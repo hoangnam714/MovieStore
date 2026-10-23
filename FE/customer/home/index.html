@@ -47,11 +47,17 @@
             <div class="searchbar">
               <input
                 id="search"
+                oninput="onSearch(this.value)"
                 class="input form-control"
                 placeholder="Tìm tên phim"
                 aria-label="Tìm phim"
               />
-              <select id="genre" class="input form-select" aria-label="Thể loại">
+              <select
+                id="genre"
+                onchange="onGenreChange(this.value)"
+                class="input form-select"
+                aria-label="Thể loại"
+              >
                 <option value="">Thể loại</option>
               </select>
             </div>
@@ -125,7 +131,7 @@
               })
               .join("");
             onDateFilters();
-            onFilterEvents();
+
             onMovies();
           })
           .catch((error) => {
@@ -139,37 +145,31 @@
           7
         );
         document.getElementById("date-tabs").innerHTML = `
-          <button class="chip active" data-day="">Tất cả</button>
-          ${days
-            .map(
-              (day) => `
-                <button class="chip" data-day="${day}">${getSafeHtml(getDayLabel(day))}</button>
-              `
-            )
-            .join("")}
-        `;
+                <button class="chip ${selectedDay === "" ? "active" : ""}" onclick="onSelectDay('')">Tất cả</button>
+                ${days
+                  .map(
+                    (day) => `
+                      <button class="chip ${day === selectedDay ? "active" : ""}" onclick="onSelectDay('${day}')">${getSafeHtml(getDayLabel(day))}</button>
+                    `
+                  )
+                  .join("")}
+              `;
       }
 
-      function onFilterEvents() {
-        const dateButtons = document.getElementById("date-tabs").querySelectorAll("[data-day]");
+      function onSelectDay(day) {
+        selectedDay = day;
+        onDateFilters();
+        onMovies();
+      }
 
-        dateButtons.forEach(function (button) {
-          button.addEventListener("click", function () {
-            selectedDay = button.dataset.day;
-            dateButtons.forEach(function (dateButton) {
-              dateButton.classList.toggle("active", dateButton === button);
-            });
-            onMovies();
-          });
-        });
-        document.getElementById("search").addEventListener("input", function (event) {
-          searchKeyword = event.target.value.trim().toLocaleLowerCase("vi");
-          onMovies();
-        });
-        document.getElementById("genre").addEventListener("change", function (event) {
-          selectedGenre = event.target.value;
-          onMovies();
-        });
+      function onSearch(value) {
+        searchKeyword = value.trim().toLocaleLowerCase("vi");
+        onMovies();
+      }
+
+      function onGenreChange(value) {
+        selectedGenre = value;
+        onMovies();
       }
 
       function onMovies() {

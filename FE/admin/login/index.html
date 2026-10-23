@@ -23,7 +23,7 @@
           <p class="text-muted mb-0">Quản lý rạp phim (AdminLTE 3)</p>
         </div>
         <div class="card-body">
-          <form id="login-form">
+          <form id="login-form" onsubmit="onLogin(event)">
             <div class="input-group mb-3">
               <input
                 type="email"
@@ -65,8 +65,8 @@
     <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
     <script src="../../assets/js/common.js"></script>
     <script>
-      document.getElementById("login-form").addEventListener("submit", (e) => {
-        e.preventDefault();
+      function onLogin(event) {
+        event.preventDefault();
 
         return userApi
           .login({
@@ -85,7 +85,7 @@
           .catch((error) => {
             console.error(error);
           });
-      });
+      }
     </script>
   </body>
 </html>
