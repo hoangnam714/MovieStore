@@ -65,6 +65,7 @@
     <script src="../../assets/js/admin-layout.js"></script>
     <script>
       let genres = [];
+
       function onGenres(content) {
         return genreApi.list().then((response) => {
           const data = response.data;

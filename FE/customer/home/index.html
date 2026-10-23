@@ -76,6 +76,7 @@
         "The Grand Budapest Hotel": "eKi8dIrr8voobbaGzDpe8w0PVbC.jpg",
         "Your Name": "q719jXXEzOoYaps6babgKnONONX.jpg"
       };
+
       function getPoster(title) {
         const url =
           title === "Mai"
@@ -150,10 +151,12 @@
       }
 
       function onFilterEvents() {
-        document.querySelectorAll("[data-day]").forEach(function (button) {
+        const dateButtons = document.getElementById("date-tabs").querySelectorAll("[data-day]");
+
+        dateButtons.forEach(function (button) {
           button.addEventListener("click", function () {
             selectedDay = button.dataset.day;
-            document.querySelectorAll("[data-day]").forEach(function (dateButton) {
+            dateButtons.forEach(function (dateButton) {
               dateButton.classList.toggle("active", dateButton === button);
             });
             onMovies();

@@ -31,7 +31,7 @@ function onAdminLayout() {
       </a>
       <div class="sidebar">
         <nav class="mt-2">
-          <ul class="nav nav-pills nav-sidebar flex-column">
+          <ul id="admin-menu" class="nav nav-pills nav-sidebar flex-column">
             <li class="nav-item">
               <a href="/admin/dashboard/index.html" class="nav-link" data-view="dashboard">
                 <i class="nav-icon fas fa-tachometer-alt"></i>
@@ -79,9 +79,12 @@ function onAdminLayout() {
     location.href = "/admin/login/index.html";
   });
   const currentPage = document.body.dataset.page;
-  document.querySelectorAll("[data-view]").forEach(function (link) {
-    link.classList.toggle("active", link.dataset.view === currentPage);
-  });
+  document
+    .getElementById("admin-menu")
+    .querySelectorAll("[data-view]")
+    .forEach(function (link) {
+      link.classList.toggle("active", link.dataset.view === currentPage);
+    });
 }
 
 function onAdminNavigate(page) {

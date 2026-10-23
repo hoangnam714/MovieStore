@@ -34,12 +34,12 @@
                   <form id="st-form">
                     <div class="form-row">
                       <div class="col-md-3">
-                        <select class="form-control" name="movieId" required>
+                        <select id="showtime-movie" class="form-control" name="movieId" required>
                           <option value="">Phim</option>
                         </select>
                       </div>
                       <div class="col-md-2">
-                        <select class="form-control" name="roomId" required>
+                        <select id="showtime-room" class="form-control" name="roomId" required>
                           <option value="">Phòng</option>
                         </select>
                       </div>
@@ -110,8 +110,8 @@
                 `
               )
               .join("");
-            document.querySelector('select[name="movieId"]').insertAdjacentHTML("beforeend", movieOpts);
-            document.querySelector('select[name="roomId"]').insertAdjacentHTML("beforeend", roomOpts);
+            document.getElementById("showtime-movie").insertAdjacentHTML("beforeend", movieOpts);
+            document.getElementById("showtime-room").insertAdjacentHTML("beforeend", roomOpts);
             document.getElementById("showtimes-rows").innerHTML = `${showtimeResponse.data
               .map(
                 (showtime) => `

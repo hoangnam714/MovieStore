@@ -85,17 +85,20 @@ const getDateTime = (iso) => {
 };
 
 const getDateKey = (value) => String(value).slice(0, 10);
+
 const getTime = (value) =>
   new Date(value).toLocaleTimeString("vi-VN", {
     hour: "2-digit",
     minute: "2-digit"
   });
+
 const getDayLabel = (value) =>
   new Date(value + "T12:00:00").toLocaleDateString("vi-VN", {
     weekday: "short",
     day: "2-digit",
     month: "2-digit"
   });
+
 function getSeatLabel(number) {
   return String.fromCharCode(65 + Math.floor((number - 1) / 10)) + (((number - 1) % 10) + 1);
 }

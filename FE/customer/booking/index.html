@@ -23,7 +23,7 @@
               <a href="/customer/home/index.html#movies" class="muted tiny">
                 ← Quay lại danh sách phim
               </a>
-              <h2><span data-movie-title></span></h2>
+              <h2><span id="movie-title"></span></h2>
               <p class="muted"><span id="movie-description"></span></p>
             </div>
             <span class="eyebrow">CHỌN SUẤT → CHỌN GHẾ → NHẬN VÉ</span>
@@ -61,7 +61,7 @@
             </section>
             <aside class="panel summary">
               <span class="eyebrow">VÉ XEM PHIM CỦA BẠN</span>
-              <h2><span data-movie-title></span></h2>
+              <h2><span id="summary-movie-title"></span></h2>
               <dl>
                 <div>
                   <dt>Suất chiếu</dt>
@@ -114,6 +114,7 @@
         "Your Name": "Hai cuộc đời, một sợi dây kết nối vượt qua khoảng cách."
       };
       let schedule = [];
+
       function onBookingMessage(message) {
         const node = document.createElement("div");
         node.className = "toast";
@@ -126,6 +127,7 @@
         selectedSeats = new Set(),
         occupied = new Set(),
         seatRequest = 0;
+
       function getBookingPage() {
         const params = new URLSearchParams(location.search);
 
@@ -137,9 +139,8 @@
             const movie = movieResponse.data.find((item) => item.id === movieId);
             if (!movie) throw new Error("Không tìm thấy phim.");
             const movieTimes = schedule.filter((item) => item.movieId === movieId);
-            document.querySelectorAll("[data-movie-title]").forEach((element) => {
-              element.textContent = movie.title;
-            });
+            document.getElementById("movie-title").textContent = movie.title;
+            document.getElementById("summary-movie-title").textContent = movie.title;
             document.getElementById("movie-description").textContent =
               movieDescriptions[movie.title] || "Khám phá câu chuyện trên màn ảnh rộng.";
             document.getElementById("booking-loading").hidden = true;
@@ -147,6 +148,7 @@
             const days = [...new Set(movieTimes.map((item) => getDateKey(item.startTime)))];
             let date = params.get("date");
             if (!days.includes(date)) date = requested ? getDateKey(requested.startTime) : days[0];
+
             function onSelectDay(selectedDate) {
               document.getElementById("book-dates").innerHTML = days
                 .map(
@@ -186,6 +188,7 @@
               if (todayTimes.length)
                 onSelectShowtime(todayTimes.find((item) => item.id === requested?.id) || todayTimes[0]);
             }
+
             document.getElementById("confirm").onclick = onBooking;
             onSelectDay(date);
           })
@@ -201,6 +204,7 @@
         document.getElementById("confirm").disabled = true;
         document.getElementById("seat-grid").innerHTML = "Đang tải ghế…";
         document
+          .getElementById("times")
           .querySelectorAll("[data-time]")
           .forEach((button) =>
             button.classList.toggle("active", Number(button.dataset.time) === showtime.id)

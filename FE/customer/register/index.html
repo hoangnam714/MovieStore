@@ -69,7 +69,7 @@
               />
             </label>
             <p id="auth-error" class="error tiny" role="alert"></p>
-            <button class="btn full" type="submit">Tạo tài khoản ↗</button>
+            <button id="auth-submit" class="btn full" type="submit">Tạo tài khoản ↗</button>
           </form>
           <p class="auth-foot">
             Đã có tài khoản?
@@ -88,7 +88,7 @@
 
       form.addEventListener("submit", function (event) {
         event.preventDefault();
-        const submitButton = form.querySelector("button");
+        const submitButton = document.getElementById("auth-submit");
         submitButton.disabled = true;
         errorMessage.textContent = "";
         const values = Object.fromEntries(new FormData(form));
