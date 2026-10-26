@@ -4,14 +4,8 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Suất chiếu | Movie Store CMS</title>
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css"
-    />
-    <link
-      rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css"
-    />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" />
     <link rel="stylesheet" href="../../assets/css/admin.css" />
     <link rel="stylesheet" href="./style.css" />
   </head>
@@ -26,59 +20,82 @@
           </div>
         </section>
         <section class="content">
-          <div class="container-fluid">
-            <p id="page-error" class="text-danger" role="alert"></p>
-            <div id="main-content">
-              <div class="card">
-                <div class="card-body">
-                  <form id="st-form" onsubmit="onCreateShowtime(event)">
-                    <div class="form-row">
-                      <div class="col-md-3">
-                        <select id="showtime-movie" class="form-control" name="movieId" required>
-                          <option value="">Phim</option>
-                        </select>
-                      </div>
-                      <div class="col-md-2">
-                        <select id="showtime-room" class="form-control" name="roomId" required>
-                          <option value="">Phòng</option>
-                        </select>
-                      </div>
-                      <div class="col-md-3">
-                        <input
-                          class="form-control"
-                          name="startTime"
-                          type="datetime-local"
-                          required
-                        />
-                      </div>
-                      <div class="col-md-2">
-                        <input
-                          class="form-control"
-                          name="ticketPrice"
-                          type="number"
-                          min="0"
-                          step="1000"
-                          placeholder="Giá vé"
-                          required
-                        />
-                      </div>
-                      <div class="col-md-2">
-                        <button class="btn btn-primary btn-block">Tạo suất</button>
-                      </div>
+          <div class="container-fluid" id="main-content">
+            <div class="card showtime-editor" id="showtime-editor">
+              <div class="card-body">
+                <div class="section-heading">
+                  <div>
+                    <span class="section-kicker">LÊN LỊCH CHIẾU</span>
+                    <h2 id="form-title">Tạo suất chiếu mới</h2>
+                    <p>Tìm phim theo tên, chọn cụm rạp và kiểm tra thời gian trước khi lưu.</p>
+                  </div>
+                  <span class="section-symbol" aria-hidden="true"><i class="fas fa-calendar-plus"></i></span>
+                </div>
+                <form id="st-form" onsubmit="onSaveShowtime(event)">
+                  <div class="form-row">
+                    <div class="col-lg-4 col-md-6">
+                      <label for="movie-search">Tìm tên phim</label>
+                      <input id="movie-search" class="form-control" type="search" placeholder="Ví dụ: Dune, Mai..." autocomplete="off" oninput="onMovieSearch()" />
+                      <small id="movie-search-results" class="form-help" aria-live="polite"></small>
                     </div>
-                  </form>
-                  <table class="table table-sm table-hover">
-                    <thead>
-                      <tr>
-                        <th>Phim</th>
-                        <th>Phòng</th>
-                        <th>Bắt đầu</th>
-                        <th>Giá</th>
-                        <th></th>
-                      </tr>
-                    </thead>
-                    <tbody id="showtimes-rows"></tbody>
-                  </table>
+                    <div class="col-lg-4 col-md-6">
+                      <label for="showtime-movie">Phim sẽ chiếu</label>
+                      <select id="showtime-movie" class="form-control" name="movieId" required><option value="">Chọn phim</option></select>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                      <label for="showtime-cinema">Cụm rạp</label>
+                      <select id="showtime-cinema" class="form-control" onchange="onCinemaChanged()" required><option value="">Chọn cụm rạp</option></select>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                      <label for="showtime-room">Phòng chiếu</label>
+                      <select id="showtime-room" class="form-control" name="roomId" required><option value="">Chọn phòng</option></select>
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                      <label for="showtime-start">Ngày và giờ bắt đầu</label>
+                      <input id="showtime-start" class="form-control" name="startTime" type="datetime-local" required />
+                    </div>
+                    <div class="col-lg-4 col-md-6">
+                      <label for="showtime-price">Giá vé (VND)</label>
+                      <input id="showtime-price" class="form-control" name="ticketPrice" type="number" min="0" step="1000" placeholder="Ví dụ: 95000" required />
+                    </div>
+                  </div>
+                  <div class="editor-actions">
+                    <p id="showtime-error" class="text-danger mb-0" role="alert"></p>
+                    <div class="editor-buttons">
+                      <button type="button" id="cancel-edit" class="btn btn-outline-secondary" onclick="onCancelEdit()" hidden>Hủy sửa</button>
+                      <button type="submit" id="save-showtime" class="btn btn-primary"><i class="fas fa-plus mr-1"></i> Tạo suất chiếu</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+
+            <div class="card">
+              <div class="card-body">
+                <div class="section-heading list-heading">
+                  <div>
+                    <span class="section-kicker">QUẢN LÝ LỊCH</span>
+                    <h2>Danh sách suất chiếu</h2>
+                    <p id="showtime-summary" aria-live="polite">Đang tải dữ liệu...</p>
+                  </div>
+                </div>
+                <div class="filter-bar">
+                  <div class="filter-search"><i class="fas fa-search" aria-hidden="true"></i><input id="list-search" class="form-control" type="search" placeholder="Tìm phim hoặc phòng..." aria-label="Tìm phim hoặc phòng" oninput="onListFilter()" /></div>
+                  <select id="list-cinema" class="form-control" aria-label="Lọc cụm rạp" onchange="onListFilter()"><option value="">Tất cả cụm rạp</option></select>
+                  <input id="list-date" class="form-control" type="date" aria-label="Lọc ngày chiếu" onchange="onListFilter()" />
+                  <button type="button" class="btn btn-outline-secondary" onclick="onClearFilters()">Xóa lọc</button>
+                </div>
+                <table class="table table-hover">
+                  <thead><tr><th>Phim</th><th>Phòng / cụm rạp</th><th>Bắt đầu</th><th>Giá vé</th><th>Thao tác</th></tr></thead>
+                  <tbody id="showtimes-rows"></tbody>
+                </table>
+                <div class="list-footer">
+                  <span id="page-summary"></span>
+                  <div class="page-actions">
+                    <button id="page-prev" class="btn btn-outline-secondary btn-sm" type="button" onclick="onChangePage(-1)" aria-label="Trang trước"><i class="fas fa-chevron-left"></i></button>
+                    <span id="page-current" aria-live="polite"></span>
+                    <button id="page-next" class="btn btn-outline-secondary btn-sm" type="button" onclick="onChangePage(1)" aria-label="Trang sau"><i class="fas fa-chevron-right"></i></button>
+                  </div>
                 </div>
               </div>
             </div>
@@ -93,72 +110,180 @@
     <script src="../../assets/js/common.js"></script>
     <script src="../../assets/js/admin-layout.js"></script>
     <script>
-      function onShowtimes() {
-        return Promise.all([showtimeApi.list(), movieApi.list(), roomApi.list()]).then(
-          ([showtimeResponse, movies, rooms]) => {
-            const movieOpts = movies.data
-              .map(
-                (movie) => `
-                  <option value="${movie.id}">${movie.title}</option>
-                `
-              )
-              .join("");
-            const roomOpts = rooms.data
-              .map(
-                (room) => `
-                  <option value="${room.id}">${room.name}</option>
-                `
-              )
-              .join("");
-            document.getElementById("showtime-movie").insertAdjacentHTML("beforeend", movieOpts);
-            document.getElementById("showtime-room").insertAdjacentHTML("beforeend", roomOpts);
-            document.getElementById("showtimes-rows").innerHTML = `${showtimeResponse.data
-              .map(
-                (showtime) => `
-                  <tr>
-                    <td>${showtime.movieTitle}</td>
-                    <td>${showtime.roomName}</td>
-                    <td>${getDateTime(showtime.startTime)}</td>
-                    <td>${getMoney(showtime.ticketPrice)}</td>
-                    <td>
-                      <button class="btn btn-sm btn-danger" onclick="onDeleteShowtime(${showtime.id})">Xóa</button>
-                    </td>
-                  </tr>
-                `
-              )
-              .join("")}`;
-          }
-        );
+      let showtimes = [];
+      let movies = [];
+      let rooms = [];
+      let editingShowtimeId = null;
+      let currentPage = 1;
+      const pageSize = 12;
+
+      function normalizeSearch(value) {
+        return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLocaleLowerCase('vi');
       }
 
-      function onCreateShowtime(event) {
+      function onShowtimes() {
+        return Promise.all([showtimeApi.list(), movieApi.list(), roomApi.list(), cinemaApi.list()]).then(
+          ([showtimeResponse, movieResponse, roomResponse, cinemaResponse]) => {
+            showtimes = showtimeResponse.data;
+            movies = movieResponse.data;
+            rooms = roomResponse.data;
+            const options = cinemaResponse.data.map(cinema => `<option value="${cinema.id}">${getSafeHtml(cinema.name)}</option>`).join('');
+            document.getElementById('showtime-cinema').insertAdjacentHTML('beforeend', options);
+            document.getElementById('list-cinema').insertAdjacentHTML('beforeend', options);
+            onMovieSearch();
+            onCinemaChanged();
+            onCancelEdit();
+            renderShowtimes();
+          }
+        ).catch(error => {
+          document.getElementById('showtime-error').textContent = 'Không tải được lịch chiếu. Vui lòng tải lại trang.';
+          throw error;
+        });
+      }
+
+      function onMovieSearch() {
+        const keyword = normalizeSearch(document.getElementById('movie-search').value.trim());
+        const select = document.getElementById('showtime-movie');
+        const selected = select.value;
+        const matches = movies.filter(movie => normalizeSearch(movie.title).includes(keyword));
+        select.innerHTML = '<option value="">Chọn phim</option>' + matches.map(movie => `<option value="${movie.id}">${getSafeHtml(movie.title)} · ${movie.duration} phút</option>`).join('');
+        if (matches.some(movie => String(movie.id) === selected)) select.value = selected;
+        if (matches.length === 1 && keyword) select.value = String(matches[0].id);
+        document.getElementById('movie-search-results').textContent = matches.length ? `${matches.length} phim phù hợp` : 'Không tìm thấy phim. Thử từ khóa khác.';
+      }
+
+      function onCinemaChanged() {
+        const cinemaId = document.getElementById('showtime-cinema').value;
+        const select = document.getElementById('showtime-room');
+        const selected = select.value;
+        const matches = rooms.filter(room => cinemaId && String(room.cinemaId) === cinemaId);
+        select.innerHTML = '<option value="">Chọn phòng</option>' + matches.map(room => `<option value="${room.id}">${getSafeHtml(room.name)} · ${room.seatCount} ghế</option>`).join('');
+        select.disabled = !cinemaId;
+        if (matches.some(room => String(room.id) === selected)) select.value = selected;
+      }
+
+      function onListFilter() { currentPage = 1; renderShowtimes(); }
+      function onClearFilters() {
+        document.getElementById('list-search').value = '';
+        document.getElementById('list-cinema').value = '';
+        document.getElementById('list-date').value = '';
+        onListFilter();
+      }
+
+      function renderShowtimes() {
+        const keyword = normalizeSearch(document.getElementById('list-search').value.trim());
+        const cinemaId = document.getElementById('list-cinema').value;
+        const date = document.getElementById('list-date').value;
+        const filtered = showtimes.filter(showtime =>
+          (!cinemaId || String(showtime.cinemaId) === cinemaId) &&
+          (!date || getDateKey(showtime.startTime) === date) &&
+          (!keyword || normalizeSearch(`${showtime.movieTitle} ${showtime.roomName} ${showtime.cinemaName}`).includes(keyword))
+        );
+        const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
+        currentPage = Math.min(currentPage, pages);
+        const visible = filtered.slice((currentPage - 1) * pageSize, currentPage * pageSize);
+        document.getElementById('showtime-summary').textContent = `${filtered.length} trong ${showtimes.length} suất chiếu`;
+        document.getElementById('showtimes-rows').innerHTML = visible.map(showtime => `
+          <tr>
+            <td><strong>${getSafeHtml(showtime.movieTitle)}</strong><small class="d-block text-muted">${showtime.movieDuration} phút</small></td>
+            <td>${getSafeHtml(showtime.roomName)}<small class="d-block text-muted">${getSafeHtml(showtime.cinemaName || 'Chưa phân cụm')}</small></td>
+            <td>${getDateTime(showtime.startTime)}</td>
+            <td><strong>${getMoney(showtime.ticketPrice)}</strong></td>
+            <td class="action-cell"><button type="button" class="btn btn-sm btn-outline-secondary" onclick="onEditShowtime(${showtime.id})" aria-label="Sửa suất ${getSafeHtml(showtime.movieTitle)}">Sửa</button><button type="button" class="btn btn-sm btn-outline-danger" onclick="onDeleteShowtime(${showtime.id})" aria-label="Xóa suất ${getSafeHtml(showtime.movieTitle)}">Xóa</button></td>
+          </tr>
+        `).join('') || '<tr><td colspan="5" class="empty-list">Không có suất chiếu phù hợp. Hãy đổi bộ lọc hoặc tạo suất mới.</td></tr>';
+        document.getElementById('page-summary').textContent = filtered.length ? `Hiển thị ${(currentPage - 1) * pageSize + 1}–${Math.min(currentPage * pageSize, filtered.length)} / ${filtered.length}` : 'Không có kết quả';
+        document.getElementById('page-current').textContent = `Trang ${currentPage} / ${pages}`;
+        document.getElementById('page-prev').disabled = currentPage === 1;
+        document.getElementById('page-next').disabled = currentPage === pages;
+      }
+
+      function onChangePage(direction) { currentPage += direction; renderShowtimes(); }
+
+      function onEditShowtime(id) {
+        const showtime = showtimes.find(item => item.id === id);
+        if (!showtime) return;
+        editingShowtimeId = id;
+        const form = document.getElementById('st-form');
+        document.getElementById('movie-search').value = showtime.movieTitle;
+        onMovieSearch();
+        form.elements.movieId.value = String(showtime.movieId);
+        document.getElementById('showtime-cinema').value = String(showtime.cinemaId || '');
+        onCinemaChanged();
+        form.elements.roomId.value = String(showtime.roomId);
+        form.elements.startTime.value = showtime.startTime.slice(0, 16);
+        form.elements.ticketPrice.value = showtime.ticketPrice;
+        document.getElementById('form-title').textContent = `Sửa suất #${id}`;
+        document.getElementById('save-showtime').innerHTML = '<i class="fas fa-check mr-1"></i> Lưu thay đổi';
+        document.getElementById('cancel-edit').hidden = false;
+        document.getElementById('showtime-error').textContent = '';
+        document.getElementById('showtime-editor').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        document.getElementById('movie-search').focus();
+      }
+
+      function onCancelEdit() {
+        editingShowtimeId = null;
+        const form = document.getElementById('st-form');
+        form.reset();
+        document.getElementById('movie-search').value = '';
+        document.getElementById('showtime-cinema').value = '';
+        onMovieSearch();
+        onCinemaChanged();
+        document.getElementById('form-title').textContent = 'Tạo suất chiếu mới';
+        document.getElementById('save-showtime').innerHTML = '<i class="fas fa-plus mr-1"></i> Tạo suất chiếu';
+        document.getElementById('cancel-edit').hidden = true;
+        document.getElementById('showtime-error').textContent = '';
+      }
+
+      function showtimeError(error) {
+        const raw = error?.response?.data?.message || '';
+        if (raw.includes('overlaps')) return 'Phòng đã có suất chiếu trùng giờ. Hãy chọn thời gian hoặc phòng khác.';
+        if (raw.includes('tickets')) return 'Suất này đã có vé đặt; chỉ có thể thay đổi giá vé.';
+        return raw || 'Không lưu được suất chiếu. Vui lòng kiểm tra thông tin và thử lại.';
+      }
+
+      function onSaveShowtime(event) {
         event.preventDefault();
         const form = event.target;
-        const local = form.startTime.value;
-        const startTime = local.length === 16 ? `${local}:00` : local;
-
-        return showtimeApi
-          .create({
-            movieId: Number(form.movieId.value),
-            roomId: Number(form.roomId.value),
-            startTime,
-            ticketPrice: Number(form.ticketPrice.value)
-          })
-          .then(() => {
-            onAdminNavigate("showtimes");
-          });
+        const errorNode = document.getElementById('showtime-error');
+        const button = document.getElementById('save-showtime');
+        errorNode.textContent = '';
+        if (!form.elements.movieId.value || !form.elements.roomId.value) {
+          errorNode.textContent = 'Vui lòng chọn phim và phòng chiếu trong danh sách.';
+          return;
+        }
+        if (!editingShowtimeId && new Date(form.elements.startTime.value) <= new Date()) {
+          errorNode.textContent = 'Giờ chiếu phải ở trong tương lai.';
+          return;
+        }
+        const data = {
+          movieId: Number(form.elements.movieId.value),
+          roomId: Number(form.elements.roomId.value),
+          startTime: form.elements.startTime.value.length === 16 ? `${form.elements.startTime.value}:00` : form.elements.startTime.value,
+          ticketPrice: Number(form.elements.ticketPrice.value)
+        };
+        button.disabled = true;
+        const request = editingShowtimeId ? showtimeApi.update(editingShowtimeId, data) : showtimeApi.create(data);
+        return request.then(() => showtimeApi.list()).then(({ data: list }) => {
+          showtimes = list;
+          onAdminMessage(editingShowtimeId ? 'Đã cập nhật suất chiếu.' : 'Đã tạo suất chiếu mới.');
+          onCancelEdit();
+          renderShowtimes();
+        }).catch(error => { errorNode.textContent = showtimeError(error); }).finally(() => { button.disabled = false; });
       }
 
       function onDeleteShowtime(id) {
-        if (!confirm("Xóa suất chiếu?")) return;
-        return showtimeApi
-          .remove(id)
-          .then(() => {
-            onAdminNavigate("showtimes");
-          })
-          .catch((error) => {
-            console.error(error);
-          });
+        const item = showtimes.find(showtime => showtime.id === id);
+        if (!item || !confirm(`Xóa suất ${item.movieTitle} lúc ${getDateTime(item.startTime)}?`)) return;
+        return showtimeApi.remove(id).then(() => {
+          showtimes = showtimes.filter(showtime => showtime.id !== id);
+          if (editingShowtimeId === id) onCancelEdit();
+          renderShowtimes();
+          onAdminMessage('Đã xóa suất chiếu.');
+        }).catch(error => {
+          document.getElementById('showtime-error').textContent = showtimeError(error);
+          document.getElementById('showtime-editor').scrollIntoView({ behavior: 'smooth' });
+        });
       }
 
       onAdminPage(onShowtimes);

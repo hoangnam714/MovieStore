@@ -2,12 +2,16 @@ package com.btlon.movie.store;
 
 import com.btlon.movie.store.entity.Movie;
 import com.btlon.movie.store.entity.MovieGenre;
+import com.btlon.movie.store.entity.User;
+import com.btlon.movie.store.entity.UserRole;
+import com.btlon.movie.store.repository.AuthTokenRepository;
 import com.btlon.movie.store.repository.MovieGenreRepository;
 import com.btlon.movie.store.repository.MovieRepository;
 import com.btlon.movie.store.repository.RoomRepository;
 import com.btlon.movie.store.repository.ShowtimeRepository;
 import com.btlon.movie.store.repository.TicketRepository;
 import com.btlon.movie.store.repository.UserRepository;
+import com.btlon.movie.store.service.AuthService;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -43,6 +47,11 @@ class MovieRelationshipTests {
     @Autowired
     private TransactionTemplate transactions;
     @Autowired
+    private AuthTokenRepository authTokens;
+    @Autowired
+    private AuthService authService;
+    private String adminToken;
+    @Autowired
     private ObjectMapper mapper;
 
     private final HttpClient client = HttpClient.newHttpClient();
@@ -50,11 +59,18 @@ class MovieRelationshipTests {
     @BeforeEach
     void cleanDatabase() {
         tickets.deleteAll();
+        authTokens.deleteAll();
         showtimes.deleteAll();
         movies.deleteAll();
         genres.deleteAll();
         users.deleteAll();
         rooms.deleteAll();
+        User admin = new User();
+        admin.setFullName("Admin");
+        admin.setEmail("relationship-admin@example.test");
+        admin.setPasswordHash("hash");
+        admin.setRole(UserRole.ADMIN);
+        adminToken = authService.issue(users.save(admin));
     }
 
     @Test
@@ -135,6 +151,7 @@ class MovieRelationshipTests {
     private HttpResponse<String> request(String method, String path, String body) throws Exception {
         HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
                 .header("Content-Type", "application/json")
+                .header("Authorization", "Bearer " + adminToken)
                 .method(method, body == null ? HttpRequest.BodyPublishers.noBody()
                         : HttpRequest.BodyPublishers.ofString(body))
                 .build();

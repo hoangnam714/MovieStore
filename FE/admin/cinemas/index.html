@@ -1,0 +1,40 @@
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cụm rạp | Movie Store CMS</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css">
+  <link rel="stylesheet" href="../../assets/css/admin.css">
+</head>
+<body class="hold-transition sidebar-mini layout-fixed" data-page="cinemas">
+<div class="wrapper"><div id="admin-layout"></div><div class="content-wrapper">
+  <section class="content-header"><div class="container-fluid"><h1>Cụm rạp</h1><p class="cms-subtitle">MOVIE STORE / QUẢN TRỊ RẠP CHIẾU</p></div></section>
+  <section class="content"><div class="container-fluid"><div id="main-content" class="card"><div class="card-body">
+    <form id="cinema-form" class="form-row mb-4" onsubmit="saveCinema(event)">
+      <div class="col-md-4 mb-2"><input class="form-control" name="name" placeholder="Tên cụm rạp" required maxlength="100"></div>
+      <div class="col-md-6 mb-2"><input class="form-control" name="address" placeholder="Địa chỉ" required maxlength="255"></div>
+      <div class="col-md-2 mb-2"><button class="btn btn-primary btn-block" id="save-button">Thêm cụm rạp</button></div>
+    </form>
+    <div id="cinema-error" class="text-danger" role="alert"></div>
+    <table class="table table-hover"><thead><tr><th>Tên cụm rạp</th><th>Địa chỉ</th><th></th></tr></thead><tbody id="cinema-rows"></tbody></table>
+  </div></div></div></section>
+</div></div>
+<script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+<script src="../../assets/js/common.js"></script><script src="../../assets/js/admin-layout.js"></script>
+<script>
+  let cinemas = [], editingId = null;
+  const cinemaError = (error) => document.getElementById('cinema-error').textContent = error?.response?.data?.message || 'Không thể lưu cụm rạp.';
+  function loadCinemas() { return cinemaApi.list().then(({data}) => {
+    cinemas = data;
+    document.getElementById('cinema-rows').innerHTML = data.map(c => `<tr><td>${getSafeHtml(c.name)}</td><td>${getSafeHtml(c.address)}</td><td><button class="btn btn-sm btn-outline-primary mr-2" onclick="editCinema(${c.id})">Sửa</button><button class="btn btn-sm btn-outline-danger" onclick="deleteCinema(${c.id})">Xóa</button></td></tr>`).join('') || '<tr><td colspan="3">Chưa có cụm rạp.</td></tr>';
+  }).catch(cinemaError); }
+  function editCinema(id) { const c = cinemas.find(c => c.id === id); if (!c) return; editingId = id; const form = document.getElementById('cinema-form'); form.elements.name.value = c.name; form.elements.address.value = c.address; document.getElementById('save-button').textContent = 'Lưu thay đổi'; form.scrollIntoView({behavior:'smooth'}); }
+  function saveCinema(event) { event.preventDefault(); const form = event.target; const data = {name:form.elements.name.value.trim(),address:form.elements.address.value.trim()}; (editingId ? cinemaApi.update(editingId,data) : cinemaApi.create(data)).then(() => { editingId = null; form.reset(); document.getElementById('save-button').textContent = 'Thêm cụm rạp'; document.getElementById('cinema-error').textContent = ''; loadCinemas(); }).catch(cinemaError); }
+  function deleteCinema(id) { if (!confirm('Xóa cụm rạp này?')) return; cinemaApi.remove(id).then(loadCinemas).catch(cinemaError); }
+  onAdminPage(loadCinemas);
+</script>
+</body></html>

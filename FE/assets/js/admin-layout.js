@@ -57,15 +57,27 @@ function onAdminLayout() {
               </a>
             </li>
             <li class="nav-item">
+              <a href="/admin/cinemas/index.html" class="nav-link" data-view="cinemas">
+                <i class="nav-icon fas fa-map-marker-alt"></i>
+                <p>Cụm rạp</p>
+              </a>
+            </li>
+            <li class="nav-item">
               <a href="/admin/showtimes/index.html" class="nav-link" data-view="showtimes">
                 <i class="nav-icon fas fa-calendar"></i>
                 <p>Suất chiếu</p>
               </a>
             </li>
             <li class="nav-item">
+              <a href="/admin/discounts/index.html" class="nav-link" data-view="discounts">
+                <i class="nav-icon fas fa-percent"></i>
+                <p>Mã giảm giá</p>
+              </a>
+            </li>
+            <li class="nav-item">
               <a href="/admin/tickets/index.html" class="nav-link" data-view="tickets">
                 <i class="nav-icon fas fa-ticket-alt"></i>
-                <p>Vé đã bán</p>
+                <p>Quản lý đặt vé</p>
               </a>
             </li>
           </ul>
@@ -116,6 +128,10 @@ function onAdminPage(getPage) {
     })
     .catch((error) => {
       console.error(error);
+      const pageError = document.getElementById('page-error');
+      const message = error?.response?.data?.message || 'Không tải được dữ liệu. Vui lòng tải lại trang.';
+      if (pageError) pageError.textContent = message;
+      else onAdminMessage(message);
     });
 }
 

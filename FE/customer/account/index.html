@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Tài khoản | Movie Store</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css"
+    />
+    <link rel="stylesheet" href="../../assets/css/customer.css" />
+  </head>
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <div class="auth-layout">
+        <section class="auth-art">
+          <h1>
+            Tài khoản của bạn, an toàn của bạn.
+          </h1>
+          <p>Đổi mật khẩu định kỳ. Các thiết bị khác đang đăng nhập sẽ bị đăng xuất sau khi đổi.</p>
+          <img
+            class="film-poster"
+            src="https://image.tmdb.org/t/p/w500/q719jXXEzOoYaps6babgKnONONX.jpg"
+            alt="Poster Your Name"
+            referrerpolicy="no-referrer"
+          />
+        </section>
+        <section class="auth-form">
+          <span class="eyebrow">TÀI KHOẢN</span>
+          <h1 id="account-name"></h1>
+          <p class="muted"><span id="account-email"></span><span id="account-phone"></span></p>
+          <form id="auth-form" onsubmit="onChangePassword(event)">
+            <label class="field">
+              Mật khẩu hiện tại
+              <input
+                name="currentPassword"
+                type="password"
+                class="input"
+                required
+                autocomplete="current-password"
+              />
+            </label>
+            <label class="field">
+              Mật khẩu mới
+              <input
+                name="newPassword"
+                type="password"
+                class="input"
+                required
+                minlength="6"
+                autocomplete="new-password"
+                placeholder="Tối thiểu 6 ký tự"
+              />
+            </label>
+            <label class="field">
+              Xác nhận mật khẩu mới
+              <input
+                name="confirmPassword"
+                type="password"
+                class="input"
+                required
+                minlength="6"
+                autocomplete="new-password"
+                placeholder="Nhập lại mật khẩu mới"
+              />
+            </label>
+            <p id="auth-error" class="error tiny" role="alert"></p>
+            <p id="auth-success" class="success-message tiny" role="status" hidden>Đã đổi mật khẩu.</p>
+            <button id="auth-submit" class="btn full" type="submit">Đổi mật khẩu ↗</button>
+          </form>
+          <p class="auth-foot">
+            <a href="../my-tickets/index.html">Xem vé của tôi</a>
+          </p>
+        </section>
+      </div>
+    </main>
+    <div id="footer"></div>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="../../assets/js/common.js"></script>
+    <script src="../../assets/js/customer-layout.js"></script>
+    <script>
+      function getAccountPage() {
+        const currentUser = getUser();
+        if (!currentUser) {
+          location.href = "/customer/login/index.html?next=/customer/account/index.html";
+          return;
+        }
+        document.getElementById("account-name").textContent = currentUser.fullName;
+        document.getElementById("account-email").textContent = currentUser.email;
+        document.getElementById("account-phone").textContent = currentUser.phone ? " · " + currentUser.phone : "";
+      }
+
+      function onChangePassword(event) {
+        event.preventDefault();
+        const form = event.target;
+        const errorNode = document.getElementById("auth-error");
+        const submitButton = document.getElementById("auth-submit");
+        const data = Object.fromEntries(new FormData(form));
+        errorNode.textContent = "";
+        document.getElementById("auth-success").hidden = true;
+        if (data.newPassword !== data.confirmPassword) {
+          errorNode.textContent = accountErrorMessages["Password confirmation does not match"];
+          form.elements.confirmPassword.focus();
+          return;
+        }
+        submitButton.disabled = true;
+
+        return userApi
+          .changePassword(data)
+          .then(() => {
+            form.reset();
+            document.getElementById("auth-success").hidden = false;
+          })
+          .catch((error) => {
+            errorNode.textContent = getAccountErrorMessage(error, "Chưa đổi được mật khẩu. Vui lòng thử lại.");
+          })
+          .finally(() => { submitButton.disabled = false; });
+      }
+
+      getAccountPage();
+    </script>
+  </body>
+</html>

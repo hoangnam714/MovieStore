@@ -16,11 +16,9 @@
       <div class="auth-layout">
         <section class="auth-art">
           <h1>
-            MOVIESTORE
-            <br />
-            THÀNH VIÊN
+            Mỗi buổi xem là một câu chuyện đáng nhớ.
           </h1>
-          <p>Đăng nhập để đặt vé và quản lý lịch sử xem phim.</p>
+          <p>Tạo tài khoản để chọn ghế, đặt vé và lưu giữ những buổi hẹn điện ảnh.</p>
           <img
             class="film-poster"
             src="https://image.tmdb.org/t/p/w500/q719jXXEzOoYaps6babgKnONONX.jpg"
@@ -29,9 +27,9 @@
           />
         </section>
         <section class="auth-form">
-          <span class="eyebrow">MOVIE STORE MEMBERS</span>
+          <span class="eyebrow">BẮT ĐẦU TẠI ĐÂY</span>
           <h1>Đăng ký tài khoản</h1>
-          <p class="muted">Điền thông tin bên dưới để tạo tài khoản.</p>
+          <p class="muted">Chỉ vài bước để có vé xem phim đầu tiên.</p>
           <form id="auth-form" onsubmit="onRegister(event)">
             <label class="field">
               Họ và tên
@@ -57,6 +55,19 @@
               />
             </label>
             <label class="field">
+              Số điện thoại
+              <input
+                name="phone"
+                type="tel"
+                inputmode="tel"
+                class="input"
+                required
+                maxlength="15"
+                autocomplete="tel"
+                placeholder="0912 345 678"
+              />
+            </label>
+            <label class="field">
               Mật khẩu
               <input
                 name="password"
@@ -66,6 +77,18 @@
                 minlength="6"
                 autocomplete="new-password"
                 placeholder="Tối thiểu 6 ký tự"
+              />
+            </label>
+            <label class="field">
+              Xác nhận mật khẩu
+              <input
+                name="confirmPassword"
+                type="password"
+                class="input"
+                required
+                minlength="6"
+                autocomplete="new-password"
+                placeholder="Nhập lại mật khẩu"
               />
             </label>
             <p id="auth-error" class="error tiny" role="alert"></p>
@@ -86,15 +109,28 @@
       const form = document.getElementById("auth-form");
       const errorMessage = document.getElementById("auth-error");
 
+      const PHONE_PATTERN = /^(0|\+84)[35789]\d{8}$/;
+
       function onRegister(event) {
         event.preventDefault();
         const submitButton = document.getElementById("auth-submit");
-        submitButton.disabled = true;
         errorMessage.textContent = "";
         const values = Object.fromEntries(new FormData(form));
+        values.phone = values.phone.replace(/[\s.-]/g, "");
+        if (!PHONE_PATTERN.test(values.phone)) {
+          errorMessage.textContent = accountErrorMessages["Phone number must be a valid Vietnamese mobile number"];
+          form.elements.phone.focus();
+          return;
+        }
+        if (values.password !== values.confirmPassword) {
+          errorMessage.textContent = accountErrorMessages["Password confirmation does not match"];
+          form.elements.confirmPassword.focus();
+          return;
+        }
+        submitButton.disabled = true;
 
         return userApi
-          .register({ ...values, role: "CUSTOMER" })
+          .register(values)
           .then((response) => {
             const data = response.data;
             onSaveUser(data);
@@ -107,7 +143,8 @@
             location.href = isCustomerPage ? destination.href : "../home/index.html";
           })
           .catch((error) => {
-            console.error(error);
+            errorMessage.textContent = getAccountErrorMessage(error, "Không thể tạo tài khoản. Vui lòng kiểm tra thông tin và thử lại.");
+            submitButton.disabled = false;
           });
       }
     </script>

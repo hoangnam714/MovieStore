@@ -1,3 +1,8 @@
 #movie-form {
-  margin-bottom: 1rem;
+  margin-bottom: 1.5rem;
 }
+.cms-section-heading h2, .cms-list-toolbar h2 { margin: 0; font-size: 21px; font-weight: 750; }
+.cms-section-heading p, .cms-list-toolbar p { margin: 5px 0 18px; color: var(--cms-muted); font-size: 14px; }
+.cms-list-toolbar { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding-top: 23px; border-top: 1px solid var(--cms-line); }
+.cms-list-toolbar .form-control { width: min(300px, 100%); }
+@media (max-width: 620px) { .cms-list-toolbar { display: block; } .cms-list-toolbar .form-control { width: 100%; margin-bottom: 15px; } }

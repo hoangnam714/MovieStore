@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mã giảm giá | Movie Store CMS</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" />
+    <link rel="stylesheet" href="../../assets/css/admin.css" />
+  </head>
+  <body class="hold-transition sidebar-mini layout-fixed" data-page="discounts">
+    <div class="wrapper">
+      <div id="admin-layout"></div>
+      <div class="content-wrapper">
+        <section class="content-header">
+          <div class="container-fluid">
+            <h1>Mã giảm giá</h1>
+            <p class="cms-subtitle">MOVIE STORE / QUẢN TRỊ RẠP CHIẾU</p>
+          </div>
+        </section>
+        <section class="content">
+          <div class="container-fluid">
+            <p id="page-error" class="text-danger" role="alert"></p>
+            <div id="main-content" class="card">
+              <div class="card-body">
+                <p class="text-muted mb-3">
+                  Khách có tài khoản luôn được giảm 5%; phần trăm của mã được cộng thêm. VAT tính trên giá sau giảm.
+                </p>
+                <form id="discount-form" class="mb-4" onsubmit="onSaveDiscountCode(event)">
+                  <div class="form-row">
+                    <div class="form-group col-md-3">
+                      <label for="discount-code">Mã</label>
+                      <input id="discount-code" class="form-control text-uppercase" name="code" required
+                             minlength="3" maxlength="30" pattern="[A-Za-z0-9_\-]{3,30}" placeholder="VD: WELCOME10">
+                    </div>
+                    <div class="form-group col-md-2">
+                      <label for="discount-percent">Giảm (%)</label>
+                      <input id="discount-percent" class="form-control" name="discountPercent" type="number"
+                             min="1" max="100" required>
+                    </div>
+                    <div class="form-group col-md-7">
+                      <label for="discount-description">Mô tả</label>
+                      <input id="discount-description" class="form-control" name="description" maxlength="255"
+                             placeholder="Nội dung chương trình">
+                    </div>
+                  </div>
+                  <div class="form-row align-items-end">
+                    <div class="form-group col-md-3">
+                      <label for="discount-start">Từ ngày</label>
+                      <input id="discount-start" class="form-control" name="startDate" type="date">
+                    </div>
+                    <div class="form-group col-md-3">
+                      <label for="discount-end">Đến ngày</label>
+                      <input id="discount-end" class="form-control" name="endDate" type="date">
+                    </div>
+                    <div class="form-group col-md-2">
+                      <label for="discount-limit">Số lượt tối đa</label>
+                      <input id="discount-limit" class="form-control" name="usageLimit" type="number" min="1"
+                             placeholder="Không giới hạn">
+                    </div>
+                    <div class="form-group col-md-2">
+                      <div class="custom-control custom-switch mb-2">
+                        <input id="discount-active" class="custom-control-input" name="active" type="checkbox" checked>
+                        <label class="custom-control-label" for="discount-active">Đang áp dụng</label>
+                      </div>
+                    </div>
+                    <div class="form-group col-md-2">
+                      <button class="btn btn-primary btn-block" id="save-button">Thêm mã</button>
+                      <button class="btn btn-outline-secondary btn-block" id="cancel-button" type="button"
+                              onclick="onResetDiscountForm()" hidden>Hủy sửa</button>
+                    </div>
+                  </div>
+                </form>
+                <div id="discount-error" class="text-danger mb-2" role="alert"></div>
+                <table class="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Mã</th>
+                      <th>Giảm</th>
+                      <th>Mô tả</th>
+                      <th>Hiệu lực</th>
+                      <th>Đã dùng</th>
+                      <th>Trạng thái</th>
+                      <th></th>
+                    </tr>
+                  </thead>
+                  <tbody id="discount-rows"></tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+    </div>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.7.9/dist/axios.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/jquery@3.7.1/dist/jquery.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@4.6.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/js/adminlte.min.js"></script>
+    <script src="../../assets/js/common.js"></script>
+    <script src="../../assets/js/admin-layout.js"></script>
+    <script>
+      let discountCodes = [];
+      let editingId = null;
+
+      function onDiscountError(error) {
+        document.getElementById('discount-error').textContent =
+          error?.response?.data?.message || 'Không thể lưu mã giảm giá.';
+      }
+
+      function getDateLabel(value) {
+        return value ? new Date(value + 'T00:00:00').toLocaleDateString('vi-VN') : '';
+      }
+
+      function getValidity(code) {
+        if (!code.startDate && !code.endDate) return 'Không giới hạn';
+        return `${getDateLabel(code.startDate) || '…'} → ${getDateLabel(code.endDate) || '…'}`;
+      }
+
+      function getStatus(code) {
+        const today = new Date().toLocaleDateString('sv-SE');
+        if (!code.active) return '<span class="badge badge-secondary">Đã tắt</span>';
+        if (code.endDate && code.endDate < today) return '<span class="badge badge-warning">Hết hạn</span>';
+        if (code.startDate && code.startDate > today) return '<span class="badge badge-info">Chưa bắt đầu</span>';
+        if (code.usageLimit != null && code.usedCount >= code.usageLimit) return '<span class="badge badge-warning">Hết lượt</span>';
+        return '<span class="badge badge-success">Đang áp dụng</span>';
+      }
+
+      function getDiscountCodes() {
+        return discountApi.list().then(({ data }) => {
+          discountCodes = data;
+          document.getElementById('discount-rows').innerHTML = data.map(code => `
+            <tr>
+              <td><strong>${getSafeHtml(code.code)}</strong></td>
+              <td>${code.discountPercent}%</td>
+              <td>${getSafeHtml(code.description || '')}</td>
+              <td>${getValidity(code)}</td>
+              <td>${code.usedCount}${code.usageLimit != null ? ' / ' + code.usageLimit : ''}</td>
+              <td>${getStatus(code)}</td>
+              <td class="text-nowrap">
+                <button class="btn btn-sm btn-outline-primary mr-2" onclick="onEditDiscountCode(${code.id})">Sửa</button>
+                <button class="btn btn-sm btn-outline-danger" onclick="onDeleteDiscountCode(${code.id})">Xóa</button>
+              </td>
+            </tr>
+          `).join('') || '<tr><td colspan="7" class="text-center">Chưa có mã giảm giá.</td></tr>';
+        });
+      }
+
+      function onResetDiscountForm() {
+        editingId = null;
+        const form = document.getElementById('discount-form');
+        form.reset();
+        document.getElementById('save-button').textContent = 'Thêm mã';
+        document.getElementById('cancel-button').hidden = true;
+        document.getElementById('discount-error').textContent = '';
+      }
+
+      function onEditDiscountCode(id) {
+        const code = discountCodes.find(item => item.id === id);
+        if (!code) return;
+        editingId = id;
+        const form = document.getElementById('discount-form');
+        form.elements.code.value = code.code;
+        form.elements.discountPercent.value = code.discountPercent;
+        form.elements.description.value = code.description || '';
+        form.elements.startDate.value = code.startDate || '';
+        form.elements.endDate.value = code.endDate || '';
+        form.elements.usageLimit.value = code.usageLimit ?? '';
+        form.elements.active.checked = code.active;
+        document.getElementById('save-button').textContent = 'Lưu thay đổi';
+        document.getElementById('cancel-button').hidden = false;
+        form.scrollIntoView({ behavior: 'smooth' });
+      }
+
+      function onSaveDiscountCode(event) {
+        event.preventDefault();
+        const form = event.target;
+        const data = {
+          code: form.elements.code.value.trim().toUpperCase(),
+          discountPercent: Number(form.elements.discountPercent.value),
+          description: form.elements.description.value.trim(),
+          startDate: form.elements.startDate.value || null,
+          endDate: form.elements.endDate.value || null,
+          usageLimit: form.elements.usageLimit.value ? Number(form.elements.usageLimit.value) : null,
+          active: form.elements.active.checked
+        };
+        if (data.startDate && data.endDate && data.endDate < data.startDate) {
+          document.getElementById('discount-error').textContent = 'Ngày kết thúc phải sau ngày bắt đầu.';
+          return;
+        }
+        (editingId ? discountApi.update(editingId, data) : discountApi.create(data))
+          .then(() => {
+            onAdminMessage(editingId ? 'Đã cập nhật mã giảm giá.' : 'Đã thêm mã giảm giá.');
+            onResetDiscountForm();
+            return getDiscountCodes();
+          })
+          .catch(onDiscountError);
+      }
+
+      function onDeleteDiscountCode(id) {
+        if (!confirm('Xóa mã giảm giá này? Mã đã dùng cho vé chỉ có thể tắt.')) return;
+        discountApi.remove(id).then(getDiscountCodes).catch(onDiscountError);
+      }
+
+      onAdminPage(getDiscountCodes);
+    </script>
+  </body>
+</html>

@@ -3,6 +3,7 @@ package com.btlon.movie.store.controller;
 import com.btlon.movie.store.dto.RoomRequest;
 import com.btlon.movie.store.entity.Room;
 import com.btlon.movie.store.service.RoomService;
+import com.btlon.movie.store.security.AdminOnly;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -37,16 +38,19 @@ public class RoomController {
         return roomService.getRoomById(id).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    @AdminOnly
     @PostMapping
     public ResponseEntity<Room> createRoom(@RequestBody RoomRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(roomService.createRoom(request));
     }
 
+    @AdminOnly
     @PutMapping("/{id}")
     public ResponseEntity<Room> updateRoom(@PathVariable Long id, @RequestBody RoomRequest request) {
         return roomService.updateRoom(id, request).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
 
+    @AdminOnly
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteRoom(@PathVariable Long id) {
         return roomService.deleteRoom(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();

@@ -5,11 +5,11 @@ import com.btlon.movie.store.dto.UserRegisterRequest;
 import com.btlon.movie.store.dto.UserResponse;
 import com.btlon.movie.store.entity.User;
 import com.btlon.movie.store.entity.UserRole;
+import com.btlon.movie.store.repository.AuthTokenRepository;
 import com.btlon.movie.store.repository.TicketRepository;
 import com.btlon.movie.store.repository.UserRepository;
 import com.btlon.movie.store.web.BadRequestException;
 import com.btlon.movie.store.web.ConflictException;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -21,11 +21,15 @@ import java.util.Optional;
 public class UserService {
     private final UserRepository userRepository;
     private final TicketRepository ticketRepository;
-    private final PasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    private final AuthTokenRepository authTokenRepository;
+    private final PasswordEncoder passwordEncoder;
 
-    public UserService(UserRepository userRepository, TicketRepository ticketRepository) {
+    public UserService(UserRepository userRepository, TicketRepository ticketRepository,
+                       AuthTokenRepository authTokenRepository, PasswordEncoder passwordEncoder) {
         this.userRepository = userRepository;
         this.ticketRepository = ticketRepository;
+        this.authTokenRepository = authTokenRepository;
+        this.passwordEncoder = passwordEncoder;
     }
 
     public Optional<UserResponse> findById(Long id) {
@@ -33,26 +37,27 @@ public class UserService {
     }
 
     @Transactional
-    public UserResponse register(UserRegisterRequest request) {
+    public User register(UserRegisterRequest request) {
         validateRegister(request);
+        String phone = PhoneNumbers.normalize(request.getPhone());
         if (userRepository.existsByEmail(request.getEmail().trim())) {
             throw new ConflictException("Email already registered");
         }
         User user = new User();
         user.setFullName(request.getFullName().trim());
         user.setEmail(request.getEmail().trim());
+        user.setPhone(phone);
         user.setPasswordHash(passwordEncoder.encode(request.getPassword()));
-        user.setRole(request.getRole() == null ? UserRole.CUSTOMER : request.getRole());
-        return UserResponse.from(userRepository.save(user));
+        user.setRole(UserRole.CUSTOMER);
+        return userRepository.save(user);
     }
 
-    public Optional<UserResponse> login(UserLoginRequest request) {
+    public Optional<User> login(UserLoginRequest request) {
         if (request.getEmail() == null || request.getPassword() == null) {
             return Optional.empty();
         }
         return userRepository.findByEmail(request.getEmail().trim())
-                .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPasswordHash()))
-                .map(UserResponse::from);
+                .filter(user -> passwordEncoder.matches(request.getPassword(), user.getPasswordHash()));
     }
 
     @Transactional
@@ -63,6 +68,7 @@ public class UserService {
         if (ticketRepository.existsByUser_Id(userId)) {
             throw new ConflictException("Cannot delete user with tickets");
         }
+        authTokenRepository.deleteByUserId(userId);
         userRepository.deleteById(userId);
         return true;
     }
@@ -70,8 +76,10 @@ public class UserService {
     private static void validateRegister(UserRegisterRequest request) {
         if (request.getFullName() == null || request.getFullName().isBlank()
                 || request.getEmail() == null || request.getEmail().isBlank()
+                || request.getPhone() == null || request.getPhone().isBlank()
                 || request.getPassword() == null || request.getPassword().isBlank()) {
-            throw new BadRequestException("fullName, email and password are required");
+            throw new BadRequestException("fullName, email, phone and password are required");
         }
+        PasswordService.validateNewPassword(request.getPassword(), request.getConfirmPassword());
     }
 }

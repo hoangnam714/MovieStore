@@ -15,16 +15,23 @@
   <body>
     <header id="header"></header>
     <main id="main">
-      <div class="wrap">
+      <div class="tickets-intro"><div class="wrap">
         <div class="section-head">
           <div>
             <span class="eyebrow">NHỮNG BUỔI HẸN ĐIỆN ẢNH</span>
             <h2>Vé của tôi</h2>
             <p class="muted">Mọi thông tin bạn cần trước khi đến rạp.</p>
           </div>
-          <a class="btn light" href="/customer/home/index.html">Đặt thêm vé ↗</a>
+          <a class="btn" href="/customer/home/index.html#movies">Khám phá phim mới ↗</a>
         </div>
-        <div id="tickets" class="ticket-grid"></div>
+      </div></div>
+      <div class="wrap">
+        <div class="ticket-filters" role="search">
+          <div class="ticket-tabs" id="ticket-tabs" role="tablist" aria-label="Lọc theo trạng thái suất chiếu"></div>
+          <input id="ticket-search" class="form-control ticket-search" type="search" placeholder="Tìm theo tên phim"
+                 aria-label="Tìm theo tên phim" oninput="onRenderTickets()">
+        </div>
+        <div id="tickets"></div>
       </div>
     </main>
     <div id="footer"></div>
@@ -32,41 +39,91 @@
     <script src="../../assets/js/common.js"></script>
     <script src="../../assets/js/customer-layout.js"></script>
     <script>
+      // A showtime within this many days counts as "Sắp chiếu"; later ones are "Chiếu trong tương lai".
+      const UPCOMING_DAYS = 3;
+      const ticketGroups = [
+        { key: "upcoming", label: "Sắp chiếu", status: "SẮP CHIẾU", empty: "Không có suất nào trong 3 ngày tới." },
+        { key: "future", label: "Chiếu trong tương lai", status: "ĐÃ ĐẶT", empty: "Chưa có vé cho các ngày sau." },
+        { key: "past", label: "Đã chiếu", status: "ĐÃ CHIẾU", empty: "Chưa có suất nào đã chiếu." }
+      ];
+      let myTickets = [];
+      let activeGroup = "all";
+
+      function getTicketGroup(ticket, now) {
+        const start = new Date(ticket.startTime);
+        if (start <= now) return "past";
+        return start - now <= UPCOMING_DAYS * 24 * 60 * 60 * 1000 ? "upcoming" : "future";
+      }
+
+      function getTicketCard(ticket, group) {
+        return `
+          <article class="ticket ${group.key === "past" ? "is-past" : ""}">
+            <div class="ticket-top"><span class="ticket-code">MOVIESTORE · #${String(ticket.id).padStart(6, "0")}</span><span class="ticket-status status-${group.key}">${group.status}</span></div>
+            <h3>${getSafeHtml(ticket.movieTitle)}</h3>
+            <div class="ticket-details"><div><small>CỤM RẠP / PHÒNG</small><strong>${getSafeHtml(ticket.cinemaName || 'Cụm rạp')} · ${getSafeHtml(ticket.roomName)}</strong></div><div><small>SUẤT CHIẾU</small><strong>${getDateTime(ticket.startTime)}</strong></div></div>
+            <div class="ticket-bottom"><span class="seat-label">GHẾ <b>${getSeatLabel(ticket.seatNumber)}</b></span><strong>${getMoney(ticket.totalAmount)}</strong></div>
+            <span class="ticket-booked">Đặt lúc ${getDateTime(ticket.bookedAt)}</span>
+          </article>
+        `;
+      }
+
+      function onSelectTicketGroup(key) {
+        activeGroup = key;
+        onRenderTickets();
+      }
+
+      function onRenderTickets() {
+        const now = new Date();
+        const keyword = document.getElementById("ticket-search").value.trim().toLocaleLowerCase("vi");
+        const grouped = { upcoming: [], future: [], past: [] };
+        myTickets
+          .filter((ticket) => !keyword || ticket.movieTitle.toLocaleLowerCase("vi").includes(keyword))
+          .forEach((ticket) => grouped[getTicketGroup(ticket, now)].push(ticket));
+        const byStart = (first, second) => new Date(first.startTime) - new Date(second.startTime);
+        grouped.upcoming.sort(byStart);
+        grouped.future.sort(byStart);
+        grouped.past.sort((first, second) => byStart(second, first));
+
+        const total = grouped.upcoming.length + grouped.future.length + grouped.past.length;
+        document.getElementById("ticket-tabs").innerHTML = [{ key: "all", label: "Tất cả" }, ...ticketGroups]
+          .map((group) => {
+            const count = group.key === "all" ? total : grouped[group.key].length;
+            const active = group.key === activeGroup;
+            return `<button class="chip ${active ? "active" : ""}" role="tab" aria-selected="${active}" onclick="onSelectTicketGroup('${group.key}')">${group.label} <span class="badge rounded-pill">${count}</span></button>`;
+          })
+          .join("");
+
+        const shownGroups = ticketGroups.filter((group) => activeGroup === "all" || group.key === activeGroup);
+        const sections = shownGroups
+          .filter((group) => activeGroup !== "all" || grouped[group.key].length)
+          .map((group) => `
+            <section class="ticket-section">
+              <h3 class="ticket-section-title">${group.label} <span>${grouped[group.key].length}</span></h3>
+              ${grouped[group.key].length
+                ? `<div class="ticket-grid">${grouped[group.key].map((ticket) => getTicketCard(ticket, group)).join("")}</div>`
+                : `<p class="muted">${group.empty}</p>`}
+            </section>
+          `)
+          .join("");
+        document.getElementById("tickets").innerHTML = sections || (myTickets.length
+          ? '<div class="empty">Không có vé khớp với tên phim bạn tìm.</div>'
+          : '<div class="empty tickets-empty"><span aria-hidden="true">✦</span><h3>Chưa có vé nào</h3><p>Một câu chuyện hay đang chờ bạn trên màn ảnh rộng.</p><a class="btn" href="/customer/home/index.html#movies">Khám phá phim đang chiếu ↗</a></div>');
+      }
+
       function getTickets() {
-        const currentUser = getUser();
-        if (!currentUser) {
+        if (!getUser()) {
           location.href = "/customer/login/index.html?next=/customer/my-tickets/index.html";
           return;
         }
 
         return ticketApi
-          .byUser(currentUser.id)
-          .then((response) => {
-            const data = response.data;
-            document.getElementById("tickets").innerHTML =
-              data
-                .map(
-                  (ticket) =>
-                    `
-                      <article class="ticket">
-                        <span class="ticket-code">MOVIESTORE · #${String(ticket.id).padStart(6, "0")}</span>
-                        <h3>${getSafeHtml(ticket.movieTitle)}</h3>
-                        <p class="muted">${getSafeHtml(ticket.roomName)} · ${getDateTime(ticket.startTime)}</p>
-                        <div class="total">
-                          <span>
-                            Ghế
-                            <b>${getSeatLabel(ticket.seatNumber)}</b>
-                          </span>
-                          <strong>${getMoney(ticket.price)}</strong>
-                        </div>
-                        <span class="tiny muted">Đã đặt: ${getDateTime(ticket.bookedAt)}</span>
-                      </article>
-                    `
-                )
-                .join("") || '<div class="empty">Bạn chưa có vé. Một bộ phim hay đang chờ bạn!</div>';
+          .mine()
+          .then(({ data }) => {
+            myTickets = data;
+            onRenderTickets();
           })
           .catch((error) => {
-            console.error(error);
+            document.getElementById('tickets').innerHTML = `<div class="empty">${getSafeHtml(error?.response?.data?.message || 'Không tải được vé của bạn.')}</div>`;
           });
       }
 

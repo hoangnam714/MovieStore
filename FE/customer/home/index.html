@@ -15,36 +15,30 @@
   <body>
     <header id="header"></header>
     <main id="main">
-      <section class="hero">
-        <div class="hero-backdrop"></div>
-        <div class="wrap container hero-content">
-          <p class="eyebrow">PHIM NỔI BẬT</p>
-          <h1>
-            DUNE
-            <span>PART TWO</span>
-          </h1>
-          <div class="hero-meta">
-            <span>2024</span>
-            <span>166 phút</span>
-            <span>Khoa học viễn tưởng</span>
-          </div>
-          <p class="hero-description">
-            Paul Atreides cùng người Fremen viết tiếp cuộc chiến trên hành tinh cát Arrakis.
-          </p>
-          <a id="featured-book" class="btn btn-lg" href="#movies">Chọn suất chiếu</a>
-          <span class="hero-director">Một bộ phim của Denis Villeneuve</span>
+      <section class="hero" id="hot-movies" aria-label="Phim nổi bật">
+        <div class="hero-track" id="hero-track"><div class="hero-loading">Đang tải phim nổi bật…</div></div>
+        <div class="hero-control-bar wrap container" id="hero-controls" hidden>
+          <button type="button" onclick="onHeroStep(-1)" aria-label="Phim trước">←</button>
+          <button type="button" onclick="onHeroStep(1)" aria-label="Phim tiếp theo">→</button>
         </div>
-        <span class="hero-caption">DUNE: PART TWO / 2024</span>
+      </section>
+      <section class="experience-strip wrap container" aria-label="Thông tin trải nghiệm đặt vé">
+        <div><span class="experience-icon" aria-hidden="true">01</span><p><strong>Chọn phim yêu thích</strong><span>Lịch chiếu cập nhật theo cụm rạp</span></p></div>
+        <div><span class="experience-icon" aria-hidden="true">02</span><p><strong>Giữ chỗ dễ dàng</strong><span>Chọn ghế liền nhau trực quan</span></p></div>
+        <div><span class="experience-icon" aria-hidden="true">03</span><p><strong>Vé trong tài khoản</strong><span>Sẵn sàng cho buổi xem phim</span></p></div>
       </section>
       <section class="catalog-section wrap container" id="movies">
         <div class="section-head">
-          <h2>PHIM & LỊCH CHIẾU</h2>
-          <span class="muted tiny" id="film-count"></span>
+          <div><span class="eyebrow">KHÁM PHÁ ĐIỆN ẢNH</span><h2>Phim & lịch chiếu</h2><p class="muted">Tìm một câu chuyện đáng xem, chọn suất chiếu vừa với bạn.</p></div>
+          <div class="catalog-actions"><span class="muted tiny" id="film-count"></span><button id="reset-filters" type="button" class="reset-filters" onclick="onResetFilters()" hidden>Xóa bộ lọc</button></div>
         </div>
-        <div class="catalog-toolbar row g-3">
-          <div class="col-md-8"><div id="date-tabs" class="filters"></div></div>
-          <div class="col-md-4">
+        <div class="catalog-toolbar">
+          <div class="filter-heading"><span class="eyebrow">LỌC LỊCH CHIẾU</span><span class="muted tiny">Chọn ngày và cụm rạp để xem suất phù hợp</span></div>
+          <div id="date-tabs" class="filters"></div>
+          <div class="filter-divider"></div>
+          <div>
             <div class="searchbar">
+              <select id="cinema" onchange="onCinemaChange(this.value)" class="input form-select" aria-label="Cụm rạp"><option value="">Tất cả cụm rạp</option></select>
               <input
                 id="search"
                 oninput="onSearch(this.value)"
@@ -83,13 +77,21 @@
         "Your Name": "q719jXXEzOoYaps6babgKnONONX.jpg"
       };
 
+      const hotMovieDetails = [
+        { title: "Dune: Part Two", year: "2024", subtitle: "HÀNH TRÌNH TRÊN HÀNH TINH CÁT", description: "Paul Atreides cùng người Fremen viết tiếp cuộc chiến trên hành tinh cát Arrakis." },
+        { title: "Inside Out 2", year: "2024", subtitle: "THẾ GIỚI CẢM XÚC ĐẦY SẮC MÀU", description: "Một chuyến phiêu lưu rực rỡ khi những cảm xúc mới xuất hiện trong tâm trí Riley." },
+        { title: "Avengers: Endgame", year: "2019", subtitle: "HỒI KẾT CỦA NHỮNG ANH HÙNG", description: "Các siêu anh hùng tập hợp cho trận chiến quyết định của cả vũ trụ." },
+        { title: "Mai", year: "2024", subtitle: "MỘT CÂU CHUYỆN VỀ TÌNH YÊU", description: "Một câu chuyện về tình yêu, hy vọng và những khởi đầu mới." },
+        { title: "Interstellar", year: "2014", subtitle: "VƯỢT QUA KHÔNG GIAN VÀ THỜI GIAN", description: "Băng qua những vì sao trong hành trình tìm kiếm tương lai cho nhân loại." }
+      ];
+
+      function getPosterUrl(title) {
+        if (title === "Mai") return "https://media.senscritique.com/media/000021934906/0/mai.jpg";
+        return posterPaths[title] ? "https://image.tmdb.org/t/p/w500/" + posterPaths[title] : "";
+      }
+
       function getPoster(title) {
-        const url =
-          title === "Mai"
-            ? "https://media.senscritique.com/media/000021934906/0/mai.jpg"
-            : posterPaths[title]
-              ? "https://image.tmdb.org/t/p/w500/" + posterPaths[title]
-              : null;
+        const url = getPosterUrl(title);
         return url
           ? `
             <img
@@ -110,19 +112,130 @@
       let genres = [];
       let selectedDay = "";
       let selectedGenre = "";
+      let selectedCinema = "";
       let searchKeyword = "";
+      let hotMovies = [];
+      let heroIndex = 0;
+      let heroTimer = null;
+      let heroHovered = false;
+      let heroTransitioning = false;
+
+      function getHeroSlide({ movie, details }) {
+        const genre = genres.find(item => item.id === movie.genreId);
+        const poster = getPosterUrl(movie.title);
+        const meta = [movie.releaseYear || details.year, movie.duration + " phút", genre?.name || "Điện ảnh"]
+          .filter(Boolean).map(value => `<span>${getSafeHtml(value)}</span>`).join("");
+        return `<div class="hero-slide" aria-hidden="true" inert>
+          <div class="hero-backdrop" aria-hidden="true"><img src="${poster}" alt="" referrerpolicy="no-referrer" /></div>
+          <div class="wrap container hero-shell">
+            <div class="hero-content">
+              <p class="eyebrow hero-kicker"><span class="kicker-dot"></span> ${getSafeHtml(details.subtitle || genre?.name || movie.title)}</p>
+              <h1>${getSafeHtml(movie.title)}</h1>
+              <div class="hero-meta">${meta}</div>
+              <p class="hero-description">${getSafeHtml(details.description || "Khám phá câu chuyện trên màn ảnh rộng.")}</p>
+              <div class="hero-actions"><a class="btn btn-lg" href="../booking/index.html?movieId=${encodeURIComponent(movie.id)}">Chọn suất chiếu <span aria-hidden="true">↗</span></a></div>
+            </div>
+            <div class="hero-art" aria-hidden="true"><img src="${poster}" alt="" referrerpolicy="no-referrer" /><span class="hero-art-label">MOVIESTORE PREMIERE</span></div>
+          </div>
+        </div>`;
+      }
+
+      function onHeroStep(direction) {
+        if (hotMovies.length < 2 || heroTransitioning) return;
+        heroTransitioning = true;
+        heroIndex += direction;
+        const track = document.getElementById("hero-track");
+        const reducedMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+        track.style.transition = reducedMotion ? "none" : "";
+        track.style.transform = `translateX(-${heroIndex * 100}%)`;
+        if (reducedMotion) onHeroTransitionEnd({ target: track, currentTarget: track, propertyName: "transform" });
+        startHeroTimer();
+      }
+
+      function onHeroTransitionEnd(event) {
+        if (event.target !== event.currentTarget || event.propertyName !== "transform") return;
+        const track = event.currentTarget;
+        if (heroIndex === 0 || heroIndex === hotMovies.length + 1) {
+          heroIndex = heroIndex === 0 ? hotMovies.length : 1;
+          track.style.transition = "none";
+          track.style.transform = `translateX(-${heroIndex * 100}%)`;
+          void track.offsetWidth;
+          track.style.transition = "";
+        }
+        heroTransitioning = false;
+        updateHeroAccessibility();
+      }
+
+      function updateHeroAccessibility() {
+        document.querySelectorAll("#hero-track .hero-slide").forEach((slide, index) => {
+          const active = index === heroIndex;
+          slide.inert = !active;
+          slide.setAttribute("aria-hidden", String(!active));
+        });
+      }
+
+      function stopHeroTimer() {
+        clearTimeout(heroTimer);
+        heroTimer = null;
+      }
+
+      function startHeroTimer() {
+        stopHeroTimer();
+        if (hotMovies.length < 2 || heroHovered || document.hidden || window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
+        heroTimer = setTimeout(() => onHeroStep(1), 5500);
+      }
+
+      function onHotMovies() {
+        hotMovies = hotMovieDetails.map(details => ({
+          details,
+          movie: movies.find(movie => movie.title === details.title && getPosterUrl(movie.title) && showtimes.some(time => time.movieId === movie.id))
+        })).filter(item => item.movie);
+        const remaining = movies.filter(movie =>
+          getPosterUrl(movie.title) && showtimes.some(time => time.movieId === movie.id)
+          && !hotMovies.some(item => item.movie.id === movie.id)
+        ).map(movie => ({ movie, details: {} }));
+        hotMovies = [...hotMovies, ...remaining].slice(0, 5);
+        if (!hotMovies.length) {
+          document.getElementById("hot-movies").hidden = true;
+          return;
+        }
+        const slides = hotMovies.length > 1
+          ? [getHeroSlide(hotMovies.at(-1)), ...hotMovies.map(item => getHeroSlide(item)), getHeroSlide(hotMovies[0])]
+          : [getHeroSlide(hotMovies[0])];
+        const track = document.getElementById("hero-track");
+        track.innerHTML = slides.join("");
+        heroIndex = hotMovies.length > 1 ? 1 : 0;
+        track.style.transition = "none";
+        track.style.transform = `translateX(-${heroIndex * 100}%)`;
+        void track.offsetWidth;
+        track.style.transition = "";
+        updateHeroAccessibility();
+        document.getElementById("hero-controls").hidden = hotMovies.length < 2;
+        startHeroTimer();
+      }
+
+      document.getElementById("hero-track").addEventListener("transitionend", onHeroTransitionEnd);
+      const heroSection = document.getElementById("hot-movies");
+      heroSection.addEventListener("pointerenter", (event) => {
+        if (event.pointerType !== "mouse") return;
+        heroHovered = true;
+        stopHeroTimer();
+      });
+      heroSection.addEventListener("pointerleave", (event) => {
+        if (event.pointerType !== "mouse") return;
+        heroHovered = false;
+        startHeroTimer();
+      });
+      document.addEventListener("visibilitychange", () => document.hidden ? stopHeroTimer() : startHeroTimer());
 
       function getHomePage() {
-        return Promise.all([movieApi.list(), showtimeApi.upcoming(), genreApi.list()])
-          .then(([movieResponse, showtimeResponse, genreResponse]) => {
+        return Promise.all([movieApi.list(), showtimeApi.upcoming(), genreApi.list(), cinemaApi.list()])
+          .then(([movieResponse, showtimeResponse, genreResponse, cinemaResponse]) => {
             movies = movieResponse.data;
             showtimes = showtimeResponse.data;
             genres = genreResponse.data;
-            const featuredMovie = movies.find((movie) => movie.title === "Dune: Part Two");
-            if (featuredMovie) {
-              document.getElementById("featured-book").href =
-                "../booking/index.html?movieId=" + featuredMovie.id;
-            }
+            document.getElementById("cinema").innerHTML += cinemaResponse.data.map(cinema => `<option value="${cinema.id}">${getSafeHtml(cinema.name)}</option>`).join("");
+            onHotMovies();
             document.getElementById("genre").innerHTML += genres
               .map(function (genre) {
                 return `
@@ -163,7 +276,23 @@
       }
 
       function onSearch(value) {
-        searchKeyword = value.trim().toLocaleLowerCase("vi");
+        searchKeyword = normalizeKeyword(value.trim());
+        onMovies();
+      }
+
+      function normalizeKeyword(value) {
+        return String(value).normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLocaleLowerCase('vi');
+      }
+
+      function onResetFilters() {
+        selectedDay = '';
+        selectedGenre = '';
+        selectedCinema = '';
+        searchKeyword = '';
+        document.getElementById('search').value = '';
+        document.getElementById('genre').value = '';
+        document.getElementById('cinema').value = '';
+        onDateFilters();
         onMovies();
       }
 
@@ -172,42 +301,45 @@
         onMovies();
       }
 
+      function onCinemaChange(value) {
+        selectedCinema = value;
+        onMovies();
+      }
+
       function onMovies() {
         const filteredMovies = movies.filter(function (movie) {
-          const matchesKeyword = movie.title.toLocaleLowerCase("vi").includes(searchKeyword);
+          const matchesKeyword = normalizeKeyword(movie.title).includes(searchKeyword);
           const matchesGenre = !selectedGenre || String(movie.genreId) === selectedGenre;
-          const matchesDay =
-            !selectedDay ||
-            showtimes.some(function (showtime) {
-              return showtime.movieId === movie.id && getDateKey(showtime.startTime) === selectedDay;
-            });
-          return matchesKeyword && matchesGenre && matchesDay;
+          const matchesSchedule = (!selectedDay && !selectedCinema) || showtimes.some(function (showtime) {
+            return showtime.movieId === movie.id && (!selectedDay || getDateKey(showtime.startTime) === selectedDay)
+              && (!selectedCinema || String(showtime.cinemaId) === selectedCinema);
+          });
+          return matchesKeyword && matchesGenre && matchesSchedule;
         });
         document.getElementById("movies-grid").innerHTML = filteredMovies.length
           ? filteredMovies.map(getMovieCard).join("")
-          : '<div class="empty">Không tìm thấy phim phù hợp. Thử tên phim hoặc ngày khác nhé.</div>';
+          : '<div class="empty">Không tìm thấy phim phù hợp.<br><button type="button" class="btn mt-3" onclick="onResetFilters()">Xem tất cả phim</button></div>';
         document.getElementById("film-count").textContent =
           filteredMovies.length + " phim trong danh mục";
+        document.getElementById('reset-filters').hidden = !(selectedDay || selectedGenre || selectedCinema || searchKeyword);
       }
 
       function getMovieCard(movie) {
         const movieShowtimes = showtimes.filter(function (showtime) {
           return (
             showtime.movieId === movie.id &&
-            (!selectedDay || getDateKey(showtime.startTime) === selectedDay)
+            (!selectedDay || getDateKey(showtime.startTime) === selectedDay) &&
+            (!selectedCinema || String(showtime.cinemaId) === selectedCinema)
           );
         });
         const genre = genres.find((genre) => genre.id === movie.genreId);
-        const bookingUrl = "../booking/index.html?movieId=" + movie.id;
+        const bookingUrl = "../booking/index.html?movieId=" + movie.id + (selectedCinema ? "&cinemaId=" + selectedCinema : "");
         let bookingAction = '<span class="muted tiny">Chưa có lịch chiếu</span>';
         if (movieShowtimes.length) {
           const minimumPrice = Math.min(...movieShowtimes.map((showtime) => showtime.ticketPrice));
           const dateQuery = selectedDay ? "&date=" + selectedDay : "";
           bookingAction = `
-            <div class="film-bottom">
-              <span class="price">Từ ${getMoney(minimumPrice)}</span>
-              <a class="btn" href="${bookingUrl}${dateQuery}">Đặt vé</a>
-            </div>
+            <div class="film-bottom"><span class="price"><small>GIÁ VÉ TỪ</small>${getMoney(minimumPrice)}</span><a class="btn" href="${bookingUrl}${dateQuery}">Chọn suất <span aria-hidden="true">↗</span></a></div>
           `;
         }
         return `
@@ -215,7 +347,7 @@
             <div class="movie-card">
               <a class="poster" href="${bookingUrl}">
                 ${getPoster(movie.title)}
-                <span class="badge">2D</span>
+                <span class="badge">ĐANG CHIẾU</span>
               </a>
               <div class="movie-info">
                 <p class="film-category">${getSafeHtml(genre?.name || "Điện ảnh")} / ${movie.duration} phút</p>

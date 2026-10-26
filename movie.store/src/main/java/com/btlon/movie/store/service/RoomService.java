@@ -2,6 +2,7 @@ package com.btlon.movie.store.service;
 
 import com.btlon.movie.store.dto.RoomRequest;
 import com.btlon.movie.store.entity.Room;
+import com.btlon.movie.store.repository.CinemaRepository;
 import com.btlon.movie.store.repository.RoomRepository;
 import com.btlon.movie.store.repository.ShowtimeRepository;
 import com.btlon.movie.store.repository.TicketRepository;
@@ -12,6 +13,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Objects;
 
 @Service
 @Transactional(readOnly = true)
@@ -19,12 +21,14 @@ public class RoomService {
     private final RoomRepository roomRepository;
     private final ShowtimeRepository showtimeRepository;
     private final TicketRepository ticketRepository;
+    private final CinemaRepository cinemaRepository;
 
     public RoomService(RoomRepository roomRepository, ShowtimeRepository showtimeRepository,
-                       TicketRepository ticketRepository) {
+                       TicketRepository ticketRepository, CinemaRepository cinemaRepository) {
         this.roomRepository = roomRepository;
         this.showtimeRepository = showtimeRepository;
         this.ticketRepository = ticketRepository;
+        this.cinemaRepository = cinemaRepository;
     }
 
     public List<Room> getAllRooms() {
@@ -39,6 +43,8 @@ public class RoomService {
     public Room createRoom(RoomRequest request) {
         validate(request);
         Room room = new Room(request.getName().trim(), request.getSeatCount());
+        room.setCinema(cinemaRepository.findById(request.getCinemaId())
+                .orElseThrow(() -> new BadRequestException("Unknown cinema")));
         return roomRepository.save(room);
     }
 
@@ -50,11 +56,17 @@ public class RoomService {
             return Optional.empty();
         }
         Room room = existing.get();
+        if (!Objects.equals(room.getCinemaId(), request.getCinemaId())
+                && showtimeRepository.existsByRoom_Id(id)) {
+            throw new ConflictException("Cannot move a room with showtimes to another cinema");
+        }
         if (request.getSeatCount() < room.getSeatCount()) {
             ensureSeatCountCanShrink(room.getId(), request.getSeatCount());
         }
         room.setName(request.getName().trim());
         room.setSeatCount(request.getSeatCount());
+        room.setCinema(cinemaRepository.findById(request.getCinemaId())
+                .orElseThrow(() -> new BadRequestException("Unknown cinema")));
         return Optional.of(roomRepository.save(room));
     }
 
@@ -89,5 +101,6 @@ public class RoomService {
         if (request.getSeatCount() == null || request.getSeatCount() <= 0) {
             throw new BadRequestException("seatCount must be greater than 0");
         }
+        if (request.getCinemaId() == null) throw new BadRequestException("cinemaId is required");
     }
 }

@@ -5,13 +5,13 @@ const root = __dirname;
 const types = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg' };
 const server = http.createServer((req, res) => {
   if (req.url === '/api' || req.url.startsWith('/api/')) {
-    const upstream = http.request({ hostname: 'localhost', port: 5173, path: req.url, method: req.method, headers: { ...req.headers, host: 'localhost:5173' } }, reply => {
+    const upstream = http.request({ hostname: '127.0.0.1', port: 5173, path: req.url, method: req.method, headers: { ...req.headers, host: '127.0.0.1:5173' } }, reply => {
       res.writeHead(reply.statusCode, reply.headers);
       reply.pipe(res);
     });
     upstream.on('error', () => {
       res.writeHead(502, { 'Content-Type': 'application/json; charset=utf-8' });
-      res.end(JSON.stringify({ message: 'Backend chưa sẵn sàng tại cổng 5173. Kiểm tra Console của MovieStore - Backend trong Eclipse.' }));
+      res.end(JSON.stringify({ message: 'Backend chưa sẵn sàng tại cổng 5173. Kiểm tra terminal chạy backend trong IDE.' }));
     });
     req.pipe(upstream);
     return;

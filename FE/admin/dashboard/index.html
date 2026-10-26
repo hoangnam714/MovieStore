@@ -87,7 +87,7 @@
                       </button>
                     </div>
                   </div>
-                  <p class="cms-foot">Giao diện CMS dựa trên AdminLTE 3.2.</p>
+                  <p class="cms-foot">Chọn “Tạo suất chiếu” để lên lịch cho từng cụm rạp.</p>
                 </div>
               </div>
             </div>
@@ -108,7 +108,7 @@
             const upcoming = showtimes.data
               .filter((showtime) => new Date(showtime.startTime) > new Date())
               .sort((a, b) => a.startTime.localeCompare(b.startTime));
-            const revenue = tickets.data.reduce((sum, ticket) => sum + Number(ticket.price), 0);
+            const revenue = tickets.data.reduce((sum, ticket) => sum + Number(ticket.totalAmount), 0);
 
             document.getElementById("dashboard-summary").textContent =
               `${new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · ${upcoming.length} suất chiếu đang mở bán`;

@@ -23,6 +23,10 @@ public class User {
     @Column(nullable = false, unique = true, length = 254)
     private String email;
 
+    /** Null only for accounts created before phone numbers were required. */
+    @Column(length = 15)
+    private String phone;
+
     @JsonIgnore
     @Column(name = "password_hash", nullable = false, length = 255)
     private String passwordHash;
@@ -40,6 +44,8 @@ public class User {
     public void setFullName(String fullName) { this.fullName = fullName; }
     public String getEmail() { return email; }
     public void setEmail(String email) { this.email = email; }
+    public String getPhone() { return phone; }
+    public void setPhone(String phone) { this.phone = phone; }
     public String getPasswordHash() { return passwordHash; }
     public void setPasswordHash(String passwordHash) { this.passwordHash = passwordHash; }
     public UserRole getRole() { return role; }

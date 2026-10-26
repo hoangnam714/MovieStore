@@ -18,11 +18,33 @@ Tài khoản demo (tự seed khi DB trống):
 
 ## Frontend (`FE` — project `MovieStore-FE`)
 
+FE là **web tĩnh** (HTML/JS), **không** có `main()` như Spring Boot → không có *Run As → Java Application*. Vẫn chạy **trong Eclipse** bằng Tomcat:
+
+### Cách 1 — Run on Server (chuẩn Eclipse)
+
+Cần **Eclipse IDE for Enterprise Java and Web Developers** (có *Web Tools Platform*).
+
 1. **File → Import → General → Existing Projects into Workspace** → chọn thư mục `FE`.
-2. Cài extension **Eclipse Web Developer** hoặc dùng trình duyệt + server tĩnh:
-   - Cách đơn giản: plugin **Live Server** (nếu dùng VS Code) hoặc **Web Server for PHP** trong Eclipse (*Run on Server* với Tomcat chỉ phục vụ static).
-   - Hoặc từ thư mục `FE`: `python3 -m http.server 5500` → mở `http://localhost:5500/customer/`
-3. Sửa `FE/assets/js/api.js` nếu API không chạy ở `localhost:8080`.
+2. Nếu Eclipse hỏi convert facet: bật **Dynamic Web Module** (project đã cấu hình `jst.web` 4.0).
+3. **Window → Show View → Servers** → chuột phải → **New → Server** → **Apache Tomcat** (cài Tomcat 9/10, trỏ tới thư mục Tomcat trên máy).
+4. Kéo project **MovieStore-FE** vào server, hoặc chuột phải project → **Run As → Run on Server**.
+5. Mở trình duyệt (context root thường là tên project):
+   - `http://localhost:8080/MovieStore-FE/customer/index.html`
+   - `http://localhost:8080/MovieStore-FE/admin/login.html`
+
+**Lưu ý:** Tomcat mặc định cũng dùng port **8080** — trùng với Spring Boot. Chỉnh một trong hai:
+   - Tomcat: đổi HTTP port (ví dụ **8081**) trong *double-click server → Ports*;
+   - hoặc chạy BE trên port khác trong `application.properties` (`server.port=8080`, Tomcat `8081`).
+
+Backend API vẫn phải chạy riêng (*Run As → Spring Boot App* trên `movie.store`).
+
+### Cách 2 — Terminal (không cần Tomcat)
+
+Từ thư mục `FE`: `python3 -m http.server 5500` → `http://localhost:5500/customer/`
+
+### Cấu hình API
+
+Sửa `FE/assets/js/api.js` nếu backend không ở `http://localhost:8080/api`.
 
 ## Đường dẫn giao diện
 

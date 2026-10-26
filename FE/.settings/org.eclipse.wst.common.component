@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project-modules id="moduleCoreId" project-version="1.5.0">
+	<wb-module deploy-name="MovieStore-FE">
+		<wb-resource deploy-path="/" source-path="/" tag="defaultRootSource"/>
+		<property name="context-root" value="MovieStore-FE"/>
+	</wb-module>
+</project-modules>

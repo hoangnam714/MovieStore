@@ -1,0 +1,35 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "MovieStore: Backend",
+      "type": "shell",
+      "command": "bash",
+      "args": ["./mvnw", "spring-boot:run"],
+      "options": { "cwd": "${workspaceFolder}/movie.store" },
+      "windows": {
+        "command": ".\\mvnw.cmd",
+        "args": ["spring-boot:run"]
+      },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "MovieStore: Frontend",
+      "type": "process",
+      "command": "node",
+      "args": ["FE/server.cjs"],
+      "options": { "cwd": "${workspaceFolder}" },
+      "isBackground": true,
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
+      "label": "MovieStore: Full Stack",
+      "dependsOn": ["MovieStore: Backend", "MovieStore: Frontend"],
+      "dependsOrder": "parallel",
+      "problemMatcher": []
+    }
+  ]
+}

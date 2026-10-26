@@ -3,6 +3,7 @@ package com.btlon.movie.store.controller;
 import com.btlon.movie.store.entity.Movie;
 import com.btlon.movie.store.dto.MovieRequest;
 import com.btlon.movie.store.service.MovieService;
+import com.btlon.movie.store.security.AdminOnly;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -38,6 +39,7 @@ public class MovieController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @AdminOnly
     @PostMapping
     public ResponseEntity<Movie> createMovie(@RequestBody MovieRequest movie) {
         return movieService.createMovie(movie)
@@ -45,12 +47,14 @@ public class MovieController {
                 .orElse(ResponseEntity.badRequest().build());
     }
 
+    @AdminOnly
     @PutMapping("/{id}")
     public ResponseEntity<Movie> updateMovie(@PathVariable Long id, @RequestBody MovieRequest movie) {
         return movieService.updateMovie(id, movie).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @AdminOnly
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
         return movieService.deleteMovie(id) ? ResponseEntity.noContent().build()

@@ -3,6 +3,7 @@ package com.btlon.movie.store.controller;
 import com.btlon.movie.store.dto.ShowtimeRequest;
 import com.btlon.movie.store.dto.ShowtimeResponse;
 import com.btlon.movie.store.service.ShowtimeService;
+import com.btlon.movie.store.security.AdminOnly;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.CrossOrigin;
@@ -43,6 +44,7 @@ public class ShowtimeController {
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @AdminOnly
     @PostMapping
     public ResponseEntity<ShowtimeResponse> createShowtime(@RequestBody ShowtimeRequest request) {
         return showtimeService.createShowtime(request)
@@ -50,12 +52,14 @@ public class ShowtimeController {
                 .orElse(ResponseEntity.badRequest().build());
     }
 
+    @AdminOnly
     @PutMapping("/{id}")
     public ResponseEntity<ShowtimeResponse> updateShowtime(@PathVariable Long id, @RequestBody ShowtimeRequest request) {
         return showtimeService.updateShowtime(id, request).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
+    @AdminOnly
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteShowtime(@PathVariable Long id) {
         return showtimeService.deleteShowtime(id) ? ResponseEntity.noContent().build()
