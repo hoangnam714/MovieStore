@@ -8,9 +8,14 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
 import java.util.Optional;
+import java.util.List;
+import org.springframework.data.jpa.repository.EntityGraph;
 
 @Repository
 public interface RoomRepository extends JpaRepository<Room, Long> {
+    @EntityGraph(attributePaths = "cinema")
+    List<Room> findAllByOrderByNameAscIdAsc();
+
     boolean existsByCinema_Id(Long cinemaId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)

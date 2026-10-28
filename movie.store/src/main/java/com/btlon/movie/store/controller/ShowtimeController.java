@@ -2,6 +2,7 @@ package com.btlon.movie.store.controller;
 
 import com.btlon.movie.store.dto.ShowtimeRequest;
 import com.btlon.movie.store.dto.ShowtimeResponse;
+import com.btlon.movie.store.dto.ShowtimeScheduleResponse;
 import com.btlon.movie.store.service.ShowtimeService;
 import com.btlon.movie.store.security.AdminOnly;
 import org.springframework.http.HttpStatus;
@@ -14,7 +15,10 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.format.annotation.DateTimeFormat;
 
+import java.time.LocalDate;
 import java.util.List;
 
 @RestController
@@ -34,6 +38,14 @@ public class ShowtimeController {
     @GetMapping("/upcoming")
     public List<ShowtimeResponse> getUpcomingShowtimes() {
         return showtimeService.getUpcomingShowtimes();
+    }
+
+    @GetMapping("/schedule")
+    public ShowtimeScheduleResponse getSchedule(
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false) List<Long> cinemaIds,
+            @RequestParam(required = false) String keyword) {
+        return showtimeService.getSchedule(date, cinemaIds, keyword);
     }
 
     @GetMapping("/{id}")

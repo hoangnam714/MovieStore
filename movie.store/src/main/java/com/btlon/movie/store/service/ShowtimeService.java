@@ -2,6 +2,11 @@ package com.btlon.movie.store.service;
 
 import com.btlon.movie.store.dto.ShowtimeRequest;
 import com.btlon.movie.store.dto.ShowtimeResponse;
+import com.btlon.movie.store.dto.ShowtimeScheduleResponse;
+import com.btlon.movie.store.dto.CinemaScheduleResponse;
+import com.btlon.movie.store.dto.RoomScheduleResponse;
+import com.btlon.movie.store.entity.Cinema;
+import com.btlon.movie.store.repository.CinemaRepository;
 import com.btlon.movie.store.entity.Movie;
 import com.btlon.movie.store.entity.Room;
 import com.btlon.movie.store.entity.Showtime;
@@ -16,6 +21,12 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.time.LocalDate;
+import java.time.ZoneId;
+import java.text.Normalizer;
+import java.util.ArrayList;
+import java.util.Locale;
+import java.util.Objects;
 import java.util.List;
 import java.util.Optional;
 
@@ -26,13 +37,16 @@ public class ShowtimeService {
     private final MovieRepository movieRepository;
     private final RoomRepository roomRepository;
     private final TicketRepository ticketRepository;
+    private final CinemaRepository cinemaRepository;
 
     public ShowtimeService(ShowtimeRepository showtimeRepository, MovieRepository movieRepository,
-                           RoomRepository roomRepository, TicketRepository ticketRepository) {
+                           RoomRepository roomRepository, TicketRepository ticketRepository,
+                           CinemaRepository cinemaRepository) {
         this.showtimeRepository = showtimeRepository;
         this.movieRepository = movieRepository;
         this.roomRepository = roomRepository;
         this.ticketRepository = ticketRepository;
+        this.cinemaRepository = cinemaRepository;
     }
 
     public List<ShowtimeResponse> getAllShowtimes() {
@@ -45,6 +59,68 @@ public class ShowtimeService {
         return showtimeRepository.findByStartTimeAfterOrderByStartTimeAsc(LocalDateTime.now()).stream()
                 .map(ShowtimeResponse::from)
                 .toList();
+    }
+
+    public ShowtimeScheduleResponse getSchedule(LocalDate date, List<Long> cinemaIds, String keyword) {
+        if (date == null) date = LocalDate.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        if (cinemaIds == null) cinemaIds = new ArrayList<>();
+        for (Long id : cinemaIds) {
+            if (id == null || id < 0) throw new BadRequestException("Cụm rạp không hợp lệ.");
+        }
+        String search = getSearchKeyword(keyword);
+
+        // Lấy dữ liệu một lần, không gọi repository bên trong vòng lặp gom nhóm.
+        List<Cinema> cinemas = new ArrayList<>(cinemaRepository.findAllByOrderByNameAscIdAsc());
+        List<Room> rooms = roomRepository.findAllByOrderByNameAscIdAsc();
+        List<Showtime> showtimes = showtimeRepository
+                .findByStartTimeGreaterThanEqualAndStartTimeLessThanOrderByStartTimeAscIdAsc(
+                        date.atStartOfDay(), date.plusDays(1).atStartOfDay());
+        for (Room room : rooms) {
+            if (room.getCinemaId() != null) continue;
+            cinemas.add(new Cinema("Chưa phân cụm", ""));
+            break;
+        }
+
+        List<CinemaScheduleResponse> result = new ArrayList<>();
+        int totalShowtimes = 0;
+        for (Cinema cinema : cinemas) {
+            // ID 0 dùng cho các phòng cũ chưa được gán cụm rạp.
+            Long cinemaId = cinema.getId() == null ? 0L : cinema.getId();
+            if (!cinemaIds.isEmpty() && !cinemaIds.contains(cinemaId)) continue;
+
+            List<RoomScheduleResponse> roomSchedules = new ArrayList<>();
+            int cinemaTotal = 0;
+            for (Room room : rooms) {
+                if (!Objects.equals(room.getCinemaId(), cinema.getId())) continue;
+                String roomKeyword = getSearchKeyword(cinema.getName() + " " + room.getName());
+                List<ShowtimeResponse> roomShowtimes = new ArrayList<>();
+                for (Showtime showtime : showtimes) {
+                    if (!room.getId().equals(showtime.getRoomId())) continue;
+                    String text = getSearchKeyword(cinema.getName() + " " + room.getName()
+                            + " " + showtime.getMovie().getTitle());
+                    if (!text.contains(search)) continue;
+                    roomShowtimes.add(ShowtimeResponse.from(showtime));
+                }
+                // Giữ phòng trống để quản trị viên thấy phòng nào chưa được lên lịch.
+                if (!roomKeyword.contains(search) && roomShowtimes.isEmpty()) continue;
+                roomSchedules.add(new RoomScheduleResponse(room.getId(), room.getName(),
+                        room.getSeatCount(), roomShowtimes));
+                cinemaTotal += roomShowtimes.size();
+            }
+            if (!search.isEmpty() && roomSchedules.isEmpty()) continue;
+            result.add(new CinemaScheduleResponse(cinema.getId(), cinema.getName(), cinema.getAddress(),
+                    cinemaTotal, roomSchedules));
+            totalShowtimes += cinemaTotal;
+        }
+        return new ShowtimeScheduleResponse(date, totalShowtimes, result);
+    }
+
+    private String getSearchKeyword(String value) {
+        if (value == null) return "";
+        return Normalizer.normalize(value.trim(), Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .replace('đ', 'd').replace('Đ', 'D')
+                .toLowerCase(Locale.ROOT);
     }
 
     public Optional<ShowtimeResponse> getShowtimeById(Long id) {

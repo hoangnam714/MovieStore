@@ -16,6 +16,7 @@ public class ShowtimeResponse {
     private String cinemaName;
     private Integer seatCount;
     private LocalDateTime startTime;
+    private LocalDateTime endTime;
     private BigDecimal ticketPrice;
 
     public static ShowtimeResponse from(Showtime showtime) {
@@ -30,6 +31,7 @@ public class ShowtimeResponse {
         response.cinemaName = showtime.getRoom().getCinemaName();
         response.seatCount = showtime.getRoom().getSeatCount();
         response.startTime = showtime.getStartTime();
+        response.endTime = showtime.getStartTime().plusMinutes(showtime.getMovie().getDuration());
         response.ticketPrice = showtime.getTicketPrice();
         return response;
     }
@@ -76,5 +78,9 @@ public class ShowtimeResponse {
 
     public BigDecimal getTicketPrice() {
         return ticketPrice;
+    }
+
+    public LocalDateTime getEndTime() {
+        return endTime;
     }
 }

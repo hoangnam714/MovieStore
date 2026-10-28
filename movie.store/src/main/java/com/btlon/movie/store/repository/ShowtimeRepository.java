@@ -31,6 +31,10 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
     @EntityGraph(attributePaths = { "movie", "room" })
     List<Showtime> findAllByOrderByStartTimeAsc();
 
+    @EntityGraph(attributePaths = { "movie", "room", "room.cinema" })
+    List<Showtime> findByStartTimeGreaterThanEqualAndStartTimeLessThanOrderByStartTimeAscIdAsc(
+            LocalDateTime start, LocalDateTime end);
+
     @EntityGraph(attributePaths = { "movie", "room" })
     List<Showtime> findByStartTimeAfterOrderByStartTimeAsc(LocalDateTime after);
 

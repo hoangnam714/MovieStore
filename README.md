@@ -103,6 +103,14 @@ Ví dụ body thêm/sửa phim:
 }
 ```
 
+## Lịch chiếu theo rạp và phòng
+
+CMS gọi `GET /api/showtimes/schedule?date=2026-10-30&cinemaIds=1,2&keyword=soul`. `date` mặc định là hôm nay theo giờ Việt Nam; bỏ `cinemaIds` để lấy tất cả rạp; `keyword` tìm tên phim, phòng hoặc rạp, không phân biệt hoa/thường và dấu tiếng Việt. ID `0` dành cho phòng cũ chưa được gán cụm rạp.
+
+Response gồm `date`, `totalShowtimes` và `cinemas`. Mỗi rạp có `id`, `name`, `address`, `totalShowtimes`, `rooms`; mỗi phòng có `id`, `name`, `seatCount`, `showtimes`. Phòng trống trả `showtimes: []`. Khi tìm kiếm, chỉ giữ các phòng khớp từ khóa hoặc có suất chiếu khớp; không có kết quả trả `cinemas: []` và tổng bằng 0.
+
+BE dùng vòng `for` và `ArrayList` để lọc, gom nhóm; suất chiếu được lấy theo ngày và sắp theo giờ bắt đầu, rồi ID tăng dần. `ShowtimeResponse` có thêm `endTime` do BE tính từ thời lượng phim, kể cả khi kết thúc qua ngày hôm sau. FE chỉ hiển thị cấu trúc đã nhận, định dạng ngày/giờ và tiền; tìm kiếm tự gọi API sau 300 ms ngừng gõ. API danh sách phẳng, chi tiết, thêm/sửa/xóa vẫn giữ nguyên đường dẫn.
+
 ## Format code chung trong VS Code / Cursor
 
 Mở thư mục gốc `MovieStore`, sau đó cài hai extension được đề xuất trong tab Extensions (`@recommended`): **Prettier - Code formatter** và **Language Support for Java by Red Hat**.

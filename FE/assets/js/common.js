@@ -83,6 +83,7 @@ const cinemaApi = {
 
 const showtimeApi = {
   list: () => api.get("/showtimes"),
+  schedule: (params) => api.get("/showtimes/schedule", { params }),
   upcoming: () => api.get("/showtimes/upcoming"),
   get: (id) => api.get(`/showtimes/${id}`),
   create: (data) => api.post("/showtimes", data),
