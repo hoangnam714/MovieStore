@@ -15,6 +15,7 @@ import java.util.Optional;
 @Repository
 public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
     boolean existsByMovie_Id(Long movieId);
+
     boolean existsByRoom_Id(Long roomId);
 
     @Lock(LockModeType.PESSIMISTIC_WRITE)
@@ -24,16 +25,16 @@ public interface ShowtimeRepository extends JpaRepository<Showtime, Long> {
     @EntityGraph(attributePaths = "movie")
     List<Showtime> findByRoom_Id(Long roomId);
 
-    @EntityGraph(attributePaths = {"movie", "room"})
+    @EntityGraph(attributePaths = { "movie", "room" })
     List<Showtime> findByMovie_Id(Long movieId);
 
-    @EntityGraph(attributePaths = {"movie", "room"})
+    @EntityGraph(attributePaths = { "movie", "room" })
     List<Showtime> findAllByOrderByStartTimeAsc();
 
-    @EntityGraph(attributePaths = {"movie", "room"})
+    @EntityGraph(attributePaths = { "movie", "room" })
     List<Showtime> findByStartTimeAfterOrderByStartTimeAsc(LocalDateTime after);
 
     @Override
-    @EntityGraph(attributePaths = {"movie", "room"})
+    @EntityGraph(attributePaths = { "movie", "room" })
     Optional<Showtime> findById(Long id);
 }

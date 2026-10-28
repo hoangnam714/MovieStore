@@ -24,7 +24,8 @@ public class Room {
     @Column(name = "seat_count", nullable = false)
     private Integer seatCount;
 
-    // Nullable while existing databases are upgraded; new rooms must select a cinema.
+    // Nullable while existing databases are upgraded; new rooms must select a
+    // cinema.
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "cinema_id")
     @JsonIgnore
@@ -38,14 +39,43 @@ public class Room {
         this.seatCount = seatCount;
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public Integer getSeatCount() { return seatCount; }
-    public void setSeatCount(Integer seatCount) { this.seatCount = seatCount; }
-    public Cinema getCinema() { return cinema; }
-    public void setCinema(Cinema cinema) { this.cinema = cinema; }
-    public Long getCinemaId() { return cinema == null ? null : cinema.getId(); }
-    public String getCinemaName() { return cinema == null ? null : cinema.getName(); }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public Integer getSeatCount() {
+        return seatCount;
+    }
+
+    public void setSeatCount(Integer seatCount) {
+        this.seatCount = seatCount;
+    }
+
+    public Cinema getCinema() {
+        return cinema;
+    }
+
+    public void setCinema(Cinema cinema) {
+        this.cinema = cinema;
+    }
+
+    public Long getCinemaId() {
+        return cinema == null ? null : cinema.getId();
+    }
+
+    public String getCinemaName() {
+        return cinema == null ? null : cinema.getName();
+    }
 }

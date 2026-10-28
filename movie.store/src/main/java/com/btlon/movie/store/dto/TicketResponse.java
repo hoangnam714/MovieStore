@@ -50,23 +50,79 @@ public class TicketResponse {
         return response;
     }
 
-    public Long getId() { return id; }
-    public Long getUserId() { return userId; }
-    public String getUserFullName() { return userFullName; }
-    public String getUserEmail() { return userEmail; }
-    public String getCustomerPhone() { return customerPhone; }
-    public boolean isGuest() { return userId == null; }
-    public Long getShowtimeId() { return showtimeId; }
-    public String getMovieTitle() { return movieTitle; }
-    public String getRoomName() { return roomName; }
-    public Long getCinemaId() { return cinemaId; }
-    public String getCinemaName() { return cinemaName; }
-    public LocalDateTime getStartTime() { return startTime; }
-    public Integer getSeatNumber() { return seatNumber; }
-    public BigDecimal getPrice() { return price; }
-    public String getDiscountCode() { return discountCode; }
-    public BigDecimal getDiscountAmount() { return discountAmount; }
-    public BigDecimal getVatAmount() { return vatAmount; }
-    public BigDecimal getTotalAmount() { return totalAmount; }
-    public LocalDateTime getBookedAt() { return bookedAt; }
+    public Long getId() {
+        return id;
+    }
+
+    public Long getUserId() {
+        return userId;
+    }
+
+    public String getUserFullName() {
+        return userFullName;
+    }
+
+    public String getUserEmail() {
+        return userEmail;
+    }
+
+    public String getCustomerPhone() {
+        return customerPhone;
+    }
+
+    public boolean isGuest() {
+        return userId == null;
+    }
+
+    public Long getShowtimeId() {
+        return showtimeId;
+    }
+
+    public String getMovieTitle() {
+        return movieTitle;
+    }
+
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public Long getCinemaId() {
+        return cinemaId;
+    }
+
+    public String getCinemaName() {
+        return cinemaName;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public Integer getSeatNumber() {
+        return seatNumber;
+    }
+
+    public BigDecimal getPrice() {
+        return price;
+    }
+
+    public String getDiscountCode() {
+        return discountCode;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public BigDecimal getVatAmount() {
+        return vatAmount;
+    }
+
+    public BigDecimal getTotalAmount() {
+        return totalAmount;
+    }
+
+    public LocalDateTime getBookedAt() {
+        return bookedAt;
+    }
 }

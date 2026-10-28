@@ -11,7 +11,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
-/** Issues and verifies opaque bearer tokens; the raw token is only ever returned to the client. */
+/**
+ * Issues and verifies opaque bearer tokens; the raw token is only ever returned
+ * to the client.
+ */
 @Service
 @Transactional(readOnly = true)
 public class AuthService {
@@ -44,10 +47,14 @@ public class AuthService {
         if (token != null && !token.isBlank()) tokens.deleteByTokenHash(Tokens.sha256(token));
     }
 
-    /** Logs the user out everywhere except the session making the request (null keeps none). */
+    /**
+     * Logs the user out everywhere except the session making the request (null
+     * keeps none).
+     */
     @Transactional
     public void revokeOtherSessions(Long userId, String keepToken) {
         if (keepToken == null) tokens.deleteByUserId(userId);
-        else tokens.deleteByUserIdAndTokenHashNot(userId, Tokens.sha256(keepToken));
+        else
+            tokens.deleteByUserIdAndTokenHashNot(userId, Tokens.sha256(keepToken));
     }
 }

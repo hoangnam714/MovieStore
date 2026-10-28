@@ -20,9 +20,23 @@ public class UserResponse {
         return response;
     }
 
-    public Long getId() { return id; }
-    public String getFullName() { return fullName; }
-    public String getEmail() { return email; }
-    public String getPhone() { return phone; }
-    public UserRole getRole() { return role; }
+    public Long getId() {
+        return id;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
 }

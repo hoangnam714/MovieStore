@@ -24,7 +24,7 @@ public class MovieService {
     private final TicketRepository ticketRepository;
 
     public MovieService(MovieGenreRepository genreRepository, MovieRepository movieRepository,
-                        ShowtimeRepository showtimeRepository, TicketRepository ticketRepository) {
+            ShowtimeRepository showtimeRepository, TicketRepository ticketRepository) {
         this.genreRepository = genreRepository;
         this.movieRepository = movieRepository;
         this.showtimeRepository = showtimeRepository;

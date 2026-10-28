@@ -34,15 +34,47 @@ public class ShowtimeResponse {
         return response;
     }
 
-    public Long getId() { return id; }
-    public Long getMovieId() { return movieId; }
-    public String getMovieTitle() { return movieTitle; }
-    public Integer getMovieDuration() { return movieDuration; }
-    public Long getRoomId() { return roomId; }
-    public String getRoomName() { return roomName; }
-    public Long getCinemaId() { return cinemaId; }
-    public String getCinemaName() { return cinemaName; }
-    public Integer getSeatCount() { return seatCount; }
-    public LocalDateTime getStartTime() { return startTime; }
-    public BigDecimal getTicketPrice() { return ticketPrice; }
+    public Long getId() {
+        return id;
+    }
+
+    public Long getMovieId() {
+        return movieId;
+    }
+
+    public String getMovieTitle() {
+        return movieTitle;
+    }
+
+    public Integer getMovieDuration() {
+        return movieDuration;
+    }
+
+    public Long getRoomId() {
+        return roomId;
+    }
+
+    public String getRoomName() {
+        return roomName;
+    }
+
+    public Long getCinemaId() {
+        return cinemaId;
+    }
+
+    public String getCinemaName() {
+        return cinemaName;
+    }
+
+    public Integer getSeatCount() {
+        return seatCount;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public BigDecimal getTicketPrice() {
+        return ticketPrice;
+    }
 }

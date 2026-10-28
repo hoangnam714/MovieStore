@@ -54,7 +54,8 @@ public class ShowtimeController {
 
     @AdminOnly
     @PutMapping("/{id}")
-    public ResponseEntity<ShowtimeResponse> updateShowtime(@PathVariable Long id, @RequestBody ShowtimeRequest request) {
+    public ResponseEntity<ShowtimeResponse> updateShowtime(@PathVariable Long id,
+            @RequestBody ShowtimeRequest request) {
         return showtimeService.updateShowtime(id, request).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }

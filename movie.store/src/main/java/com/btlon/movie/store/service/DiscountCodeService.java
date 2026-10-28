@@ -23,10 +23,13 @@ public class DiscountCodeService {
     private final TicketRepository tickets;
 
     public DiscountCodeService(DiscountCodeRepository codes, TicketRepository tickets) {
-        this.codes = codes; this.tickets = tickets;
+        this.codes = codes;
+        this.tickets = tickets;
     }
 
-    public List<DiscountCode> list() { return codes.findAllByOrderByIdDesc(); }
+    public List<DiscountCode> list() {
+        return codes.findAllByOrderByIdDesc();
+    }
 
     /** Returns the usable code for today, or null when no code was entered. */
     public DiscountCode findUsable(String rawCode) {
@@ -62,7 +65,8 @@ public class DiscountCodeService {
                 throw new ConflictException("Discount code already exists");
             });
             if (request.getUsageLimit() != null && request.getUsageLimit() < entity.getUsedCount())
-                throw new BadRequestException("usageLimit must not be lower than used count (" + entity.getUsedCount() + ")");
+                throw new BadRequestException(
+                        "usageLimit must not be lower than used count (" + entity.getUsedCount() + ")");
             apply(entity, request, code);
             return codes.save(entity);
         });
@@ -80,7 +84,8 @@ public class DiscountCodeService {
     private static void apply(DiscountCode entity, DiscountCodeRequest request, String code) {
         entity.setCode(code);
         entity.setDescription(request.getDescription() == null || request.getDescription().isBlank()
-                ? null : request.getDescription().trim());
+                ? null
+                : request.getDescription().trim());
         entity.setDiscountPercent(request.getDiscountPercent());
         entity.setStartDate(request.getStartDate());
         entity.setEndDate(request.getEndDate());
@@ -94,7 +99,8 @@ public class DiscountCodeService {
         String code = request.getCode().trim().toUpperCase(Locale.ROOT);
         if (!CODE_PATTERN.matcher(code).matches())
             throw new BadRequestException("code must be 3-30 characters: A-Z, 0-9, _ or -");
-        if (request.getDiscountPercent() == null || request.getDiscountPercent() < 1 || request.getDiscountPercent() > 100)
+        if (request.getDiscountPercent() == null || request.getDiscountPercent() < 1
+                || request.getDiscountPercent() > 100)
             throw new BadRequestException("discountPercent must be between 1 and 100");
         if (request.getDescription() != null && request.getDescription().trim().length() > 255)
             throw new BadRequestException("description must be at most 255 characters");

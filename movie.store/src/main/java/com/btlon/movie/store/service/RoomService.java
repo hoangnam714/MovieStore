@@ -56,8 +56,7 @@ public class RoomService {
             return Optional.empty();
         }
         Room room = existing.get();
-        if (!Objects.equals(room.getCinemaId(), request.getCinemaId())
-                && showtimeRepository.existsByRoom_Id(id)) {
+        if (!Objects.equals(room.getCinemaId(), request.getCinemaId()) && showtimeRepository.existsByRoom_Id(id)) {
             throw new ConflictException("Cannot move a room with showtimes to another cinema");
         }
         if (request.getSeatCount() < room.getSeatCount()) {
@@ -73,9 +72,7 @@ public class RoomService {
     private void ensureSeatCountCanShrink(Long roomId, int newSeatCount) {
         for (var showtime : showtimeRepository.findByRoom_Id(roomId)) {
             int maxSeatSold = ticketRepository.findByShowtime_Id(showtime.getId()).stream()
-                    .mapToInt(t -> t.getSeatNumber())
-                    .max()
-                    .orElse(0);
+                    .mapToInt(t -> t.getSeatNumber()).max().orElse(0);
             if (newSeatCount < maxSeatSold) {
                 throw new ConflictException("Cannot reduce seat count below sold seats for a showtime in this room");
             }

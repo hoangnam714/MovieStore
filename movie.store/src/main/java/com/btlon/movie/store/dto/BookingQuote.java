@@ -2,7 +2,10 @@ package com.btlon.movie.store.dto;
 
 import java.math.BigDecimal;
 
-/** Price breakdown of one booking. Amounts are per-ticket values multiplied by seatCount. */
+/**
+ * Price breakdown of one booking. Amounts are per-ticket values multiplied by
+ * seatCount.
+ */
 public class BookingQuote {
     private final int seatCount;
     private final BigDecimal unitPrice;
@@ -19,7 +22,7 @@ public class BookingQuote {
     private final BigDecimal ticketTotal;
 
     public BookingQuote(int seatCount, BigDecimal unitPrice, int memberDiscountPercent, String discountCode,
-                        int codeDiscountPercent, BigDecimal ticketDiscount, int vatPercent, BigDecimal ticketVat) {
+            int codeDiscountPercent, BigDecimal ticketDiscount, int vatPercent, BigDecimal ticketVat) {
         BigDecimal seats = BigDecimal.valueOf(seatCount);
         this.seatCount = seatCount;
         this.unitPrice = unitPrice;
@@ -36,17 +39,55 @@ public class BookingQuote {
         this.ticketTotal = unitPrice.subtract(ticketDiscount).add(ticketVat);
     }
 
-    public int getSeatCount() { return seatCount; }
-    public BigDecimal getUnitPrice() { return unitPrice; }
-    public BigDecimal getSubtotal() { return subtotal; }
-    public int getMemberDiscountPercent() { return memberDiscountPercent; }
-    public String getDiscountCode() { return discountCode; }
-    public int getCodeDiscountPercent() { return codeDiscountPercent; }
-    public BigDecimal getDiscountAmount() { return discountAmount; }
-    public int getVatPercent() { return vatPercent; }
-    public BigDecimal getVatAmount() { return vatAmount; }
-    public BigDecimal getTotal() { return total; }
-    public BigDecimal getTicketDiscount() { return ticketDiscount; }
-    public BigDecimal getTicketVat() { return ticketVat; }
-    public BigDecimal getTicketTotal() { return ticketTotal; }
+    public int getSeatCount() {
+        return seatCount;
+    }
+
+    public BigDecimal getUnitPrice() {
+        return unitPrice;
+    }
+
+    public BigDecimal getSubtotal() {
+        return subtotal;
+    }
+
+    public int getMemberDiscountPercent() {
+        return memberDiscountPercent;
+    }
+
+    public String getDiscountCode() {
+        return discountCode;
+    }
+
+    public int getCodeDiscountPercent() {
+        return codeDiscountPercent;
+    }
+
+    public BigDecimal getDiscountAmount() {
+        return discountAmount;
+    }
+
+    public int getVatPercent() {
+        return vatPercent;
+    }
+
+    public BigDecimal getVatAmount() {
+        return vatAmount;
+    }
+
+    public BigDecimal getTotal() {
+        return total;
+    }
+
+    public BigDecimal getTicketDiscount() {
+        return ticketDiscount;
+    }
+
+    public BigDecimal getTicketVat() {
+        return ticketVat;
+    }
+
+    public BigDecimal getTicketTotal() {
+        return ticketTotal;
+    }
 }

@@ -24,7 +24,7 @@ public class MovieGenre {
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 
-    @OneToMany(mappedBy = "genre", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
+    @OneToMany(mappedBy = "genre", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
     @JsonManagedReference
     @OrderBy("title ASC")
     private List<Movie> movies = new ArrayList<>();
@@ -42,16 +42,34 @@ public class MovieGenre {
         movie.setGenre(this);
     }
 
-    /** Phim bắt buộc có thể loại; chỉ gỡ khỏi danh sách trong bộ nhớ (không xóa phim, không null genre). */
+    /**
+     * Phim bắt buộc có thể loại; chỉ gỡ khỏi danh sách trong bộ nhớ (không xóa
+     * phim, không null genre).
+     */
     public void removeMovie(Movie movie) {
         movies.remove(movie);
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public String getName() { return name; }
-    public void setName(String name) { this.name = name; }
-    public List<Movie> getMovies() { return movies; }
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getName() {
+        return name;
+    }
+
+    public void setName(String name) {
+        this.name = name;
+    }
+
+    public List<Movie> getMovies() {
+        return movies;
+    }
+
     public void setMovies(List<Movie> movies) {
         List<Movie> replacements = movies == null ? List.of() : new ArrayList<>(movies);
         for (Movie movie : new ArrayList<>(this.movies)) {

@@ -1,0 +1,11 @@
+{
+  "name": "moviestore-tools",
+  "private": true,
+  "scripts": {
+    "format": "prettier --write \"FE/**/*.{html,css,js,cjs,json}\"",
+    "format:check": "prettier --check \"FE/**/*.{html,css,js,cjs,json}\""
+  },
+  "devDependencies": {
+    "prettier": "3.9.6"
+  }
+}

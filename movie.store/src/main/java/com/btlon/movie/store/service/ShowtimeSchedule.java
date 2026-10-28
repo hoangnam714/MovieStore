@@ -10,14 +10,14 @@ final class ShowtimeSchedule {
     private ShowtimeSchedule() {
     }
 
-    static boolean overlaps(LocalDateTime start, int durationMinutes, LocalDateTime otherStart, int otherDurationMinutes) {
+    static boolean overlaps(LocalDateTime start, int durationMinutes, LocalDateTime otherStart,
+                            int otherDurationMinutes) {
         LocalDateTime end = start.plusMinutes(durationMinutes);
         LocalDateTime otherEnd = otherStart.plusMinutes(otherDurationMinutes);
         return start.isBefore(otherEnd) && otherStart.isBefore(end);
     }
 
-    static boolean roomHasOverlap(List<Showtime> inRoom, Long excludeShowtimeId,
-                                  LocalDateTime start, Movie movie) {
+    static boolean roomHasOverlap(List<Showtime> inRoom, Long excludeShowtimeId, LocalDateTime start, Movie movie) {
         int duration = movie.getDuration();
         for (Showtime existing : inRoom) {
             if (excludeShowtimeId != null && excludeShowtimeId.equals(existing.getId())) {

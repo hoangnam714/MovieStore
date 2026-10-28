@@ -3,7 +3,10 @@ package com.btlon.movie.store.dto;
 import com.btlon.movie.store.entity.User;
 import com.btlon.movie.store.entity.UserRole;
 
-/** User profile plus the bearer token to send as "Authorization: Bearer <token>". */
+/**
+ * User profile plus the bearer token to send as "Authorization: Bearer
+ * <token>".
+ */
 public class LoginResponse {
     private final Long id;
     private final String fullName;
@@ -21,10 +24,27 @@ public class LoginResponse {
         this.token = token;
     }
 
-    public Long getId() { return id; }
-    public String getFullName() { return fullName; }
-    public String getEmail() { return email; }
-    public String getPhone() { return phone; }
-    public UserRole getRole() { return role; }
-    public String getToken() { return token; }
+    public Long getId() {
+        return id;
+    }
+
+    public String getFullName() {
+        return fullName;
+    }
+
+    public String getEmail() {
+        return email;
+    }
+
+    public String getPhone() {
+        return phone;
+    }
+
+    public UserRole getRole() {
+        return role;
+    }
+
+    public String getToken() {
+        return token;
+    }
 }

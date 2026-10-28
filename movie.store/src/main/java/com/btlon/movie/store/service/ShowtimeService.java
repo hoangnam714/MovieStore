@@ -62,11 +62,8 @@ public class ShowtimeService {
         if (room.isEmpty()) {
             return Optional.empty();
         }
-        if (ShowtimeSchedule.roomHasOverlap(
-                showtimeRepository.findByRoom_Id(room.get().getId()),
-                null,
-                request.getStartTime(),
-                movie.get())) {
+        if (ShowtimeSchedule.roomHasOverlap(showtimeRepository.findByRoom_Id(room.get().getId()), null,
+                request.getStartTime(), movie.get())) {
             throw new ConflictException("Showtime overlaps another in the same room");
         }
         Showtime showtime = new Showtime();
@@ -102,11 +99,8 @@ public class ShowtimeService {
         if (room.isEmpty()) {
             return Optional.empty();
         }
-        if (ShowtimeSchedule.roomHasOverlap(
-                showtimeRepository.findByRoom_Id(room.get().getId()),
-                id,
-                request.getStartTime(),
-                movie.get())) {
+        if (ShowtimeSchedule.roomHasOverlap(showtimeRepository.findByRoom_Id(room.get().getId()), id,
+                request.getStartTime(), movie.get())) {
             throw new ConflictException("Showtime overlaps another in the same room");
         }
         showtime.setMovie(movie.get());
@@ -129,8 +123,8 @@ public class ShowtimeService {
     }
 
     private static void validate(ShowtimeRequest request) {
-        if (request.getMovieId() == null || request.getRoomId() == null
-                || request.getStartTime() == null || request.getTicketPrice() == null) {
+        if (request.getMovieId() == null || request.getRoomId() == null || request.getStartTime() == null
+                || request.getTicketPrice() == null) {
             throw new BadRequestException("movieId, roomId, startTime and ticketPrice are required");
         }
         if (request.getTicketPrice().compareTo(BigDecimal.ZERO) < 0) {

@@ -11,7 +11,8 @@ import java.util.HexFormat;
 public final class Tokens {
     private static final SecureRandom RANDOM = new SecureRandom();
 
-    private Tokens() {}
+    private Tokens() {
+    }
 
     public static String newToken() {
         byte[] bytes = new byte[32];

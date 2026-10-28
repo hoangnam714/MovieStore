@@ -40,17 +40,51 @@ public class Showtime {
     public Showtime() {
     }
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-    public Movie getMovie() { return movie; }
-    public void setMovie(Movie movie) { this.movie = movie; }
-    public Room getRoom() { return room; }
-    public void setRoom(Room room) { this.room = room; }
-    public LocalDateTime getStartTime() { return startTime; }
-    public void setStartTime(LocalDateTime startTime) { this.startTime = startTime; }
-    public BigDecimal getTicketPrice() { return ticketPrice; }
-    public void setTicketPrice(BigDecimal ticketPrice) { this.ticketPrice = ticketPrice; }
+    public Long getId() {
+        return id;
+    }
 
-    public Long getMovieId() { return movie == null ? null : movie.getId(); }
-    public Long getRoomId() { return room == null ? null : room.getId(); }
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public Movie getMovie() {
+        return movie;
+    }
+
+    public void setMovie(Movie movie) {
+        this.movie = movie;
+    }
+
+    public Room getRoom() {
+        return room;
+    }
+
+    public void setRoom(Room room) {
+        this.room = room;
+    }
+
+    public LocalDateTime getStartTime() {
+        return startTime;
+    }
+
+    public void setStartTime(LocalDateTime startTime) {
+        this.startTime = startTime;
+    }
+
+    public BigDecimal getTicketPrice() {
+        return ticketPrice;
+    }
+
+    public void setTicketPrice(BigDecimal ticketPrice) {
+        this.ticketPrice = ticketPrice;
+    }
+
+    public Long getMovieId() {
+        return movie == null ? null : movie.getId();
+    }
+
+    public Long getRoomId() {
+        return room == null ? null : room.getId();
+    }
 }

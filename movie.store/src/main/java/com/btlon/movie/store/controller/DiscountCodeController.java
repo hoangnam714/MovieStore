@@ -15,15 +15,28 @@ import java.util.List;
 @CrossOrigin(origins = "*")
 public class DiscountCodeController {
     private final DiscountCodeService service;
-    public DiscountCodeController(DiscountCodeService service) { this.service = service; }
-    @GetMapping public List<DiscountCode> list() { return service.list(); }
-    @PostMapping public ResponseEntity<DiscountCode> create(@RequestBody DiscountCodeRequest request) {
+
+    public DiscountCodeController(DiscountCodeService service) {
+        this.service = service;
+    }
+
+    @GetMapping
+    public List<DiscountCode> list() {
+        return service.list();
+    }
+
+    @PostMapping
+    public ResponseEntity<DiscountCode> create(@RequestBody DiscountCodeRequest request) {
         return ResponseEntity.status(HttpStatus.CREATED).body(service.create(request));
     }
-    @PutMapping("/{id}") public ResponseEntity<DiscountCode> update(@PathVariable Long id, @RequestBody DiscountCodeRequest request) {
+
+    @PutMapping("/{id}")
+    public ResponseEntity<DiscountCode> update(@PathVariable Long id, @RequestBody DiscountCodeRequest request) {
         return service.update(id, request).map(ResponseEntity::ok).orElse(ResponseEntity.notFound().build());
     }
-    @DeleteMapping("/{id}") public ResponseEntity<Void> delete(@PathVariable Long id) {
+
+    @DeleteMapping("/{id}")
+    public ResponseEntity<Void> delete(@PathVariable Long id) {
         return service.delete(id) ? ResponseEntity.noContent().build() : ResponseEntity.notFound().build();
     }
 }

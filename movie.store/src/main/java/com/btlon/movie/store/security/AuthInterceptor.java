@@ -13,9 +13,12 @@ import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
- * Resolves the user from "Authorization: Bearer <token>" and enforces @LoginRequired / @AdminOnly.
- * A token that is sent but invalid or expired is rejected even on public endpoints,
- * so the client learns its session ended instead of silently booking as a guest.
+ * Resolves the user from "Authorization: Bearer <token>" and
+ * enforces @LoginRequired / @AdminOnly.
+ * A token that is sent but invalid or expired is rejected even on public
+ * endpoints,
+ * so the client learns its session ended instead of silently booking as a
+ * guest.
  */
 @Component
 public class AuthInterceptor implements HandlerInterceptor {
@@ -23,7 +26,9 @@ public class AuthInterceptor implements HandlerInterceptor {
     private static final String BEARER = "Bearer ";
     private final AuthService authService;
 
-    public AuthInterceptor(AuthService authService) { this.authService = authService; }
+    public AuthInterceptor(AuthService authService) {
+        this.authService = authService;
+    }
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) {

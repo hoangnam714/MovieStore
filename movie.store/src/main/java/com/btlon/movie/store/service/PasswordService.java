@@ -26,23 +26,23 @@ public class PasswordService {
     public static void validateNewPassword(String password, String confirmPassword) {
         if (password == null || password.length() < MIN_LENGTH)
             throw new BadRequestException("Password must be at least 6 characters");
-        if (!password.equals(confirmPassword))
-            throw new BadRequestException("Password confirmation does not match");
+        if (!password.equals(confirmPassword)) throw new BadRequestException("Password confirmation does not match");
     }
 
     /**
-     * Resets the password when email and registered phone match, then logs the account out everywhere.
+     * Resets the password when email and registered phone match, then logs the
+     * account out everywhere.
      * One message for every mismatch so the form cannot reveal which emails exist.
      */
     @Transactional
     public void resetPassword(ResetPasswordRequest request) {
-        if (request == null || request.getEmail() == null || request.getEmail().isBlank()
-                || request.getPhone() == null || request.getPhone().isBlank())
+        if (request == null || request.getEmail() == null || request.getEmail().isBlank() || request.getPhone() == null
+                || request.getPhone().isBlank())
             throw new BadRequestException("email and phone are required");
         String phone = PhoneNumbers.normalize(request.getPhone());
         validateNewPassword(request.getNewPassword(), request.getConfirmPassword());
-        User user = users.findByEmail(request.getEmail().trim())
-                .filter(found -> phone.equals(found.getPhone()))
+
+        User user = users.findByEmail(request.getEmail().trim()).filter(found -> phone.equals(found.getPhone()))
                 .orElseThrow(() -> new BadRequestException("Email or phone number is incorrect"));
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));
         users.save(user);
@@ -55,6 +55,7 @@ public class PasswordService {
                 || !passwordEncoder.matches(request.getCurrentPassword(), user.getPasswordHash()))
             throw new BadRequestException("Current password is incorrect");
         validateNewPassword(request.getNewPassword(), request.getConfirmPassword());
+
         if (passwordEncoder.matches(request.getNewPassword(), user.getPasswordHash()))
             throw new BadRequestException("New password must be different from the current password");
         user.setPasswordHash(passwordEncoder.encode(request.getNewPassword()));

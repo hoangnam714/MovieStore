@@ -11,6 +11,11 @@ public class BookingResponse {
         this.tickets = tickets;
     }
 
-    public BookingQuote getPricing() { return pricing; }
-    public List<TicketResponse> getTickets() { return tickets; }
+    public BookingQuote getPricing() {
+        return pricing;
+    }
+
+    public List<TicketResponse> getTickets() {
+        return tickets;
+    }
 }

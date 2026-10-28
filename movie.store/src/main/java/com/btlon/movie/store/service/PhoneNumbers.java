@@ -8,9 +8,13 @@ import java.util.regex.Pattern;
 public final class PhoneNumbers {
     private static final Pattern VN_MOBILE = Pattern.compile("0[35789]\\d{8}");
 
-    private PhoneNumbers() {}
+    private PhoneNumbers() {
+    }
 
-    /** Accepts 0xxxxxxxxx or +84xxxxxxxxx with optional spaces, dots or dashes; returns null if blank. */
+    /**
+     * Accepts 0xxxxxxxxx or +84xxxxxxxxx with optional spaces, dots or dashes;
+     * returns null if blank.
+     */
     public static String normalize(String raw) {
         if (raw == null || raw.isBlank()) return null;
         String phone = raw.replaceAll("[\\s.-]", "");

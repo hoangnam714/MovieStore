@@ -9,8 +9,10 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 
 /**
- * Per-ticket pricing: discount = price x (member % + code %), VAT on the discounted price.
- * Amounts are rounded to whole VND so stored tickets add up exactly to the booking total.
+ * Per-ticket pricing: discount = price x (member % + code %), VAT on the
+ * discounted price.
+ * Amounts are rounded to whole VND so stored tickets add up exactly to the
+ * booking total.
  */
 @Component
 public class TicketPricing {
@@ -28,8 +30,10 @@ public class TicketPricing {
         int memberPercent = member ? memberDiscountPercent : 0;
         int codePercent = code == null ? 0 : code.getDiscountPercent();
         int totalPercent = Math.min(100, memberPercent + codePercent);
+
         BigDecimal discount = percentOf(unitPrice, totalPercent);
         BigDecimal vat = percentOf(unitPrice.subtract(discount), vatPercent);
+
         return new BookingQuote(seatCount, unitPrice, memberPercent, code == null ? null : code.getCode(),
                 codePercent, discount, vatPercent, vat);
     }

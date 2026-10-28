@@ -18,7 +18,7 @@ public class CurrentUserArgumentResolver implements HandlerMethodArgumentResolve
 
     @Override
     public Object resolveArgument(MethodParameter parameter, ModelAndViewContainer container,
-                                  NativeWebRequest request, WebDataBinderFactory binderFactory) {
+            NativeWebRequest request, WebDataBinderFactory binderFactory) {
         return request.getAttribute(AuthInterceptor.CURRENT_USER, RequestAttributes.SCOPE_REQUEST);
     }
 }

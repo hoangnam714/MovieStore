@@ -68,7 +68,10 @@ public class TicketService {
                 .toList();
     }
 
-    /** Price preview for the booking page; seat availability is checked only when booking. */
+    /**
+     * Price preview for the booking page; seat availability is checked only when
+     * booking.
+     */
     public BookingQuote quote(TicketBookRequest request, User user) {
         if (request == null || request.getShowtimeId() == null
                 || request.getSeatNumbers() == null || request.getSeatNumbers().isEmpty()) {
@@ -105,7 +108,8 @@ public class TicketService {
 
         int seatCount = showtime.getRoom().getSeatCount();
         Set<Integer> uniqueSeats = new LinkedHashSet<>();
-        if (request.getSeatNumbers().size() > MAX_SEATS_PER_BOOKING) throw new BadRequestException("Maximum 8 seats per booking");
+        if (request.getSeatNumbers().size() > MAX_SEATS_PER_BOOKING)
+            throw new BadRequestException("Maximum 8 seats per booking");
         for (Integer seat : request.getSeatNumbers()) {
             if (seat == null || seat < 1 || seat > seatCount) {
                 throw new BadRequestException("Seat must be between 1 and " + seatCount);
@@ -122,7 +126,8 @@ public class TicketService {
             throw new ConflictException("One or more seats are already booked for this showtime");
 
         if (discountCode != null) discountCodeService.consume(discountCode);
-        BookingQuote pricing = ticketPricing.quote(showtime.getTicketPrice(), uniqueSeats.size(), user != null, discountCode);
+        BookingQuote pricing = ticketPricing.quote(showtime.getTicketPrice(), uniqueSeats.size(), user != null,
+                discountCode);
 
         List<Ticket> tickets = new ArrayList<>();
         for (Integer seat : uniqueSeats) {
@@ -157,10 +162,11 @@ public class TicketService {
         queue.add(first);
         while (!queue.isEmpty()) {
             int seat = queue.removeFirst();
-            for (int neighbor : new int[]{seat - 1, seat + 1, seat - SEATS_PER_ROW, seat + SEATS_PER_ROW}) {
+            for (int neighbor : new int[] { seat - 1, seat + 1, seat - SEATS_PER_ROW, seat + SEATS_PER_ROW }) {
                 if (neighbor < 1 || neighbor > seatCount) continue;
                 if (Math.abs(neighbor - seat) == 1
-                        && (neighbor - 1) / SEATS_PER_ROW != (seat - 1) / SEATS_PER_ROW) continue;
+                        && (neighbor - 1) / SEATS_PER_ROW != (seat - 1) / SEATS_PER_ROW)
+                    continue;
                 if (seats.contains(neighbor) && visited.add(neighbor)) queue.addLast(neighbor);
             }
         }

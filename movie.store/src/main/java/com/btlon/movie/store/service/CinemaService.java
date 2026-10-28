@@ -16,15 +16,22 @@ import java.util.Optional;
 public class CinemaService {
     private final CinemaRepository cinemas;
     private final RoomRepository rooms;
+
     public CinemaService(CinemaRepository cinemas, RoomRepository rooms) {
-        this.cinemas = cinemas; this.rooms = rooms;
+        this.cinemas = cinemas;
+        this.rooms = rooms;
     }
-    public List<Cinema> list() { return cinemas.findAll(); }
+
+    public List<Cinema> list() {
+        return cinemas.findAll();
+    }
+
     @Transactional
     public Cinema create(CinemaRequest request) {
         validate(request);
         return cinemas.save(new Cinema(request.getName().trim(), request.getAddress().trim()));
     }
+
     @Transactional
     public Optional<Cinema> update(Long id, CinemaRequest request) {
         validate(request);
@@ -34,6 +41,7 @@ public class CinemaService {
             return cinemas.save(cinema);
         });
     }
+
     @Transactional
     public boolean delete(Long id) {
         if (!cinemas.existsById(id)) return false;
@@ -41,6 +49,7 @@ public class CinemaService {
         cinemas.deleteById(id);
         return true;
     }
+
     private static void validate(CinemaRequest request) {
         if (request == null || request.getName() == null || request.getName().isBlank()
                 || request.getAddress() == null || request.getAddress().isBlank())
