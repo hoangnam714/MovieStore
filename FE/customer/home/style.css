@@ -5,6 +5,10 @@
   background: #201e24;
 }
 
+.hero[hidden] + .experience-strip {
+  margin-top: 24px;
+}
+
 .hero-track {
   display: flex;
   width: 100%;

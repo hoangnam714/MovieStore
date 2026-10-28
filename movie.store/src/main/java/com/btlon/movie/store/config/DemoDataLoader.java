@@ -49,8 +49,12 @@ public class DemoDataLoader {
             if (genres.count() == 0) {
                 MovieGenre action = genres.save(new MovieGenre(null, "Hành động"));
                 MovieGenre comedy = genres.save(new MovieGenre(null, "Hài"));
-                movies.save(new Movie(null, "Avengers: Endgame", 181, 2019, action));
-                movies.save(new Movie(null, "Mai", 131, 2024, comedy));
+                Movie avengers = new Movie(null, "Avengers: Endgame", 181, 2019, action);
+                Movie mai = new Movie(null, "Mai", 131, 2024, comedy);
+                MovieMediaMigration.applyCatalog(avengers, true);
+                MovieMediaMigration.applyCatalog(mai, true);
+                movies.save(avengers);
+                movies.save(mai);
             }
             if (rooms.count() == 0) {
                 rooms.save(new Room("Phòng 1", 50));

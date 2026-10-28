@@ -108,7 +108,7 @@ class MovieRelationshipTests {
     void rejectsMissingOrUnknownGenreWithoutSavingMovie() throws Exception {
         assertEquals(400, request("POST", "/api/movies", movieBody(999999L)).statusCode());
         assertEquals(400, request("POST", "/api/movies",
-                "{\"title\":\"Demo\",\"duration\":120,\"releaseYear\":2026}").statusCode());
+                "{\"title\":\"Demo\",\"duration\":120,\"releaseDate\":\"2026-10-28\"}").statusCode());
         assertEquals(0, movies.count());
     }
 
@@ -121,7 +121,7 @@ class MovieRelationshipTests {
         JsonNode genre = mapper.readTree(response.body());
         long genreId = genre.get("id").asLong();
         assertEquals(201, request("POST", "/api/movies",
-                "{\"title\":\"Demo\",\"duration\":100,\"releaseYear\":2026,\"genreId\":" + genreId + "}")
+                "{\"title\":\"Demo\",\"duration\":100,\"releaseDate\":\"2026-10-28\",\"genreId\":" + genreId + "}")
                 .statusCode());
         assertEquals(1, movies.findByGenre_Id(genreId).size());
         assertEquals(200, request("GET", "/api/genres/" + genreId, null).statusCode());
@@ -145,14 +145,15 @@ class MovieRelationshipTests {
     }
 
     private String movieBody(Long genreId) {
-        return "{\"title\":\"Demo\",\"duration\":120,\"releaseYear\":2026,\"genreId\":" + genreId + "}";
+        return "{\"title\":\"Demo\",\"duration\":120,\"releaseDate\":\"2026-10-28\",\"genreId\":" + genreId + "}";
     }
 
     private HttpResponse<String> request(String method, String path, String body) throws Exception {
         HttpRequest request = HttpRequest.newBuilder(URI.create("http://localhost:" + port + path))
                 .header("Content-Type", "application/json")
                 .header("Authorization", "Bearer " + adminToken)
-                .method(method, body == null ? HttpRequest.BodyPublishers.noBody()
+                .method(method, body == null
+                        ? HttpRequest.BodyPublishers.noBody()
                         : HttpRequest.BodyPublishers.ofString(body))
                 .build();
         return client.send(request, HttpResponse.BodyHandlers.ofString());

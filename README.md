@@ -59,6 +59,44 @@ Truy cập [trang khách](http://localhost:8080/customer/home/index.html) hoặc
 
 Repo có sẵn [.vscode/tasks.json](.vscode/tasks.json). Chọn `Terminal → Run Task… → MovieStore: Full Stack` để chạy backend và frontend. Bạn cũng có thể chọn `MovieStore: Backend` hoặc `MovieStore: Frontend` để chạy riêng từng phần. Lần đầu dùng Maven Wrapper có thể cần tải Maven và dependencies.
 
+## Poster phim và banner trang chủ
+
+Trong **CMS → Phim**, quản trị viên có thể chọn poster, xem trước ảnh, nhập ngày phát hành, tiêu đề phụ (tối đa 100 ký tự), mô tả (tối đa 500 ký tự) và bật/tắt banner. Độ ưu tiên banner không bắt buộc; nếu nhập thì từ 0 đến 99, số càng lớn hiển thị càng sớm. Tối đa 5 phim được bật banner cùng lúc, kể cả phim hiện chưa có suất chiếu tương lai.
+
+Backend cung cấp `GET /api/movies/banners`: chỉ lấy phim đã bật banner, có ảnh và còn suất chiếu tương lai; sắp xếp theo độ ưu tiên giảm dần (để trống xếp sau), ngày phát hành giảm dần, rồi ID giảm dần; trả tối đa 5 phim. Frontend hiển thị đúng danh sách và thứ tự API trả về, không tự chọn thêm phim.
+
+Upload ảnh qua `POST /api/uploads/images` (multipart field `file`, chỉ admin). Nhận JPG/PNG/WebP tối đa 5 MB; loại file được chọn bằng `switch` theo MIME do trình duyệt gửi lên. Bản đơn giản này không kiểm tra phần đầu file, giải mã nội dung ảnh hoặc kiểm tra số pixel. Service tạo tên UUID và lưu file bằng `transferTo`, sau đó trả URL `/api/uploads/images/<uuid>.png`. `WebConfig` ánh xạ đường dẫn này tới thư mục upload để Spring tự phục vụ ảnh và trả 404 khi file không tồn tại. Cả API và ảnh đều đi qua proxy `/api` ở frontend. Ảnh không có hoặc bị lỗi được thay bằng ảnh mặc định.
+
+Luồng xử lý trong code:
+
+1. CMS chọn ảnh và xem trước trên trình duyệt; chưa gửi file lên BE.
+2. Khi bấm lưu, `onCreateMovie` dùng chuỗi `.then() / .catch() / .finally()` để upload ảnh mới bằng `movieApi.uploadImage` rồi lưu phim. Nếu không chọn ảnh mới thì giữ URL hiện tại.
+3. `ImageUploadController` nhận file; `ImageStorageService.store` kiểm tra file rỗng/dung lượng, xác định đuôi ảnh, lưu file và trả URL.
+4. CMS gửi thông tin phim cùng `posterUrl` vào API thêm/sửa phim. Chỉ đường dẫn được lưu trong bảng `movies`.
+5. Trang khách dùng `posterUrl` trong thẻ `img`; Spring đọc ảnh từ thư mục upload qua cấu hình trong `WebConfig`.
+
+Ảnh mới được lưu trong `movie.store/uploads/movies` khi chạy từ thư mục gốc hoặc từ `movie.store`. Có thể đặt biến môi trường `MOVIESTORE_UPLOAD_DIR` thành đường dẫn tuyệt đối để chọn nơi lưu khác. Thư mục ảnh được phép đưa vào Git theo cấu hình hiện tại; 8 poster mẫu đã được tải sẵn để chạy thử. Danh sách ảnh nằm trong [uploads/README.md](movie.store/uploads/README.md). Khi chuyển máy chủ cần chuyển cả thư mục ảnh, kể cả các file upload chưa commit.
+
+Khởi động backend với database cũ sẽ tự thêm các cột mới qua Hibernate và chuyển poster/nội dung banner từng viết trong frontend sang dữ liệu phim **một lần**. Các thay đổi sau đó trong CMS không bị ghi đè khi khởi động lại. URL poster mẫu cũ được đổi sang ảnh local đã tải sẵn; các ảnh upload hoặc URL tùy chỉnh khác được giữ nguyên. Nếu dùng `MOVIESTORE_UPLOAD_DIR`, hãy chép các file trong `movie.store/uploads/movies` sang thư mục đã cấu hình.
+
+Phim cũ giữ `release_year` và để `release_date` trống; CMS hiển thị nhắc bổ sung ngày chính xác trước khi lưu. API thêm/sửa phim yêu cầu `releaseDate` (`YYYY-MM-DD`), không còn nhận `releaseYear` thay cho ngày. Cột năm cũ được giữ trong giai đoạn chuyển đổi; không tự gán ngày 01/01 hoặc xóa dữ liệu cũ. Các phim mẫu mới cũng chưa được tự đặt ngày phát hành.
+
+Ví dụ body thêm/sửa phim:
+
+```json
+{
+  "title": "Phim mới",
+  "duration": 120,
+  "releaseDate": "2026-10-28",
+  "genreId": 1,
+  "posterUrl": "/api/uploads/images/00000000-0000-4000-8000-000000000000.png",
+  "subtitle": "CÂU CHUYỆN TRÊN MÀN ẢNH RỘNG",
+  "description": "Nội dung giới thiệu phim.",
+  "featured": true,
+  "bannerPosition": null
+}
+```
+
 ## Format code chung trong VS Code / Cursor
 
 Mở thư mục gốc `MovieStore`, sau đó cài hai extension được đề xuất trong tab Extensions (`@recommended`): **Prettier - Code formatter** và **Language Support for Java by Red Hat**.

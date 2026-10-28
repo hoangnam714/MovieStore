@@ -10,6 +10,12 @@ CREATE TABLE movies (
     title        VARCHAR(150) NOT NULL,
     duration     INT          NOT NULL CHECK (duration > 0),
     release_year INT          NOT NULL,
+    release_date DATE, -- NULL với dữ liệu cũ chưa biết ngày chính xác
+    poster_url   VARCHAR(1000),
+    subtitle     VARCHAR(100),
+    description  VARCHAR(500),
+    featured     BOOLEAN, -- NULL chỉ dùng để nhận diện dữ liệu trước migration
+    banner_position INT CHECK (banner_position BETWEEN 0 AND 99),
     genre_id     BIGINT       NOT NULL,
     CONSTRAINT fk_movies_genre FOREIGN KEY (genre_id) REFERENCES movie_genres (id) ON DELETE RESTRICT
 );

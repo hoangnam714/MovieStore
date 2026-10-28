@@ -36,62 +36,209 @@
                     <p>Thông tin phim được dùng khi tạo suất chiếu và hiển thị ở trang khách.</p>
                   </div>
                   <form id="movie-form" onsubmit="onCreateMovie(event)">
-                    <div class="form-row">
-                      <div class="col-md-3">
-                        <label for="movie-title">Tên phim</label
-                        ><input
-                          id="movie-title"
-                          class="form-control"
-                          name="title"
-                          placeholder="Tên phim"
-                          required
+                    <div class="movie-editor-layout">
+                      <aside class="movie-poster-panel" aria-labelledby="movie-poster-heading">
+                        <h3 id="movie-poster-heading">Poster phim</h3>
+                        <img
+                          id="movie-poster-preview"
+                          class="movie-poster-preview"
+                          src="/assets/images/default-poster.svg"
+                          alt="Xem trước poster phim"
                         />
-                      </div>
-                      <div class="col-md-2">
-                        <label for="movie-duration">Thời lượng (phút)</label>
-                        <input
-                          id="movie-duration"
-                          class="form-control"
-                          name="duration"
-                          type="number"
-                          min="1"
-                          placeholder="Phút"
-                          required
-                        />
-                      </div>
-                      <div class="col-md-2">
-                        <label for="movie-year">Năm phát hành</label>
-                        <input
-                          id="movie-year"
-                          class="form-control"
-                          name="releaseYear"
-                          type="number"
-                          placeholder="Năm"
-                          required
-                        />
-                      </div>
-                      <div class="col-md-3">
-                        <label for="movie-genre">Thể loại</label>
-                        <select id="movie-genre" class="form-control" name="genreId" required>
-                          <option value="">Thể loại</option>
-                        </select>
-                      </div>
-                      <div class="col-md-2">
-                        <label class="d-none d-md-block">&nbsp;</label>
-                        <button id="movie-save" class="btn btn-primary btn-block">Thêm phim</button>
+                        <div class="movie-poster-actions">
+                          <input
+                            id="movie-poster"
+                            name="poster"
+                            type="file"
+                            class="movie-file-input"
+                            accept="image/jpeg,image/png,image/webp"
+                            aria-label="Chọn poster phim"
+                            aria-describedby="movie-poster-help movie-poster-filename"
+                            onchange="onMoviePosterSelected()"
+                          />
+                          <label
+                            for="movie-poster"
+                            class="btn btn-outline-secondary movie-upload-button"
+                          >
+                            <i class="fas fa-arrow-up-from-bracket" aria-hidden="true"></i>
+                            Chọn ảnh
+                          </label>
+                          <button
+                            type="button"
+                            class="btn btn-link movie-remove-poster"
+                            onclick="onRemoveMoviePoster()"
+                          >
+                            Bỏ ảnh
+                          </button>
+                        </div>
+                        <p
+                          id="movie-poster-filename"
+                          class="movie-poster-filename"
+                          aria-live="polite"
+                        >
+                          Chưa chọn ảnh
+                        </p>
+                        <p id="movie-poster-help" class="movie-field-help">
+                          JPG, PNG hoặc WebP · tối đa 5 MB.
+                        </p>
+                      </aside>
+                      <div class="movie-editor-fields">
+                        <section aria-labelledby="movie-info-heading">
+                          <h3 id="movie-info-heading" class="movie-section-title">
+                            Thông tin phim
+                          </h3>
+                          <div class="movie-field">
+                            <label for="movie-title"
+                              >Tên phim
+                              <span class="movie-required" aria-hidden="true">*</span></label
+                            >
+                            <input
+                              id="movie-title"
+                              class="form-control"
+                              name="title"
+                              maxlength="150"
+                              placeholder="Tên phim"
+                              required
+                            />
+                          </div>
+                          <div class="movie-meta-fields">
+                            <div class="movie-field">
+                              <label for="movie-duration"
+                                >Thời lượng (phút)
+                                <span class="movie-required" aria-hidden="true">*</span></label
+                              >
+                              <input
+                                id="movie-duration"
+                                class="form-control"
+                                name="duration"
+                                type="number"
+                                min="1"
+                                placeholder="Phút"
+                                required
+                              />
+                            </div>
+                            <div class="movie-field">
+                              <label for="movie-release-date"
+                                >Ngày phát hành
+                                <span class="movie-required" aria-hidden="true">*</span></label
+                              >
+                              <input
+                                id="movie-release-date"
+                                class="form-control"
+                                name="releaseDate"
+                                type="date"
+                                required
+                              />
+                            </div>
+                            <div class="movie-field">
+                              <label for="movie-genre"
+                                >Thể loại
+                                <span class="movie-required" aria-hidden="true">*</span></label
+                              >
+                              <select id="movie-genre" class="form-control" name="genreId" required>
+                                <option value="">Thể loại</option>
+                              </select>
+                            </div>
+                          </div>
+                        </section>
+                        <section class="movie-copy-section" aria-labelledby="movie-copy-heading">
+                          <h3 id="movie-copy-heading" class="movie-section-title">
+                            Nội dung giới thiệu
+                          </h3>
+                          <div class="movie-field">
+                            <label for="movie-subtitle">Tiêu đề phụ trên banner</label>
+                            <input
+                              id="movie-subtitle"
+                              name="subtitle"
+                              class="form-control"
+                              maxlength="100"
+                              aria-describedby="movie-subtitle-help"
+                            />
+                            <small id="movie-subtitle-help" class="movie-field-help"
+                              >Tối đa 100 ký tự.</small
+                            >
+                          </div>
+                          <div class="movie-field">
+                            <label for="movie-description">Mô tả phim</label>
+                            <textarea
+                              id="movie-description"
+                              name="description"
+                              class="form-control"
+                              rows="4"
+                              maxlength="500"
+                              aria-describedby="movie-description-help"
+                            ></textarea>
+                            <small id="movie-description-help" class="movie-field-help"
+                              >Tối đa 500 ký tự. Viết ngắn gọn để dễ đọc trên banner.</small
+                            >
+                          </div>
+                        </section>
+                        <fieldset class="movie-banner-settings">
+                          <legend>Cấu hình banner</legend>
+                          <div class="movie-banner-header">
+                            <label for="movie-featured" class="movie-banner-toggle">
+                              <input
+                                id="movie-featured"
+                                name="featured"
+                                type="checkbox"
+                                role="switch"
+                              />
+                              <span>Hiển thị trên banner</span>
+                            </label>
+                            <span
+                              id="movie-banner-count"
+                              class="movie-banner-count"
+                              role="status"
+                            ></span>
+                          </div>
+                          <div class="movie-banner-priority">
+                            <div class="movie-field">
+                              <label for="movie-banner-position">Độ ưu tiên</label>
+                              <input
+                                id="movie-banner-position"
+                                name="bannerPosition"
+                                class="form-control"
+                                type="number"
+                                min="0"
+                                max="99"
+                                step="1"
+                                placeholder="Không bắt buộc"
+                                aria-describedby="movie-banner-help"
+                              />
+                            </div>
+                            <p id="movie-banner-help" class="movie-field-help">
+                              Nhập từ 0 đến 99, số lớn hiển thị trước. Để trống: xếp sau nhóm có độ
+                              ưu tiên, theo ngày phát hành mới nhất.
+                            </p>
+                          </div>
+                          <p class="movie-field-help movie-banner-note">
+                            Tối đa 5 phim được bật. Phim cần có poster và suất chiếu tương lai để
+                            xuất hiện trên trang chủ.
+                          </p>
+                        </fieldset>
                       </div>
                     </div>
-                    <p id="movie-form-error" class="text-danger mt-2 mb-0" role="alert"></p>
-                    <button
-                      type="button"
-                      id="movie-cancel"
-                      class="btn btn-outline-secondary mt-2"
-                      onclick="onCancelMovieEdit()"
-                      hidden
-                    >
-                      Hủy sửa
-                    </button>
+                    <div class="movie-form-footer">
+                      <p id="movie-form-error" class="text-danger" role="alert"></p>
+                      <div class="movie-form-actions">
+                        <button
+                          type="button"
+                          id="movie-cancel"
+                          class="btn btn-outline-secondary"
+                          onclick="onCancelMovieEdit()"
+                        >
+                          Làm mới
+                        </button>
+                        <button type="submit" id="movie-save" class="btn btn-primary">
+                          Thêm phim
+                        </button>
+                      </div>
+                    </div>
                   </form>
+                </div>
+              </div>
+              <div class="card movie-list-card">
+                <div class="card-body">
                   <div class="cms-list-toolbar">
                     <div>
                       <h2>Danh sách phim</h2>
@@ -106,13 +253,14 @@
                       oninput="onRenderMovies()"
                     />
                   </div>
-                  <table class="table table-striped table-hover">
+                  <table class="table">
                     <thead>
                       <tr>
                         <th>Tên</th>
                         <th>Phút</th>
-                        <th>Năm</th>
+                        <th>Ngày phát hành</th>
                         <th>Thể loại</th>
+                        <th>Banner</th>
                         <th></th>
                       </tr>
                     </thead>
@@ -135,6 +283,59 @@
       let genres = [];
       let movies = [];
       let editingMovieId = null;
+      let currentPosterUrl = null;
+      let posterPreviewUrl = null;
+      let isSavingMovie = false;
+
+      function onMoviePosterPreview(url) {
+        if (posterPreviewUrl) URL.revokeObjectURL(posterPreviewUrl);
+        posterPreviewUrl = null;
+        const preview = document.getElementById("movie-poster-preview");
+        preview.onerror = () => {
+          preview.onerror = null;
+          preview.src = "/assets/images/default-poster.svg";
+        };
+        preview.src = getMoviePosterUrl(url);
+        document.getElementById("movie-poster-filename").textContent = url
+          ? "Ảnh hiện tại"
+          : "Chưa chọn ảnh";
+      }
+
+      function onMoviePosterSelected() {
+        const input = document.getElementById("movie-poster");
+        const file = input.files[0];
+        const error = document.getElementById("movie-form-error");
+        error.textContent = "";
+        if (!file) {
+          onMoviePosterPreview(currentPosterUrl);
+          return;
+        }
+        if (
+          !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+          file.size > 5 * 1024 * 1024
+        ) {
+          input.value = "";
+          error.textContent = "Chọn ảnh JPG, PNG hoặc WebP, tối đa 5 MB.";
+          onMoviePosterPreview(currentPosterUrl);
+          return;
+        }
+        onMoviePosterPreview(currentPosterUrl);
+        posterPreviewUrl = URL.createObjectURL(file);
+        document.getElementById("movie-poster-preview").src = posterPreviewUrl;
+        document.getElementById("movie-poster-filename").textContent = file.name;
+      }
+
+      function onRemoveMoviePoster() {
+        if (isSavingMovie) return;
+        currentPosterUrl = null;
+        document.getElementById("movie-poster").value = "";
+        onMoviePosterPreview(null);
+      }
+
+      function getMovieReleaseDate(movie) {
+        if (movie.releaseDate) return movie.releaseDate.split("-").reverse().join("/");
+        return `Chưa bổ sung ngày${movie.releaseYear ? " (năm " + movie.releaseYear + ")" : ""}`;
+      }
 
       function getNormalizedMovieSearch(value) {
         return String(value || "")
@@ -164,6 +365,8 @@
       }
 
       function onRenderMovies() {
+        document.getElementById("movie-banner-count").textContent =
+          `Đã bật: ${movies.filter((movie) => movie.featured).length}/5`;
         const keyword = getNormalizedMovieSearch(
           document.getElementById("movie-search").value.trim()
         );
@@ -177,10 +380,16 @@
             .map(
               (movie) => `
                 <tr>
-                  <td><strong>${getSafeHtml(movie.title)}</strong></td>
+                  <td>
+                    <div class="movie-list-title">
+                      <img class="movie-list-poster" src="${getSafeHtml(getMoviePosterUrl(movie.posterUrl))}" alt="" loading="lazy" onerror="this.onerror = null; this.src = '/assets/images/default-poster.svg'" />
+                      <strong>${getSafeHtml(movie.title)}</strong>
+                    </div>
+                  </td>
                   <td>${movie.duration}</td>
-                  <td>${movie.releaseYear}</td>
+                  <td>${getSafeHtml(getMovieReleaseDate(movie))}</td>
                   <td>${getSafeHtml(genres.find((genre) => genre.id === movie.genreId)?.name ?? "")}</td>
+                  <td>${movie.featured ? `Đã bật · ${movie.bannerPosition ?? "Theo ngày phát hành"}` : "Tắt"}</td>
                   <td>
                     <button class="btn btn-sm btn-outline-secondary mr-2" onclick="onEditMovie(${movie.id})">
                       Sửa
@@ -191,55 +400,103 @@
               `
             )
             .join("") ||
-          '<tr><td colspan="5" class="text-center text-muted py-4">Không có phim phù hợp.</td></tr>'
+          '<tr><td colspan="6" class="text-center text-muted py-4">Không có phim phù hợp.</td></tr>'
         }`;
       }
 
       function onEditMovie(id) {
+        if (isSavingMovie) return;
         const movie = movies.find((item) => item.id === id);
         if (!movie) return;
         editingMovieId = id;
         const form = document.getElementById("movie-form");
         form.elements.title.value = movie.title;
         form.elements.duration.value = movie.duration;
-        form.elements.releaseYear.value = movie.releaseYear;
+        form.elements.releaseDate.value = movie.releaseDate || "";
         form.elements.genreId.value = movie.genreId;
+        form.elements.subtitle.value = movie.subtitle || "";
+        form.elements.description.value = movie.description || "";
+        form.elements.featured.checked = movie.featured;
+        form.elements.bannerPosition.value = movie.bannerPosition ?? "";
+        form.elements.poster.value = "";
+        currentPosterUrl = movie.posterUrl;
+        onMoviePosterPreview(currentPosterUrl);
+        document.getElementById("movie-form-error").textContent = movie.releaseDate
+          ? ""
+          : "Phim cũ chưa có ngày phát hành chính xác. Vui lòng bổ sung trước khi lưu.";
         document.getElementById("movie-form-title").textContent = `Sửa phim #${id}`;
-        document.getElementById("movie-save").textContent = "Lưu phim";
-        document.getElementById("movie-cancel").hidden = false;
+        document.getElementById("movie-save").textContent = "Lưu thay đổi";
+        document.getElementById("movie-cancel").textContent = "Hủy sửa";
         form.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
       function onCancelMovieEdit() {
+        if (isSavingMovie) return;
+        onResetMovieForm();
+      }
+
+      function onResetMovieForm() {
         editingMovieId = null;
         document.getElementById("movie-form").reset();
         document.getElementById("movie-form-title").textContent = "Thêm phim mới";
         document.getElementById("movie-save").textContent = "Thêm phim";
-        document.getElementById("movie-cancel").hidden = true;
+        document.getElementById("movie-cancel").textContent = "Làm mới";
         document.getElementById("movie-form-error").textContent = "";
+        currentPosterUrl = null;
+        onMoviePosterPreview(null);
       }
 
       function onCreateMovie(event) {
         event.preventDefault();
+        if (isSavingMovie) return;
         const form = event.target;
 
         const payload = {
           title: form.elements.title.value.trim(),
           duration: Number(form.elements.duration.value),
-          releaseYear: Number(form.elements.releaseYear.value),
-          genreId: Number(form.elements.genreId.value)
+          releaseDate: form.elements.releaseDate.value,
+          genreId: Number(form.elements.genreId.value),
+          posterUrl: currentPosterUrl,
+          subtitle: form.elements.subtitle.value.trim(),
+          description: form.elements.description.value.trim(),
+          featured: form.elements.featured.checked,
+          bannerPosition:
+            form.elements.bannerPosition.value === ""
+              ? null
+              : Number(form.elements.bannerPosition.value)
         };
-        const request = editingMovieId
-          ? movieApi.update(editingMovieId, payload)
-          : movieApi.create(payload);
+        const poster = form.elements.poster.files[0];
+        const movieId = editingMovieId;
+        if (payload.featured && !poster && !payload.posterUrl) {
+          document.getElementById("movie-form-error").textContent =
+            "Phim hiển thị trên banner phải có poster.";
+          return;
+        }
+        isSavingMovie = true;
+        document.getElementById("movie-form-error").textContent = "";
+        const controls = [...form.querySelectorAll("input, select, textarea, button")];
+        controls.forEach((control) => {
+          control.disabled = true;
+        });
         const save = document.getElementById("movie-save");
-        save.disabled = true;
+        save.textContent = poster ? "Đang tải ảnh và lưu…" : "Đang lưu…";
+        const request = poster
+          ? movieApi.uploadImage(poster).then(({ data }) => {
+              payload.posterUrl = data.url;
+              currentPosterUrl = data.url;
+              form.elements.poster.value = "";
+              onMoviePosterPreview(data.url);
+            })
+          : Promise.resolve();
         return request
+          .then(() => (movieId ? movieApi.update(movieId, payload) : movieApi.create(payload)))
+          .then(() => {
+            onAdminMessage(movieId ? "Đã cập nhật phim." : "Đã thêm phim.");
+            onResetMovieForm();
+          })
           .then(() => movieApi.list())
           .then(({ data }) => {
             movies = data;
-            onAdminMessage(editingMovieId ? "Đã cập nhật phim." : "Đã thêm phim.");
-            onCancelMovieEdit();
             onRenderMovies();
           })
           .catch((error) => {
@@ -247,11 +504,16 @@
               error?.response?.data?.message || "Không lưu được phim.";
           })
           .finally(() => {
-            save.disabled = false;
+            isSavingMovie = false;
+            controls.forEach((control) => {
+              control.disabled = false;
+            });
+            save.textContent = editingMovieId ? "Lưu thay đổi" : "Thêm phim";
           });
       }
 
       function onDeleteMovie(id) {
+        if (isSavingMovie) return;
         if (!confirm("Xóa phim?")) return;
         return movieApi
           .remove(id)

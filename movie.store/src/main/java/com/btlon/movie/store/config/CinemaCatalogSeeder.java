@@ -50,24 +50,28 @@ public class CinemaCatalogSeeder implements CommandLineRunner {
         Map<String, MovieGenre> genreMap = new HashMap<>();
         genres.findAll().forEach(g -> genreMap.put(g.getName(), g));
         String[][] catalog = {
-                { "Dune: Part Two", "166", "2024", "Khoa học viễn tưởng" },
-                { "Inside Out 2", "96", "2024", "Hoạt hình" },
-                { "Mai", "131", "2024", "Tình cảm" },
-                { "Interstellar", "169", "2014", "Khoa học viễn tưởng" },
-                { "Spirited Away", "125", "2001", "Hoạt hình" },
-                { "Avengers: Endgame", "181", "2019", "Hành động" },
-                { "The Grand Budapest Hotel", "100", "2014", "Hài" },
-                { "Your Name", "106", "2016", "Hoạt hình" }
+                {"Dune: Part Two", "166", "2024", "Khoa học viễn tưởng"},
+                {"Inside Out 2", "96", "2024", "Hoạt hình"},
+                {"Mai", "131", "2024", "Tình cảm"},
+                {"Interstellar", "169", "2014", "Khoa học viễn tưởng"},
+                {"Spirited Away", "125", "2001", "Hoạt hình"},
+                {"Avengers: Endgame", "181", "2019", "Hành động"},
+                {"The Grand Budapest Hotel", "100", "2014", "Hài"},
+                {"Your Name", "106", "2016", "Hoạt hình"}
         };
         Map<String, Movie> movieMap = new HashMap<>();
         movies.findAll().forEach(m -> movieMap.put(m.getTitle(), m));
         List<Movie> featured = new ArrayList<>();
+        int bannerCount = movies.findFeaturedForUpdate().size();
         for (String[] entry : catalog) {
             MovieGenre genre = genreMap.computeIfAbsent(entry[3], name -> genres.save(new MovieGenre(null, name)));
             Movie movie = movieMap.get(entry[0]);
-            if (movie == null)
-                movie = movies
-                        .save(new Movie(null, entry[0], Integer.parseInt(entry[1]), Integer.parseInt(entry[2]), genre));
+            if (movie == null) {
+                movie = new Movie(null, entry[0], Integer.parseInt(entry[1]), Integer.parseInt(entry[2]), genre);
+                MovieMediaMigration.applyCatalog(movie, bannerCount < 5);
+                if (movie.isFeatured()) bannerCount++;
+                movie = movies.save(movie);
+            }
             featured.add(movie);
         }
         List<Room> seedRooms = new ArrayList<>();

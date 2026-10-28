@@ -1,6 +1,6 @@
 package com.btlon.movie.store.controller;
 
-import com.btlon.movie.store.entity.Movie;
+import com.btlon.movie.store.dto.MovieResponse;
 import com.btlon.movie.store.dto.MovieRequest;
 import com.btlon.movie.store.service.MovieService;
 import com.btlon.movie.store.security.AdminOnly;
@@ -27,19 +27,19 @@ public class MovieController {
     }
 
     @GetMapping
-    public List<Movie> getAllMovies() {
+    public List<MovieResponse> getAllMovies() {
         return movieService.getAllMovies();
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<Movie> getMovieById(@PathVariable Long id) {
+    public ResponseEntity<MovieResponse> getMovieById(@PathVariable Long id) {
         return movieService.getMovieById(id).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
 
     @AdminOnly
     @PostMapping
-    public ResponseEntity<Movie> createMovie(@RequestBody MovieRequest movie) {
+    public ResponseEntity<MovieResponse> createMovie(@RequestBody MovieRequest movie) {
         return movieService.createMovie(movie)
                 .map(created -> ResponseEntity.status(HttpStatus.CREATED).body(created))
                 .orElse(ResponseEntity.badRequest().build());
@@ -47,7 +47,7 @@ public class MovieController {
 
     @AdminOnly
     @PutMapping("/{id}")
-    public ResponseEntity<Movie> updateMovie(@PathVariable Long id, @RequestBody MovieRequest movie) {
+    public ResponseEntity<MovieResponse> updateMovie(@PathVariable Long id, @RequestBody MovieRequest movie) {
         return movieService.updateMovie(id, movie).map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
@@ -55,7 +55,13 @@ public class MovieController {
     @AdminOnly
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteMovie(@PathVariable Long id) {
-        return movieService.deleteMovie(id) ? ResponseEntity.noContent().build()
+        return movieService.deleteMovie(id)
+                ? ResponseEntity.noContent().build()
                 : ResponseEntity.notFound().build();
+    }
+
+    @GetMapping("/banners")
+    public List<MovieResponse> getBanners() {
+        return movieService.getBanners();
     }
 }

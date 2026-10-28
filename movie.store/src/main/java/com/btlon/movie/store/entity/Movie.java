@@ -10,6 +10,7 @@ import jakarta.persistence.Table;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
+import java.time.LocalDate;
 
 @Entity
 @Table(name = "movies")
@@ -24,8 +25,27 @@ public class Movie {
     @Column(nullable = false)
     private Integer duration;
 
+    // Preserve the original year until all legacy movies have an accurate release date.
     @Column(name = "release_year", nullable = false)
     private Integer releaseYear;
+
+    @Column(name = "release_date")
+    private LocalDate releaseDate;
+
+    @Column(name = "poster_url", length = 1000)
+    private String posterUrl;
+
+    @Column(length = 100)
+    private String subtitle;
+
+    @Column(length = 500)
+    private String description;
+
+    // NULL identifies pre-migration rows; new movies default to not featured.
+    private Boolean featured = false;
+
+    @Column(name = "banner_position")
+    private Integer bannerPosition;
 
     @ManyToOne(fetch = FetchType.LAZY, optional = false)
     @JoinColumn(name = "genre_id", nullable = false)
@@ -68,11 +88,51 @@ public class Movie {
     }
 
     public Integer getReleaseYear() {
-        return releaseYear;
+        return releaseDate == null ? releaseYear : releaseDate.getYear();
     }
 
     public void setReleaseYear(Integer releaseYear) {
         this.releaseYear = releaseYear;
+    }
+
+    public LocalDate getReleaseDate() {
+        return releaseDate;
+    }
+
+    public void setReleaseDate(LocalDate releaseDate) {
+        this.releaseDate = releaseDate;
+        if (releaseDate != null) this.releaseYear = releaseDate.getYear();
+    }
+
+    public String getPosterUrl() {
+        return posterUrl;
+    }
+    public void setPosterUrl(String posterUrl) {
+        this.posterUrl = posterUrl;
+    }
+    public String getSubtitle() {
+        return subtitle;
+    }
+    public void setSubtitle(String subtitle) {
+        this.subtitle = subtitle;
+    }
+    public String getDescription() {
+        return description;
+    }
+    public void setDescription(String description) {
+        this.description = description;
+    }
+    public boolean isFeatured() {
+        return Boolean.TRUE.equals(featured);
+    }
+    public void setFeatured(boolean featured) {
+        this.featured = featured;
+    }
+    public Integer getBannerPosition() {
+        return bannerPosition;
+    }
+    public void setBannerPosition(Integer bannerPosition) {
+        this.bannerPosition = bannerPosition;
     }
 
     public MovieGenre getGenre() {

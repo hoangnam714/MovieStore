@@ -103,70 +103,16 @@
     <script src="../../assets/js/common.js"></script>
     <script src="../../assets/js/customer-layout.js"></script>
     <script>
-      const posterPaths = {
-        "Dune: Part Two": "6izwz7rsy95ARzTR3poZ8H6c5pp.jpg",
-        "Inside Out 2": "vpnVM9B6NMmQpWeZvzLvDESb2QY.jpg",
-        Interstellar: "gEU2QniE6E77NI6lCU6MxlNBvIx.jpg",
-        "Spirited Away": "39wmItIWsg5sZMyRUHLkWBcuVCM.jpg",
-        "Avengers: Endgame": "or06FN3Dka5tukK1e9sl16pB3iy.jpg",
-        "The Grand Budapest Hotel": "eKi8dIrr8voobbaGzDpe8w0PVbC.jpg",
-        "Your Name": "q719jXXEzOoYaps6babgKnONONX.jpg"
-      };
-
-      const hotMovieDetails = [
-        {
-          title: "Dune: Part Two",
-          year: "2024",
-          subtitle: "HÀNH TRÌNH TRÊN HÀNH TINH CÁT",
-          description:
-            "Paul Atreides cùng người Fremen viết tiếp cuộc chiến trên hành tinh cát Arrakis."
-        },
-        {
-          title: "Inside Out 2",
-          year: "2024",
-          subtitle: "THẾ GIỚI CẢM XÚC ĐẦY SẮC MÀU",
-          description:
-            "Một chuyến phiêu lưu rực rỡ khi những cảm xúc mới xuất hiện trong tâm trí Riley."
-        },
-        {
-          title: "Avengers: Endgame",
-          year: "2019",
-          subtitle: "HỒI KẾT CỦA NHỮNG ANH HÙNG",
-          description: "Các siêu anh hùng tập hợp cho trận chiến quyết định của cả vũ trụ."
-        },
-        {
-          title: "Mai",
-          year: "2024",
-          subtitle: "MỘT CÂU CHUYỆN VỀ TÌNH YÊU",
-          description: "Một câu chuyện về tình yêu, hy vọng và những khởi đầu mới."
-        },
-        {
-          title: "Interstellar",
-          year: "2014",
-          subtitle: "VƯỢT QUA KHÔNG GIAN VÀ THỜI GIAN",
-          description: "Băng qua những vì sao trong hành trình tìm kiếm tương lai cho nhân loại."
-        }
-      ];
-
-      function getPosterUrl(title) {
-        if (title === "Mai") return "https://media.senscritique.com/media/000021934906/0/mai.jpg";
-        return posterPaths[title] ? "https://image.tmdb.org/t/p/w500/" + posterPaths[title] : "";
-      }
-
-      function getPoster(title) {
-        const url = getPosterUrl(title);
-        return url
-          ? `
+      function getPoster(movie) {
+        return `
             <img
               class="film-poster"
-              src="${url}"
-              alt="Poster ${getSafeHtml(title)}"
+              src="${getSafeHtml(getMoviePosterUrl(movie.posterUrl))}"
+              alt="Poster ${getSafeHtml(movie.title)}"
               loading="lazy"
               referrerpolicy="no-referrer"
+              onerror="this.onerror = null; this.src = '/assets/images/default-poster.svg'"
             />
-          `
-          : `
-            <div class="poster-placeholder">${getSafeHtml(title)}</div>
           `;
       }
 
@@ -183,13 +129,12 @@
       let heroHovered = false;
       let heroTransitioning = false;
 
-      function getHeroSlide({ movie, details }) {
-        const genre = genres.find((item) => item.id === movie.genreId);
-        const poster = getPosterUrl(movie.title);
+      function getHeroSlide(movie) {
+        const poster = getSafeHtml(getMoviePosterUrl(movie.posterUrl));
         const meta = [
-          movie.releaseYear || details.year,
+          movie.releaseDate ? movie.releaseDate.slice(0, 4) : movie.releaseYear,
           movie.duration + " phút",
-          genre?.name || "Điện ảnh"
+          movie.genreName || "Điện ảnh"
         ]
           .filter(Boolean)
           .map(
@@ -201,17 +146,17 @@
         return `
           <div class="hero-slide" aria-hidden="true" inert>
             <div class="hero-backdrop" aria-hidden="true">
-              <img src="${poster}" alt="" referrerpolicy="no-referrer" />
+              <img src="${poster}" alt="" referrerpolicy="no-referrer" onerror="this.onerror = null; this.src = '/assets/images/default-poster.svg'" />
             </div>
             <div class="wrap container hero-shell">
               <div class="hero-content">
                 <p class="eyebrow hero-kicker">
                   <span class="kicker-dot"></span>
-                  ${getSafeHtml(details.subtitle || genre?.name || movie.title)}
+                  ${getSafeHtml(movie.subtitle || movie.genreName || movie.title)}
                 </p>
                 <h1>${getSafeHtml(movie.title)}</h1>
                 <div class="hero-meta">${meta}</div>
-                <p class="hero-description">${getSafeHtml(details.description || "Khám phá câu chuyện trên màn ảnh rộng.")}</p>
+                <p class="hero-description">${getSafeHtml(movie.description || "Khám phá câu chuyện trên màn ảnh rộng.")}</p>
                 <div class="hero-actions">
                   <a class="btn btn-lg" href="../booking/index.html?movieId=${encodeURIComponent(movie.id)}">
                     Chọn suất chiếu
@@ -220,7 +165,7 @@
                 </div>
               </div>
               <div class="hero-art" aria-hidden="true">
-                <img src="${poster}" alt="" referrerpolicy="no-referrer" />
+                <img src="${poster}" alt="" referrerpolicy="no-referrer" onerror="this.onerror = null; this.src = '/assets/images/default-poster.svg'" />
                 <span class="hero-art-label">MOVIESTORE PREMIERE</span>
               </div>
             </div>
@@ -281,26 +226,9 @@
       }
 
       function onHotMovies() {
-        hotMovies = hotMovieDetails
-          .map((details) => ({
-            details,
-            movie: movies.find(
-              (movie) =>
-                movie.title === details.title &&
-                getPosterUrl(movie.title) &&
-                showtimes.some((time) => time.movieId === movie.id)
-            )
-          }))
-          .filter((item) => item.movie);
-        const remaining = movies
-          .filter(
-            (movie) =>
-              getPosterUrl(movie.title) &&
-              showtimes.some((time) => time.movieId === movie.id) &&
-              !hotMovies.some((item) => item.movie.id === movie.id)
-          )
-          .map((movie) => ({ movie, details: {} }));
-        hotMovies = [...hotMovies, ...remaining].slice(0, 5);
+        onStopHeroTimer();
+        heroTransitioning = false;
+        document.getElementById("hot-movies").hidden = hotMovies.length === 0;
         if (!hotMovies.length) {
           document.getElementById("hot-movies").hidden = true;
           return;
@@ -346,31 +274,38 @@
           movieApi.list(),
           showtimeApi.upcoming(),
           genreApi.list(),
-          cinemaApi.list()
+          cinemaApi.list(),
+          movieApi.banners().catch((error) => {
+            console.error(error);
+            return { data: [] };
+          })
         ])
-          .then(([movieResponse, showtimeResponse, genreResponse, cinemaResponse]) => {
-            movies = movieResponse.data;
-            showtimes = showtimeResponse.data;
-            genres = genreResponse.data;
-            document.getElementById("cinema").innerHTML += cinemaResponse.data
-              .map(
-                (cinema) => `
+          .then(
+            ([movieResponse, showtimeResponse, genreResponse, cinemaResponse, bannerResponse]) => {
+              movies = movieResponse.data;
+              hotMovies = bannerResponse.data;
+              showtimes = showtimeResponse.data;
+              genres = genreResponse.data;
+              document.getElementById("cinema").innerHTML += cinemaResponse.data
+                .map(
+                  (cinema) => `
                   <option value="${cinema.id}">${getSafeHtml(cinema.name)}</option>
                 `
-              )
-              .join("");
-            onHotMovies();
-            document.getElementById("genre").innerHTML += genres
-              .map(function (genre) {
-                return `
+                )
+                .join("");
+              onHotMovies();
+              document.getElementById("genre").innerHTML += genres
+                .map(function (genre) {
+                  return `
                   <option value="${genre.id}">${getSafeHtml(genre.name)}</option>
                 `;
-              })
-              .join("");
-            onDateFilters();
+                })
+                .join("");
+              onDateFilters();
 
-            onMovies();
-          })
+              onMovies();
+            }
+          )
           .catch((error) => {
             console.error(error);
           });
@@ -504,7 +439,7 @@
           <article class="col-6 col-md-4 col-lg-3">
             <div class="movie-card">
               <a class="poster" href="${bookingUrl}">
-                ${getPoster(movie.title)}
+                ${getPoster(movie)}
                 <span class="badge">ĐANG CHIẾU</span>
               </a>
               <div class="movie-info">

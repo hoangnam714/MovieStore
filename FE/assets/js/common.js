@@ -48,10 +48,24 @@ const genreApi = {
 
 const movieApi = {
   list: () => api.get("/movies"),
+  banners: () => api.get("/movies/banners"),
+  uploadImage: (file) => {
+    const data = new FormData();
+    data.append("file", file);
+    return api.post("/uploads/images", data);
+  },
   create: (data) => api.post("/movies", data),
   update: (id, data) => api.put(`/movies/${id}`, data),
   remove: (id) => api.delete(`/movies/${id}`)
 };
+
+function getMoviePosterUrl(value) {
+  if (typeof value !== "string") return "/assets/images/default-poster.svg";
+  return /^https:\/\//.test(value) ||
+    /^\/api\/uploads\/images\/[a-f0-9-]{36}\.(jpg|png|webp)$/.test(value)
+    ? value
+    : "/assets/images/default-poster.svg";
+}
 
 const roomApi = {
   list: () => api.get("/rooms"),

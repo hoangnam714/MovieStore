@@ -9,6 +9,12 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class ApiExceptionHandler {
+    @ExceptionHandler(org.springframework.web.multipart.MaxUploadSizeExceededException.class)
+    public ResponseEntity<Map<String, String>> handleUploadTooLarge(Exception ex) {
+        return ResponseEntity.status(HttpStatus.CONTENT_TOO_LARGE)
+                .body(Map.of("message", "Ảnh vượt quá dung lượng cho phép (tối đa 5 MB)."));
+    }
+
     @ExceptionHandler(ConflictException.class)
     public ResponseEntity<Map<String, String>> handleConflict(ConflictException ex) {
         return ResponseEntity.status(HttpStatus.CONFLICT).body(Map.of("message", ex.getMessage()));
