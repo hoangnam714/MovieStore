@@ -263,7 +263,7 @@
             schedule = showtimeResponse.data;
             const requested = schedule.find((item) => item.id === Number(params.get("showtimeId")));
             const movieId = Number(params.get("movieId")) || requested?.movieId;
-            const movie = movieResponse.data.find((item) => item.id === movieId);
+            const movie = movieResponse.data.movies.find((item) => item.id === movieId);
             if (!movie) throw new Error("Không tìm thấy phim.");
             movieTimes = schedule.filter((item) => item.movieId === movieId);
             const availableCinemas = cinemaResponse.data.filter((cinema) =>

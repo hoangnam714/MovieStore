@@ -47,7 +47,7 @@ const genreApi = {
 };
 
 const movieApi = {
-  list: () => api.get("/movies"),
+  list: (params) => api.get("/movies", { params }),
   banners: () => api.get("/movies/banners"),
   uploadImage: (file) => {
     const data = new FormData();

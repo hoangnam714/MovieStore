@@ -234,7 +234,7 @@
         return Promise.all([showtimeApi.list(), movieApi.list(), roomApi.list(), cinemaApi.list()])
           .then(([showtimeResponse, movieResponse, roomResponse, cinemaResponse]) => {
             showtimes = showtimeResponse.data;
-            movies = movieResponse.data;
+            movies = movieResponse.data.movies;
             rooms = roomResponse.data;
             const options = cinemaResponse.data
               .map(

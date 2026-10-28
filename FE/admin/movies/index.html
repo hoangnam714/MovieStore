@@ -242,17 +242,40 @@
                   <div class="cms-list-toolbar">
                     <div>
                       <h2>Danh sách phim</h2>
-                      <p id="movie-count" aria-live="polite"></p>
                     </div>
+                  </div>
+                  <form id="movie-filters" class="movie-filters" onsubmit="onSearchMovies(event)">
                     <input
                       id="movie-search"
                       class="form-control"
                       type="search"
                       placeholder="Tìm tên phim..."
                       aria-label="Tìm tên phim"
-                      oninput="onRenderMovies()"
+                      name="title"
+                      oninput="onMovieSearchInput()"
                     />
-                  </div>
+                    <select
+                      id="movie-filter-genre"
+                      name="genreId"
+                      class="form-control"
+                      aria-label="Lọc thể loại"
+                      onchange="onSearchMovies()"
+                    >
+                      <option value="">Tất cả thể loại</option>
+                    </select>
+                    <select
+                      id="movie-filter-featured"
+                      name="featured"
+                      class="form-control"
+                      aria-label="Lọc banner"
+                      onchange="onSearchMovies()"
+                    >
+                      <option value="">Tất cả banner</option>
+                      <option value="true">Đã bật</option>
+                      <option value="false">Tắt</option>
+                    </select>
+                  </form>
+                  <p id="movie-list-error" class="text-danger" role="alert"></p>
                   <table class="table">
                     <thead>
                       <tr>
@@ -261,6 +284,7 @@
                         <th>Ngày phát hành</th>
                         <th>Thể loại</th>
                         <th>Banner</th>
+                        <th>Độ ưu tiên</th>
                         <th></th>
                       </tr>
                     </thead>
@@ -282,6 +306,9 @@
     <script>
       let genres = [];
       let movies = [];
+      let featuredCount = 0;
+      let movieSearchId = 0;
+      let movieSearchTimer = null;
       let editingMovieId = null;
       let currentPosterUrl = null;
       let posterPreviewUrl = null;
@@ -337,46 +364,68 @@
         return `Chưa bổ sung ngày${movie.releaseYear ? " (năm " + movie.releaseYear + ")" : ""}`;
       }
 
-      function getNormalizedMovieSearch(value) {
-        return String(value || "")
-          .normalize("NFD")
-          .replace(/[\u0300-\u036f]/g, "")
-          .replace(/đ/g, "d")
-          .replace(/Đ/g, "D")
-          .toLocaleLowerCase("vi");
-      }
-
       function onMovies() {
-        return Promise.all([genreApi.list(), movieApi.list()]).then(
-          ([genreResponse, movieResponse]) => {
-            genres = genreResponse.data;
-            movies = movieResponse.data;
-            const genreOpts = genres
-              .map(
-                (genre) => `
+        return genreApi.list().then(({ data }) => {
+          genres = data;
+          const genreOpts = genres
+            .map(
+              (genre) => `
                   <option value="${genre.id}">${getSafeHtml(genre.name)}</option>
                 `
-              )
-              .join("");
-            document.getElementById("movie-genre").insertAdjacentHTML("beforeend", genreOpts);
+            )
+            .join("");
+          document.getElementById("movie-genre").insertAdjacentHTML("beforeend", genreOpts);
+          document.getElementById("movie-filter-genre").insertAdjacentHTML("beforeend", genreOpts);
+          return onSearchMovies();
+        });
+      }
+
+      function getMovieFilters() {
+        const form = document.getElementById("movie-filters");
+        return {
+          title: form.elements.title.value.trim() || undefined,
+          genreId: form.elements.genreId.value || undefined,
+          featured: form.elements.featured.value || undefined
+        };
+      }
+
+      function onMovieSearchInput() {
+        clearTimeout(movieSearchTimer);
+        // Không để kết quả cũ ghi đè trong lúc người dùng đang gõ từ khóa mới.
+        movieSearchId++;
+        movieSearchTimer = setTimeout(() => onSearchMovies(), 300);
+      }
+
+      function onSearchMovies(event) {
+        if (event) event.preventDefault();
+        clearTimeout(movieSearchTimer);
+        const requestId = ++movieSearchId;
+        document.getElementById("movies-rows").setAttribute("aria-busy", "true");
+        document.getElementById("movie-list-error").textContent = "";
+
+        return movieApi
+          .list(getMovieFilters())
+          .then((response) => {
+            if (requestId !== movieSearchId) return;
+            movies = response.data.movies;
+            featuredCount = response.data.featuredCount;
             onRenderMovies();
-          }
-        );
+          })
+          .catch((error) => {
+            if (requestId !== movieSearchId) return;
+            document.getElementById("movie-list-error").textContent =
+              error?.response?.data?.message || "Không tải được danh sách phim. Vui lòng thử lại.";
+          })
+          .finally(() => {
+            if (requestId !== movieSearchId) return;
+            document.getElementById("movies-rows").setAttribute("aria-busy", "false");
+          });
       }
 
       function onRenderMovies() {
-        document.getElementById("movie-banner-count").textContent =
-          `Đã bật: ${movies.filter((movie) => movie.featured).length}/5`;
-        const keyword = getNormalizedMovieSearch(
-          document.getElementById("movie-search").value.trim()
-        );
-        const data = movies.filter((movie) =>
-          getNormalizedMovieSearch(movie.title).includes(keyword)
-        );
-        document.getElementById("movie-count").textContent =
-          `${data.length} trong ${movies.length} phim`;
+        document.getElementById("movie-banner-count").textContent = `Đã bật: ${featuredCount}/5`;
         document.getElementById("movies-rows").innerHTML = `${
-          data
+          movies
             .map(
               (movie) => `
                 <tr>
@@ -389,7 +438,12 @@
                   <td>${movie.duration}</td>
                   <td>${getSafeHtml(getMovieReleaseDate(movie))}</td>
                   <td>${getSafeHtml(genres.find((genre) => genre.id === movie.genreId)?.name ?? "")}</td>
-                  <td>${movie.featured ? `Đã bật · ${movie.bannerPosition ?? "Theo ngày phát hành"}` : "Tắt"}</td>
+                  <td>
+                    <span class="badge ${movie.featured ? "badge-success" : "badge-secondary"}">
+                      ${movie.featured ? "Đã bật" : "Tắt"}
+                    </span>
+                  </td>
+                  <td>${getSafeHtml(movie.bannerPosition ?? "-")}</td>
                   <td>
                     <button class="btn btn-sm btn-outline-secondary mr-2" onclick="onEditMovie(${movie.id})">
                       Sửa
@@ -400,7 +454,7 @@
               `
             )
             .join("") ||
-          '<tr><td colspan="6" class="text-center text-muted py-4">Không có phim phù hợp.</td></tr>'
+          '<tr><td colspan="7" class="text-center text-muted py-4">Không có phim phù hợp.</td></tr>'
         }`;
       }
 
@@ -494,11 +548,7 @@
             onAdminMessage(movieId ? "Đã cập nhật phim." : "Đã thêm phim.");
             onResetMovieForm();
           })
-          .then(() => movieApi.list())
-          .then(({ data }) => {
-            movies = data;
-            onRenderMovies();
-          })
+          .then(() => onSearchMovies())
           .catch((error) => {
             document.getElementById("movie-form-error").textContent =
               error?.response?.data?.message || "Không lưu được phim.";
@@ -517,9 +567,8 @@
         if (!confirm("Xóa phim?")) return;
         return movieApi
           .remove(id)
+          .then(() => onSearchMovies())
           .then(() => {
-            movies = movies.filter((movie) => movie.id !== id);
-            onRenderMovies();
             onAdminMessage("Đã xóa phim.");
           })
           .catch((error) => {

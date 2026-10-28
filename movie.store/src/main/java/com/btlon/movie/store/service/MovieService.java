@@ -2,11 +2,9 @@ package com.btlon.movie.store.service;
 
 import com.btlon.movie.store.entity.Movie;
 import com.btlon.movie.store.entity.MovieGenre;
+import com.btlon.movie.store.entity.Showtime;
 import com.btlon.movie.store.dto.MovieRequest;
 import com.btlon.movie.store.dto.MovieResponse;
-import org.springframework.data.domain.PageRequest;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import com.btlon.movie.store.repository.MovieGenreRepository;
 import com.btlon.movie.store.repository.MovieRepository;
 import com.btlon.movie.store.repository.ShowtimeRepository;
@@ -16,8 +14,15 @@ import com.btlon.movie.store.web.ConflictException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -36,8 +41,25 @@ public class MovieService {
         this.ticketRepository = ticketRepository;
     }
 
-    public List<MovieResponse> getAllMovies() {
-        return movieRepository.findAllByOrderByTitleAsc().stream().map(MovieResponse::from).toList();
+    public List<MovieResponse> getAllMovies(String title, Long genreId, Boolean featured) {
+        if (genreId != null && genreId <= 0)
+            throw new BadRequestException("Thể loại không hợp lệ.");
+
+        String keyword = title == null ? "" : title.trim().toLowerCase(Locale.ROOT);
+        List<MovieResponse> result = new ArrayList<>();
+
+        for (Movie movie : movieRepository.findAllByOrderByTitleAscIdAsc()) {
+            // Bỏ qua phim không khớp tên, thể loại hoặc trạng thái banner đã chọn.
+            if (!movie.getTitle().toLowerCase(Locale.ROOT).contains(keyword)) continue;
+            if (genreId != null && !genreId.equals(movie.getGenreId())) continue;
+            if (featured != null && movie.isFeatured() != featured) continue;
+            result.add(MovieResponse.from(movie));
+        }
+        return result;
+    }
+
+    public long getFeaturedCount() {
+        return movieRepository.countByFeaturedTrue();
     }
 
     public Optional<MovieResponse> getMovieById(Long movieId) {
@@ -45,8 +67,51 @@ public class MovieService {
     }
 
     public List<MovieResponse> getBanners() {
-        return movieRepository.findBanners(LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh")),
-                PageRequest.of(0, MAX_BANNERS)).stream().map(MovieResponse::from).toList();
+        // 1. Lấy ID các phim còn suất chiếu tương lai.
+        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
+        Set<Long> upcomingMovieIds = new HashSet<>();
+        for (Showtime showtime : showtimeRepository.findByStartTimeAfterOrderByStartTimeAsc(now)) {
+            upcomingMovieIds.add(showtime.getMovieId());
+        }
+
+        // 2. Chọn phim bật banner, có poster và còn suất chiếu.
+        List<Movie> banners = new ArrayList<>();
+        for (Movie movie : movieRepository.findAllByOrderByTitleAscIdAsc()) {
+            if (!movie.isFeatured()) continue;
+            if (movie.getPosterUrl() == null || movie.getPosterUrl().isBlank()) continue;
+            if (!upcomingMovieIds.contains(movie.getId())) continue;
+            banners.add(movie);
+        }
+
+        // 3. Sắp xếp và trả tối đa 5 banner.
+        banners.sort(this::compareBannerMovies);
+        List<MovieResponse> result = new ArrayList<>();
+        for (Movie movie : banners) {
+            if (result.size() == MAX_BANNERS) break;
+            result.add(MovieResponse.from(movie));
+        }
+        return result;
+    }
+
+    private int compareBannerMovies(Movie first, Movie second) {
+        // Có độ ưu tiên đứng trước để trống; số lớn đứng trước số nhỏ.
+        Integer firstPosition = first.getBannerPosition();
+        Integer secondPosition = second.getBannerPosition();
+        if (firstPosition == null && secondPosition != null) return 1;
+        if (firstPosition != null && secondPosition == null) return -1;
+        if (firstPosition != null && !firstPosition.equals(secondPosition))
+            return secondPosition.compareTo(firstPosition);
+
+        // Cùng độ ưu tiên thì ngày phát hành mới hơn đứng trước.
+        LocalDate firstDate = first.getReleaseDate();
+        LocalDate secondDate = second.getReleaseDate();
+        if (firstDate == null && secondDate != null) return 1;
+        if (firstDate != null && secondDate == null) return -1;
+        if (firstDate != null && !firstDate.equals(secondDate))
+            return secondDate.compareTo(firstDate);
+
+        // Trùng cả hai thì ID lớn đứng trước để thứ tự luôn ổn định.
+        return second.getId().compareTo(first.getId());
     }
 
     @Transactional
@@ -89,7 +154,7 @@ public class MovieService {
 
     private void applyDetails(Movie movie, MovieRequest request) {
         if (request.isFeatured()) {
-            long others = movieRepository.findFeaturedForUpdate().stream()
+            long others = movieRepository.findByFeaturedTrue().stream()
                     .filter(item -> !item.getId().equals(movie.getId())).count();
             if (others >= MAX_BANNERS)
                 throw new ConflictException("Chỉ được bật tối đa 5 phim trên banner. Hãy tắt một phim trước.");

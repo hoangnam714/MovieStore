@@ -89,6 +89,58 @@ class MovieMediaTests {
     }
 
     @Test
+    void movieListFiltersByTitleGenreAndBannerWithGlobalFeaturedCount() throws Exception {
+        Movie action = movie("Alpha Action", LocalDate.now(), null, true, true, 0);
+        Movie disabled = movie("Beta Action", LocalDate.now(), null, false, true, 0);
+        Movie dramaMovie = movie("Alpha Drama", LocalDate.now(), null, true, true, 0);
+        MovieGenre drama = genres.save(new MovieGenre(null, "Drama"));
+        dramaMovie.setGenre(drama);
+        movies.save(dramaMovie);
+
+        assertEquals(List.of(action.getId(), dramaMovie.getId(), disabled.getId()), movieIds("/api/movies"));
+        assertEquals(List.of(action.getId(), dramaMovie.getId()), movieIds("/api/movies?title=%20aLpHa%20"));
+        assertEquals(List.of(dramaMovie.getId()), movieIds("/api/movies?genreId=" + drama.getId()));
+        assertEquals(List.of(action.getId(), dramaMovie.getId()), movieIds("/api/movies?featured=true"));
+        assertEquals(List.of(disabled.getId()), movieIds("/api/movies?featured=false"));
+        String combined = "/api/movies?title=alpha&genreId=" + genre.getId() + "&featured=true";
+        assertEquals(List.of(action.getId()), movieIds(combined));
+        assertTrue(movieIds("/api/movies?title=alpha&genreId=" + drama.getId() + "&featured=false").isEmpty());
+        assertTrue(movieIds("/api/movies?title=missing").isEmpty());
+        assertTrue(movieIds("/api/movies?genreId=999999").isEmpty());
+        var response = request("GET", combined, null, null);
+        var body = mapper.readTree(response.body());
+        assertEquals(2, body.get("featuredCount").asInt());
+        assertEquals(1, body.get("movies").size());
+        assertEquals(2, mapper.readTree(request("GET", "/api/movies?title=missing", null, null).body())
+                .get("featuredCount").asInt());
+
+        // Legacy NULL means not featured, just like Movie.isFeatured().
+        jdbc.update("UPDATE movies SET featured = NULL WHERE id = ?", disabled.getId());
+        assertEquals(List.of(disabled.getId()), movieIds("/api/movies?featured=false"));
+    }
+
+    @Test
+    void movieTitleSearchTreatsWildcardsAsLiteralText() throws Exception {
+        Movie percent = movie("100% Real", LocalDate.now(), null, false, true, 0);
+        movie("1000 Real", LocalDate.now(), null, false, true, 0);
+        Movie underscore = movie("Under_score", LocalDate.now(), null, false, true, 0);
+        movie("UnderXscore", LocalDate.now(), null, false, true, 0);
+        Movie exclamation = movie("Wow! Film", LocalDate.now(), null, false, true, 0);
+        assertEquals(List.of(percent.getId()), movieIds("/api/movies?title=100%25"));
+        assertEquals(List.of(underscore.getId()), movieIds("/api/movies?title=Under_score"));
+        assertEquals(List.of(exclamation.getId()), movieIds("/api/movies?title=Wow%21"));
+        assertEquals(5, movieIds("/api/movies?title=%20%20").size());
+    }
+
+    @Test
+    void movieListRejectsInvalidFilterValues() throws Exception {
+        assertEquals(400, request("GET", "/api/movies?genreId=0", null, null).statusCode());
+        assertEquals(400, request("GET", "/api/movies?genreId=-1", null, null).statusCode());
+        assertEquals(400, request("GET", "/api/movies?genreId=invalid", null, null).statusCode());
+        assertEquals(400, request("GET", "/api/movies?featured=invalid", null, null).statusCode());
+    }
+
+    @Test
     void movieCrudPersistsMediaAndRequiresRealReleaseDate() throws Exception {
         var created = request("POST", "/api/movies", body("New movie", null, false), adminToken);
         assertEquals(201, created.statusCode(), created.body());
@@ -303,6 +355,14 @@ class MovieMediaTests {
                  "posterUrl":"https://example.test/poster.jpg","subtitle":"Subtitle","description":"Description",
                  "featured":%s,"bannerPosition":%s}
                 """.formatted(title, genre.getId(), featured, position);
+    }
+
+    private List<Long> movieIds(String path) throws Exception {
+        var response = request("GET", path, null, null);
+        assertEquals(200, response.statusCode(), response.body());
+        List<Long> ids = new ArrayList<>();
+        mapper.readTree(response.body()).get("movies").forEach(movie -> ids.add(movie.get("id").asLong()));
+        return ids;
     }
 
     private HttpRequest httpRequest(String method, String path, String body, String token) {

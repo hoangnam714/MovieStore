@@ -62,7 +62,7 @@ public class CinemaCatalogSeeder implements CommandLineRunner {
         Map<String, Movie> movieMap = new HashMap<>();
         movies.findAll().forEach(m -> movieMap.put(m.getTitle(), m));
         List<Movie> featured = new ArrayList<>();
-        int bannerCount = movies.findFeaturedForUpdate().size();
+        int bannerCount = movies.findByFeaturedTrue().size();
         for (String[] entry : catalog) {
             MovieGenre genre = genreMap.computeIfAbsent(entry[3], name -> genres.save(new MovieGenre(null, name)));
             Movie movie = movieMap.get(entry[0]);

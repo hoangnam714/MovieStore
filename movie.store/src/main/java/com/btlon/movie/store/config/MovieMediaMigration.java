@@ -58,7 +58,7 @@ public class MovieMediaMigration implements CommandLineRunner {
     @Override
     @Transactional
     public void run(String... args) {
-        int featuredCount = movies.findFeaturedForUpdate().size();
+        int featuredCount = movies.findByFeaturedTrue().size();
         for (Movie movie : movies.findByFeaturedIsNull()) {
             applyCatalog(movie, featuredCount < 5);
             if (movie.isFeatured()) featuredCount++;

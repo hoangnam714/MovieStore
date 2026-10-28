@@ -282,7 +282,7 @@
         ])
           .then(
             ([movieResponse, showtimeResponse, genreResponse, cinemaResponse, bannerResponse]) => {
-              movies = movieResponse.data;
+              movies = movieResponse.data.movies;
               hotMovies = bannerResponse.data;
               showtimes = showtimeResponse.data;
               genres = genreResponse.data;

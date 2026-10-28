@@ -1,6 +1,7 @@
 package com.btlon.movie.store.controller;
 
 import com.btlon.movie.store.dto.MovieResponse;
+import com.btlon.movie.store.dto.MovieListResponse;
 import com.btlon.movie.store.dto.MovieRequest;
 import com.btlon.movie.store.service.MovieService;
 import com.btlon.movie.store.security.AdminOnly;
@@ -13,6 +14,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
@@ -27,8 +29,11 @@ public class MovieController {
     }
 
     @GetMapping
-    public List<MovieResponse> getAllMovies() {
-        return movieService.getAllMovies();
+    public MovieListResponse getAllMovies(@RequestParam(required = false) String title,
+                                                          @RequestParam(required = false) Long genreId,
+                                                          @RequestParam(required = false) Boolean featured) {
+        List<MovieResponse> movies = movieService.getAllMovies(title, genreId, featured);
+        return new MovieListResponse(movies, movieService.getFeaturedCount());
     }
 
     @GetMapping("/{id}")
