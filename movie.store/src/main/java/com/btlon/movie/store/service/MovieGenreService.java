@@ -32,16 +32,6 @@ public class MovieGenreService {
     }
 
     @Transactional
-    public MovieGenre createGenre(MovieGenre genre) {
-        genre.setId(null);
-        genre.getMovies().forEach(movie -> {
-            movie.setId(null);
-            movie.setGenre(genre);
-        });
-        return movieGenreRepository.save(genre);
-    }
-
-    @Transactional
     public Optional<MovieGenre> createGenre(GenreRequest request) {
         if (request.getName() == null || request.getName().isBlank()) {
             throw new BadRequestException("Genre name is required");
@@ -75,7 +65,7 @@ public class MovieGenreService {
         if (!movieGenreRepository.existsById(id)) {
             return false;
         }
-        if (!movieRepository.findByGenre_Id(id).isEmpty()) {
+        if (!movieRepository.findByGenres_Id(id).isEmpty()) {
             throw new ConflictException("Cannot delete genre with movies");
         }
         movieGenreRepository.deleteById(id);

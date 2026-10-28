@@ -3,14 +3,12 @@ package com.btlon.movie.store.entity;
 import java.util.ArrayList;
 import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.OneToMany;
+import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
 
@@ -24,8 +22,7 @@ public class MovieGenre {
     @Column(nullable = false, unique = true, length = 100)
     private String name;
 
-    @OneToMany(mappedBy = "genre", cascade = { CascadeType.PERSIST, CascadeType.MERGE })
-    @JsonManagedReference
+    @ManyToMany(mappedBy = "genres")
     @OrderBy("title ASC")
     private List<Movie> movies = new ArrayList<>();
 
@@ -38,16 +35,13 @@ public class MovieGenre {
     }
 
     public void addMovie(Movie movie) {
-        movies.add(movie);
-        movie.setGenre(this);
+        if (!movies.contains(movie)) movies.add(movie);
+        if (!movie.getGenres().contains(this)) movie.getGenres().add(this);
     }
 
-    /**
-     * Phim bắt buộc có thể loại; chỉ gỡ khỏi danh sách trong bộ nhớ (không xóa
-     * phim, không null genre).
-     */
     public void removeMovie(Movie movie) {
         movies.remove(movie);
+        movie.getGenres().remove(this);
     }
 
     public Long getId() {

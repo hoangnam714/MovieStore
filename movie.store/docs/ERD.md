@@ -1,8 +1,9 @@
-# ERD — Movie Store (9 bảng)
+# ERD — Movie Store (10 bảng)
 
 ```mermaid
 erDiagram
-    movie_genres ||--o{ movies : "genre_id"
+    movie_genres ||--o{ movie_genre_links : "genre_id"
+    movies ||--|{ movie_genre_links : "movie_id"
     movies ||--o{ showtimes : "movie_id"
     cinemas ||--o{ rooms : "cinema_id"
     rooms ||--o{ showtimes : "room_id"
@@ -20,7 +21,10 @@ erDiagram
         varchar title
         int duration
         int release_year
-        bigint genre_id FK
+    }
+    movie_genre_links {
+        bigint movie_id PK, FK
+        bigint genre_id PK, FK
     }
     users {
         bigint id PK

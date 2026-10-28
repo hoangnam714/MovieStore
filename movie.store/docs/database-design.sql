@@ -1,4 +1,4 @@
--- Movie Store — 9 bảng
+-- Movie Store — 10 bảng
 
 CREATE TABLE movie_genres (
     id   BIGINT       NOT NULL AUTO_INCREMENT PRIMARY KEY,
@@ -15,9 +15,16 @@ CREATE TABLE movies (
     subtitle     VARCHAR(100),
     description  VARCHAR(500),
     featured     BOOLEAN, -- NULL chỉ dùng để nhận diện dữ liệu trước migration
-    banner_position INT CHECK (banner_position BETWEEN 0 AND 99),
-    genre_id     BIGINT       NOT NULL,
-    CONSTRAINT fk_movies_genre FOREIGN KEY (genre_id) REFERENCES movie_genres (id) ON DELETE RESTRICT
+    banner_position INT CHECK (banner_position BETWEEN 0 AND 99)
+);
+
+-- Mỗi phim có nhiều thể loại; mỗi thể loại có nhiều phim.
+CREATE TABLE movie_genre_links (
+    movie_id BIGINT NOT NULL,
+    genre_id BIGINT NOT NULL,
+    PRIMARY KEY (movie_id, genre_id),
+    CONSTRAINT fk_movie_genre_links_movie FOREIGN KEY (movie_id) REFERENCES movies (id) ON DELETE CASCADE,
+    CONSTRAINT fk_movie_genre_links_genre FOREIGN KEY (genre_id) REFERENCES movie_genres (id) ON DELETE RESTRICT
 );
 
 CREATE TABLE users (

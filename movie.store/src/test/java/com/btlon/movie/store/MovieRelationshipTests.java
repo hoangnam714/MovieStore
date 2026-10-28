@@ -1,6 +1,11 @@
 package com.btlon.movie.store;
 
 import com.btlon.movie.store.entity.Movie;
+import com.btlon.movie.store.config.MovieGenreMigration;
+import org.springframework.jdbc.core.JdbcTemplate;
+import java.util.List;
+import java.util.Set;
+import java.util.ArrayList;
 import com.btlon.movie.store.entity.MovieGenre;
 import com.btlon.movie.store.entity.User;
 import com.btlon.movie.store.entity.UserRole;
@@ -50,6 +55,8 @@ class MovieRelationshipTests {
     private AuthTokenRepository authTokens;
     @Autowired
     private AuthService authService;
+    @Autowired
+    private JdbcTemplate jdbc;
     private String adminToken;
     @Autowired
     private ObjectMapper mapper;
@@ -74,78 +81,115 @@ class MovieRelationshipTests {
     }
 
     @Test
-    void movieCrudKeepsGenreIdAndAllowsChangingGenre() throws Exception {
+    void movieCanHaveSeveralGenresAndReplacingGenresKeepsOtherMovies() throws Exception {
         MovieGenre action = genres.save(new MovieGenre(null, "Action"));
         MovieGenre drama = genres.save(new MovieGenre(null, "Drama"));
-        HttpResponse<String> created = request("POST", "/api/movies", movieBody(action.getId()));
-        assertEquals(201, created.statusCode());
+        long otherId = mapper.readTree(request("POST", "/api/movies", movieBody(action.getId())).body())
+                .get("id").asLong();
+        var created = request("POST", "/api/movies", movieBody(action.getId(), drama.getId(), action.getId()));
+        assertEquals(201, created.statusCode(), created.body());
         JsonNode movie = mapper.readTree(created.body());
         long id = movie.get("id").asLong();
-        assertEquals(action.getId().longValue(), movie.get("genreId").asLong());
-        assertFalse(movie.has("genre"));
+        assertEquals(Set.of(action.getId(), drama.getId()), genreIds(movie));
+        assertEquals(2, movie.get("genres").size());
+        assertEquals(Set.of(action.getId(), drama.getId()), genreIds(mapper.readTree(
+                request("GET", "/api/movies/" + id, null).body())));
 
-        HttpResponse<String> genreResponse = request("GET", "/api/genres/" + action.getId() + "/movies", null);
-        assertEquals(200, genreResponse.statusCode());
-        JsonNode genre = mapper.readTree(genreResponse.body());
-        assertEquals(id, genre.get("movies").get(0).get("id").asLong());
-        assertEquals(200, request("GET", "/api/genres", null).statusCode());
-        assertEquals(200, request("GET", "/api/movies", null).statusCode());
-        assertEquals(action.getId().longValue(), mapper.readTree(
-                request("GET", "/api/movies/" + id, null).body()).get("genreId").asLong());
+        for (Long genreId : List.of(action.getId(), drama.getId())) {
+            var response = request("GET", "/api/genres/" + genreId + "/movies", null);
+            assertEquals(200, response.statusCode());
+            assertTrue(response.body().contains("Demo"));
+            assertFalse(mapper.readTree(response.body()).get("movies").get(0).has("genres"));
+            var filtered = mapper.readTree(request("GET", "/api/movies?genreId=" + genreId, null).body());
+            List<Long> ids = new ArrayList<>();
+            filtered.get("movies").forEach(item -> ids.add(item.get("id").asLong()));
+            assertTrue(ids.contains(id));
+            assertEquals(ids.size(), Set.copyOf(ids).size());
+            assertEquals(409, request("DELETE", "/api/genres/" + genreId, null).statusCode());
+        }
 
-        HttpResponse<String> updated = request("PUT", "/api/movies/" + id, movieBody(drama.getId()));
+        var updated = request("PUT", "/api/movies/" + id, movieBody(drama.getId()));
         assertEquals(200, updated.statusCode());
-        assertEquals(drama.getId().longValue(), mapper.readTree(updated.body()).get("genreId").asLong());
-        assertTrue(movies.findByGenre_Id(action.getId()).isEmpty());
-        assertEquals(1, movies.findByGenre_Id(drama.getId()).size());
+        assertEquals(Set.of(drama.getId()), genreIds(mapper.readTree(updated.body())));
+        assertEquals(1, movies.findByGenres_Id(action.getId()).size());
+        assertEquals(Set.of(action.getId()), genreIds(mapper.readTree(
+                request("GET", "/api/movies/" + otherId, null).body())));
 
         assertEquals(204, request("DELETE", "/api/movies/" + id, null).statusCode());
         assertEquals(404, request("GET", "/api/movies/" + id, null).statusCode());
         assertTrue(genres.existsById(drama.getId()));
+        assertTrue(genres.existsById(action.getId()));
+        assertEquals(204, request("DELETE", "/api/genres/" + drama.getId(), null).statusCode());
+        assertTrue(movies.existsById(otherId));
     }
 
     @Test
-    void rejectsMissingOrUnknownGenreWithoutSavingMovie() throws Exception {
+    void rejectsMissingEmptyOrInvalidGenresWithoutSavingMovie() throws Exception {
+        MovieGenre genre = genres.save(new MovieGenre(null, "Action"));
         assertEquals(400, request("POST", "/api/movies", movieBody(999999L)).statusCode());
+        assertEquals(400, request("POST", "/api/movies", movieBody(genre.getId(), 999999L)).statusCode());
+        assertEquals(400, request("POST", "/api/movies", movieBody()).statusCode());
+        assertEquals(400, request("POST", "/api/movies", movieBody(0L)).statusCode());
+        assertEquals(400, request("POST", "/api/movies", movieBody(-1L)).statusCode());
+        assertEquals(400, request("POST", "/api/movies", movieBody(genre.getId()).replace(
+                "[" + genre.getId() + "]", "[null]")).statusCode());
         assertEquals(400, request("POST", "/api/movies",
                 "{\"title\":\"Demo\",\"duration\":120,\"releaseDate\":\"2026-10-28\"}").statusCode());
         assertEquals(0, movies.count());
     }
 
     @Test
-    void createsGenreWithMoviesWithoutJsonRecursion() throws Exception {
-        HttpResponse<String> response = request("POST", "/api/genres", """
-                {"name":"Comedy"}
-                """);
-        assertEquals(201, response.statusCode());
-        JsonNode genre = mapper.readTree(response.body());
-        long genreId = genre.get("id").asLong();
-        assertEquals(201, request("POST", "/api/movies",
-                "{\"title\":\"Demo\",\"duration\":100,\"releaseDate\":\"2026-10-28\",\"genreId\":" + genreId + "}")
-                .statusCode());
-        assertEquals(1, movies.findByGenre_Id(genreId).size());
-        assertEquals(200, request("GET", "/api/genres/" + genreId, null).statusCode());
+    void invalidGenreUpdateDoesNotChangeExistingMovie() throws Exception {
+        MovieGenre genre = genres.save(new MovieGenre(null, "Action"));
+        long id = mapper.readTree(request("POST", "/api/movies", movieBody(genre.getId())).body())
+                .get("id").asLong();
+        assertEquals(400, request("PUT", "/api/movies/" + id, movieBody(genre.getId(), 999999L)
+                .replace("Demo", "Invalid update")).statusCode());
+        var movie = mapper.readTree(request("GET", "/api/movies/" + id, null).body());
+        assertEquals("Demo", movie.get("title").asText());
+        assertEquals(Set.of(genre.getId()), genreIds(movie));
     }
 
     @Test
-    void cascadesPersistenceWithoutDeletingMoviesWhenGenreIsRemoved() {
-        MovieGenre genre = new MovieGenre(null, "Adventure");
-        genre.addMovie(new Movie(null, "First", 90, 2026, null));
-        genre.addMovie(new Movie(null, "Second", 100, 2026, null));
-        Long genreId = genres.saveAndFlush(genre).getId();
-        assertEquals(2, movies.findByGenre_Id(genreId).size());
-
-        transactions.executeWithoutResult(status -> {
-            MovieGenre managed = genres.findById(genreId).orElseThrow();
-            managed.removeMovie(managed.getMovies().get(0));
-        });
-        assertEquals(2, movies.count());
-        assertThrows(Exception.class, () -> genres.deleteById(genreId));
-        assertEquals(2, movies.count());
+    void createsGenreWithoutJsonRecursion() throws Exception {
+        var response = request("POST", "/api/genres", "{\"name\":\"Comedy\"}");
+        assertEquals(201, response.statusCode());
+        long genreId = mapper.readTree(response.body()).get("id").asLong();
+        assertEquals(201, request("POST", "/api/movies", movieBody(genreId)).statusCode());
+        assertEquals(1, movies.findByGenres_Id(genreId).size());
+        assertEquals(200, request("GET", "/api/genres/" + genreId, null).statusCode());
+        assertEquals(200, request("GET", "/api/genres", null).statusCode());
     }
 
-    private String movieBody(Long genreId) {
-        return "{\"title\":\"Demo\",\"duration\":120,\"releaseDate\":\"2026-10-28\",\"genreId\":" + genreId + "}";
+    @Test
+    void migratesLegacyGenreOnceAndAllowsNewMoviesWithoutOldColumn() throws Exception {
+        MovieGenre action = genres.save(new MovieGenre(null, "Action"));
+        MovieGenre drama = genres.save(new MovieGenre(null, "Drama"));
+        Movie old = movies.save(new Movie(null, "Legacy", 90, 2026, null));
+        jdbc.execute("ALTER TABLE movies ADD COLUMN genre_id BIGINT");
+        jdbc.update("UPDATE movies SET genre_id = ? WHERE id = ?", action.getId(), old.getId());
+        jdbc.execute("ALTER TABLE movies ALTER COLUMN genre_id SET NOT NULL");
+        jdbc.execute("ALTER TABLE movies ADD CONSTRAINT fk_test_old_genre FOREIGN KEY (genre_id) REFERENCES movie_genres(id)");
+        var migration = new MovieGenreMigration(jdbc);
+        migration.run();
+        assertEquals(Set.of(action.getId()), genreIds(mapper.readTree(
+                request("GET", "/api/movies/" + old.getId(), null).body())));
+        assertEquals(200, request("PUT", "/api/movies/" + old.getId(), movieBody(drama.getId())).statusCode());
+        migration.run();
+        assertEquals(Set.of(drama.getId()), genreIds(mapper.readTree(
+                request("GET", "/api/movies/" + old.getId(), null).body())));
+        assertEquals(201, request("POST", "/api/movies", movieBody(action.getId(), drama.getId())).statusCode());
+    }
+
+    private Set<Long> genreIds(JsonNode movie) {
+        Set<Long> ids = new java.util.HashSet<>();
+        movie.get("genres").forEach(genre -> ids.add(genre.get("id").asLong()));
+        return ids;
+    }
+
+    private String movieBody(Long... genreIds) {
+        return "{\"title\":\"Demo\",\"duration\":120,\"releaseDate\":\"2026-10-28\",\"genreIds\":"
+                + java.util.Arrays.toString(genreIds) + "}";
     }
 
     private HttpResponse<String> request(String method, String path, String body) throws Exception {

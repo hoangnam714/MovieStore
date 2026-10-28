@@ -94,7 +94,7 @@ class MovieMediaTests {
         Movie disabled = movie("Beta Action", LocalDate.now(), null, false, true, 0);
         Movie dramaMovie = movie("Alpha Drama", LocalDate.now(), null, true, true, 0);
         MovieGenre drama = genres.save(new MovieGenre(null, "Drama"));
-        dramaMovie.setGenre(drama);
+        dramaMovie.setGenres(new ArrayList<>(List.of(drama)));
         movies.save(dramaMovie);
 
         assertEquals(List.of(action.getId(), dramaMovie.getId(), disabled.getId()), movieIds("/api/movies"));
@@ -147,7 +147,7 @@ class MovieMediaTests {
         JsonNode movie = mapper.readTree(created.body());
         long id = movie.get("id").asLong();
         assertEquals("2026-10-28", movie.get("releaseDate").asText());
-        assertEquals("Media test", movie.get("genreName").asText());
+        assertEquals("Media test", movie.get("genres").get(0).get("name").asText());
         assertTrue(movie.get("bannerPosition").isNull());
         assertFalse(movie.has("genre"));
         var updated = request("PUT", "/api/movies/" + id, body("Renamed movie", 20, true), adminToken);
@@ -182,8 +182,9 @@ class MovieMediaTests {
 
     @Test
     void bannersArePublicFilteredOrderedAndLimitedByBackend() throws Exception {
-        Movie first = movie("Priority 20", LocalDate.of(2020, 1, 1), 20, true, true, 1);
-        Movie second = movie("Priority 10 newest", LocalDate.of(2026, 1, 1), 10, true, true, 1);
+        // No showtimes or only past showtimes must still allow a banner.
+        Movie first = movie("Priority 20", LocalDate.of(2020, 1, 1), 20, true, true, 0);
+        Movie second = movie("Priority 10 newest", LocalDate.of(2026, 1, 1), 10, true, true, -1);
         Movie third = movie("Priority 10 older", LocalDate.of(2024, 1, 1), 10, true, true, 1);
         Movie fourth = movie("No priority newest", LocalDate.of(2028, 1, 1), null, true, true, 1);
         Movie fifth = movie("No priority tied newer id", LocalDate.of(2027, 1, 1), null, true, true, 1);
@@ -192,16 +193,13 @@ class MovieMediaTests {
         movie("Legacy unknown date", null, null, true, true, 1);
         movie("Disabled", LocalDate.now(), 100, false, true, 1);
         movie("No image", LocalDate.now(), 100, true, false, 1);
-        movie("Past only", LocalDate.now(), 100, true, true, -1);
-        Movie unscheduled = movie("No showtimes", LocalDate.now(), 100, true, true, 0);
-        // A second future showtime must not duplicate the first banner.
-        addShowtime(first, 3);
+        // Several showtimes must not duplicate a banner.
+        addShowtime(third, 3);
         var response = request("GET", "/api/movies/banners", null, null);
         assertEquals(200, response.statusCode(), response.body());
         List<Long> ids = new ArrayList<>();
         mapper.readTree(response.body()).forEach(item -> ids.add(item.get("id").asLong()));
         assertEquals(List.of(first.getId(), second.getId(), third.getId(), fourth.getId(), tie.getId()), ids);
-        assertFalse(ids.contains(unscheduled.getId()));
         assertFalse(ids.contains(fifth.getId()));
     }
 
@@ -351,7 +349,7 @@ class MovieMediaTests {
 
     private String body(String title, Integer position, boolean featured) {
         return """
-                {"title":"%s","duration":120,"releaseDate":"2026-10-28","genreId":%d,
+                {"title":"%s","duration":120,"releaseDate":"2026-10-28","genreIds":[%d],
                  "posterUrl":"https://example.test/poster.jpg","subtitle":"Subtitle","description":"Description",
                  "featured":%s,"bannerPosition":%s}
                 """.formatted(title, genre.getId(), featured, position);

@@ -2,7 +2,6 @@ package com.btlon.movie.store.service;
 
 import com.btlon.movie.store.entity.Movie;
 import com.btlon.movie.store.entity.MovieGenre;
-import com.btlon.movie.store.entity.Showtime;
 import com.btlon.movie.store.dto.MovieRequest;
 import com.btlon.movie.store.dto.MovieResponse;
 import com.btlon.movie.store.repository.MovieGenreRepository;
@@ -15,14 +14,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Optional;
-import java.util.Set;
 
 @Service
 @Transactional(readOnly = true)
@@ -51,7 +46,7 @@ public class MovieService {
         for (Movie movie : movieRepository.findAllByOrderByTitleAscIdAsc()) {
             // Bỏ qua phim không khớp tên, thể loại hoặc trạng thái banner đã chọn.
             if (!movie.getTitle().toLowerCase(Locale.ROOT).contains(keyword)) continue;
-            if (genreId != null && !genreId.equals(movie.getGenreId())) continue;
+            if (genreId != null && !hasGenre(movie, genreId)) continue;
             if (featured != null && movie.isFeatured() != featured) continue;
             result.add(MovieResponse.from(movie));
         }
@@ -67,23 +62,15 @@ public class MovieService {
     }
 
     public List<MovieResponse> getBanners() {
-        // 1. Lấy ID các phim còn suất chiếu tương lai.
-        LocalDateTime now = LocalDateTime.now(ZoneId.of("Asia/Ho_Chi_Minh"));
-        Set<Long> upcomingMovieIds = new HashSet<>();
-        for (Showtime showtime : showtimeRepository.findByStartTimeAfterOrderByStartTimeAsc(now)) {
-            upcomingMovieIds.add(showtime.getMovieId());
-        }
-
-        // 2. Chọn phim bật banner, có poster và còn suất chiếu.
+        // Chọn phim bật banner và có poster, kể cả khi chưa có suất chiếu.
         List<Movie> banners = new ArrayList<>();
         for (Movie movie : movieRepository.findAllByOrderByTitleAscIdAsc()) {
             if (!movie.isFeatured()) continue;
             if (movie.getPosterUrl() == null || movie.getPosterUrl().isBlank()) continue;
-            if (!upcomingMovieIds.contains(movie.getId())) continue;
             banners.add(movie);
         }
 
-        // 3. Sắp xếp và trả tối đa 5 banner.
+        // Sắp xếp và trả tối đa 5 banner.
         banners.sort(this::compareBannerMovies);
         List<MovieResponse> result = new ArrayList<>();
         for (Movie movie : banners) {
@@ -118,14 +105,9 @@ public class MovieService {
     public Optional<MovieResponse> createMovie(MovieRequest request) {
         validate(request);
         genreRepository.lockBannerChanges();
-        if (request.getGenreId() == null) {
-            return Optional.empty();
-        }
-        Optional<MovieGenre> genre = genreRepository.findById(request.getGenreId());
-        if (genre.isEmpty()) return Optional.empty();
-
         Movie movie = new Movie(null, request.getTitle().trim(), request.getDuration(),
-                request.getReleaseDate().getYear(), genre.get());
+                request.getReleaseDate().getYear(), null);
+        movie.setGenres(getSelectedGenres(request.getGenreIds()));
         applyDetails(movie, request);
         return Optional.of(MovieResponse.from(movieRepository.save(movie)));
     }
@@ -135,19 +117,16 @@ public class MovieService {
         validate(request);
         genreRepository.lockBannerChanges();
         Optional<Movie> existing = movieRepository.findById(id);
-        if (existing.isEmpty() || request.getGenreId() == null) {
+        if (existing.isEmpty()) {
             return Optional.empty();
         }
-        Optional<MovieGenre> genre = genreRepository.findById(request.getGenreId());
-        if (genre.isEmpty()) return Optional.empty();
-
         Movie movie = existing.get();
         if (!movie.getDuration().equals(request.getDuration())) {
             ensureDurationChangeAllowed(movie, request.getDuration());
         }
         movie.setTitle(request.getTitle().trim());
         movie.setDuration(request.getDuration());
-        movie.setGenre(genre.get());
+        movie.setGenres(getSelectedGenres(request.getGenreIds()));
         applyDetails(movie, request);
         return Optional.of(MovieResponse.from(movieRepository.save(movie)));
     }
@@ -177,7 +156,7 @@ public class MovieService {
                 throw new ConflictException("Cannot shorten duration when tickets exist for a showtime");
             }
             Movie probe = new Movie(movie.getId(), movie.getTitle(), newDuration,
-                    movie.getReleaseYear(), movie.getGenre());
+                    movie.getReleaseYear(), null);
             if (ShowtimeSchedule.roomHasOverlap(
                     showtimeRepository.findByRoom_Id(showtime.getRoom().getId()),
                     showtime.getId(),
@@ -198,7 +177,31 @@ public class MovieService {
         return true;
     }
 
+    private boolean hasGenre(Movie movie, Long genreId) {
+        for (MovieGenre genre : movie.getGenres()) {
+            if (genreId.equals(genre.getId())) return true;
+        }
+        return false;
+    }
+
+    private List<MovieGenre> getSelectedGenres(List<Long> genreIds) {
+        List<Long> uniqueIds = new ArrayList<>();
+        for (Long id : genreIds) {
+            if (!uniqueIds.contains(id)) uniqueIds.add(id);
+        }
+        List<MovieGenre> genres = genreRepository.findAllById(uniqueIds);
+        if (genres.size() != uniqueIds.size())
+            throw new BadRequestException("Thể loại không tồn tại.");
+        return new ArrayList<>(genres);
+    }
+
     private static void validate(MovieRequest request) {
+        if (request.getGenreIds() == null || request.getGenreIds().isEmpty())
+            throw new BadRequestException("Vui lòng chọn ít nhất một thể loại.");
+        for (Long genreId : request.getGenreIds()) {
+            if (genreId == null || genreId <= 0)
+                throw new BadRequestException("Thể loại không hợp lệ.");
+        }
         if (request.getTitle() == null || request.getTitle().isBlank()) {
             throw new BadRequestException("title is required");
         }

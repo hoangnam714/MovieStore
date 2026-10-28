@@ -11,7 +11,7 @@ import java.util.List;
 
 @Repository
 public interface MovieRepository extends JpaRepository<Movie, Long> {
-    @EntityGraph(attributePaths = "genre")
+    @EntityGraph(attributePaths = "genres")
     List<Movie> findAllByOrderByTitleAscIdAsc();
 
     long countByFeaturedTrue();
@@ -23,5 +23,5 @@ public interface MovieRepository extends JpaRepository<Movie, Long> {
 
     List<Movie> findByPosterUrl(String posterUrl);
 
-    List<Movie> findByGenre_Id(Long genreId);
+    List<Movie> findByGenres_Id(Long genreId);
 }

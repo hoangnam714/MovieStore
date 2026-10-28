@@ -63,7 +63,7 @@ Repo có sẵn [.vscode/tasks.json](.vscode/tasks.json). Chọn `Terminal → Ru
 
 Trong **CMS → Phim**, quản trị viên có thể chọn poster, xem trước ảnh, nhập ngày phát hành, tiêu đề phụ (tối đa 100 ký tự), mô tả (tối đa 500 ký tự) và bật/tắt banner. Độ ưu tiên banner không bắt buộc; nếu nhập thì từ 0 đến 99, số càng lớn hiển thị càng sớm. Tối đa 5 phim được bật banner cùng lúc, kể cả phim hiện chưa có suất chiếu tương lai.
 
-Backend cung cấp `GET /api/movies/banners`: chỉ lấy phim đã bật banner, có ảnh và còn suất chiếu tương lai; sắp xếp theo độ ưu tiên giảm dần (để trống xếp sau), ngày phát hành giảm dần, rồi ID giảm dần; trả tối đa 5 phim. Frontend hiển thị đúng danh sách và thứ tự API trả về, không tự chọn thêm phim.
+Backend cung cấp `GET /api/movies/banners`: lấy phim đã bật banner và có ảnh, kể cả phim chưa có suất chiếu hoặc chỉ có suất chiếu đã qua; sắp xếp theo độ ưu tiên giảm dần (để trống xếp sau), ngày phát hành giảm dần, rồi ID giảm dần; trả tối đa 5 phim. Frontend hiển thị đúng danh sách và thứ tự API trả về, không tự chọn thêm phim.
 
 Upload ảnh qua `POST /api/uploads/images` (multipart field `file`, chỉ admin). Nhận JPG/PNG/WebP tối đa 5 MB; loại file được chọn bằng `switch` theo MIME do trình duyệt gửi lên. Bản đơn giản này không kiểm tra phần đầu file, giải mã nội dung ảnh hoặc kiểm tra số pixel. Service tạo tên UUID và lưu file bằng `transferTo`, sau đó trả URL `/api/uploads/images/<uuid>.png`. `WebConfig` ánh xạ đường dẫn này tới thư mục upload để Spring tự phục vụ ảnh và trả 404 khi file không tồn tại. Cả API và ảnh đều đi qua proxy `/api` ở frontend. Ảnh không có hoặc bị lỗi được thay bằng ảnh mặc định.
 
@@ -83,6 +83,10 @@ Khởi động backend với database cũ sẽ tự thêm các cột mới qua H
 
 Phim cũ giữ `release_year` và để `release_date` trống; CMS hiển thị nhắc bổ sung ngày chính xác trước khi lưu. API thêm/sửa phim yêu cầu `releaseDate` (`YYYY-MM-DD`), không còn nhận `releaseYear` thay cho ngày. Cột năm cũ được giữ trong giai đoạn chuyển đổi; không tự gán ngày 01/01 hoặc xóa dữ liệu cũ. Các phim mẫu mới cũng chưa được tự đặt ngày phát hành.
 
+Phim và thể loại có quan hệ nhiều–nhiều qua bảng `movie_genre_links`. Body thêm/sửa dùng `genreIds` (chọn ít nhất một ID hợp lệ); response phim có `genres: [{"id": 1, "name": "Hành động"}]`. Bộ lọc `genreId` vẫn chọn một thể loại và tìm mọi phim có thể loại đó. CMS cho tick nhiều thể loại; khi sửa, danh sách gửi lên thay thế các thể loại đang gán. Xóa phim chỉ xóa các liên kết, không xóa thể loại; thể loại đang có phim vẫn bị chặn xóa.
+
+Khi khởi động BE với database cũ, Hibernate tạo bảng nối rồi `MovieGenreMigration` chuyển các liên kết `movies.genre_id` sang bảng nối trước khi bỏ khóa ngoại và cột cũ. Những lần khởi động sau không gán lại thể loại cũ. Không chạy đồng thời BE bản cũ trong lúc chuyển đổi.
+
 Ví dụ body thêm/sửa phim:
 
 ```json
@@ -90,7 +94,7 @@ Ví dụ body thêm/sửa phim:
   "title": "Phim mới",
   "duration": 120,
   "releaseDate": "2026-10-28",
-  "genreId": 1,
+  "genreIds": [1, 2],
   "posterUrl": "/api/uploads/images/00000000-0000-4000-8000-000000000000.png",
   "subtitle": "CÂU CHUYỆN TRÊN MÀN ẢNH RỘNG",
   "description": "Nội dung giới thiệu phim.",

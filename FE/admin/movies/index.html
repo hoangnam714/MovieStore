@@ -130,15 +130,19 @@
                                 required
                               />
                             </div>
-                            <div class="movie-field">
-                              <label for="movie-genre"
-                                >Thể loại
-                                <span class="movie-required" aria-hidden="true">*</span></label
-                              >
-                              <select id="movie-genre" class="form-control" name="genreId" required>
-                                <option value="">Thể loại</option>
-                              </select>
-                            </div>
+                          </div>
+                          <div class="movie-field">
+                            <label id="movie-genres-label"
+                              >Thể loại
+                              <span class="movie-required" aria-hidden="true">*</span></label
+                            >
+                            <div
+                              id="movie-genres"
+                              class="movie-genre-options"
+                              role="group"
+                              aria-labelledby="movie-genres-label"
+                            ></div>
+                            <p class="movie-field-help">Chọn ít nhất một thể loại.</p>
                           </div>
                         </section>
                         <section class="movie-copy-section" aria-labelledby="movie-copy-heading">
@@ -212,8 +216,8 @@
                             </p>
                           </div>
                           <p class="movie-field-help movie-banner-note">
-                            Tối đa 5 phim được bật. Phim cần có poster và suất chiếu tương lai để
-                            xuất hiện trên trang chủ.
+                            Tối đa 5 phim được bật. Phim cần có poster để xuất hiện trên trang chủ,
+                            không bắt buộc có suất chiếu.
                           </p>
                         </fieldset>
                       </div>
@@ -374,7 +378,16 @@
                 `
             )
             .join("");
-          document.getElementById("movie-genre").insertAdjacentHTML("beforeend", genreOpts);
+          document.getElementById("movie-genres").innerHTML = genres
+            .map(
+              (genre) => `
+              <label class="movie-genre-option">
+                <input type="checkbox" name="genreIds" value="${genre.id}" />
+                <span>${getSafeHtml(genre.name)}</span>
+              </label>
+            `
+            )
+            .join("");
           document.getElementById("movie-filter-genre").insertAdjacentHTML("beforeend", genreOpts);
           return onSearchMovies();
         });
@@ -437,7 +450,7 @@
                   </td>
                   <td>${movie.duration}</td>
                   <td>${getSafeHtml(getMovieReleaseDate(movie))}</td>
-                  <td>${getSafeHtml(genres.find((genre) => genre.id === movie.genreId)?.name ?? "")}</td>
+                  <td>${getSafeHtml(movie.genres.map((genre) => genre.name).join(", "))}</td>
                   <td>
                     <span class="badge ${movie.featured ? "badge-success" : "badge-secondary"}">
                       ${movie.featured ? "Đã bật" : "Tắt"}
@@ -467,7 +480,9 @@
         form.elements.title.value = movie.title;
         form.elements.duration.value = movie.duration;
         form.elements.releaseDate.value = movie.releaseDate || "";
-        form.elements.genreId.value = movie.genreId;
+        form.querySelectorAll('[name="genreIds"]').forEach((checkbox) => {
+          checkbox.checked = movie.genres.some((genre) => genre.id === Number(checkbox.value));
+        });
         form.elements.subtitle.value = movie.subtitle || "";
         form.elements.description.value = movie.description || "";
         form.elements.featured.checked = movie.featured;
@@ -509,7 +524,9 @@
           title: form.elements.title.value.trim(),
           duration: Number(form.elements.duration.value),
           releaseDate: form.elements.releaseDate.value,
-          genreId: Number(form.elements.genreId.value),
+          genreIds: [...form.querySelectorAll('[name="genreIds"]:checked')].map((checkbox) =>
+            Number(checkbox.value)
+          ),
           posterUrl: currentPosterUrl,
           subtitle: form.elements.subtitle.value.trim(),
           description: form.elements.description.value.trim(),
@@ -521,6 +538,11 @@
         };
         const poster = form.elements.poster.files[0];
         const movieId = editingMovieId;
+        if (!payload.genreIds.length) {
+          document.getElementById("movie-form-error").textContent =
+            "Vui lòng chọn ít nhất một thể loại.";
+          return;
+        }
         if (payload.featured && !poster && !payload.posterUrl) {
           document.getElementById("movie-form-error").textContent =
             "Phim hiển thị trên banner phải có poster.";

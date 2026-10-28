@@ -1,8 +1,8 @@
 # Thiết kế database mua vé xem phim — bản đơn giản
 
-Dùng **9 bảng**, giữ lại 2 bảng phim/thể loại hiện tại. Phạm vi: nhiều cụm rạp, mỗi cụm có nhiều phòng; khách chọn cụm rạp → phim → suất chiếu → ghế → đặt vé. Mỗi vé tương ứng với một ghế của một suất chiếu.
+Dùng **10 bảng**, gồm bảng nối phim/thể loại. Phạm vi: nhiều cụm rạp, mỗi cụm có nhiều phòng; khách chọn cụm rạp → phim → suất chiếu → ghế → đặt vé. Mỗi vé tương ứng với một ghế của một suất chiếu.
 
-Schema SQL: `database-design.sql`, ERD: `ERD.md`. Entity Java và API bám theo 9 bảng dưới đây.
+Schema SQL: `database-design.sql`, ERD: `ERD.md`. Entity Java và API bám theo 10 bảng.
 
 ## 1. `movie_genres` — Thể loại phim (đã có)
 
@@ -21,7 +21,7 @@ Ví dụ: Hành động, Hài, Kinh dị. Mỗi phim chọn một thể loại.
 | `title` | VARCHAR(150) | Tên phim |
 | `duration` | INT | Thời lượng, tính bằng phút |
 | `release_year` | INT | Năm phát hành |
-| `genre_id` | BIGINT | Khóa ngoại → `movie_genres.id` |
+| `genres` | Quan hệ N:N | Qua bảng nối `movie_genre_links` |
 
 Giữ nguyên các cột hiện tại. Chưa cần thêm mô tả, trailer hay poster để hoàn thành chức năng mua vé cơ bản.
 
@@ -126,7 +126,7 @@ Client gửi `Authorization: Bearer <token>`. Backend xác định người đ�
 
 | Bảng cha | Quan hệ | Bảng con | Khóa ngoại ở bảng con |
 |---|---|---|---|
-| `movie_genres` | 1 — nhiều | `movies` | `genre_id` |
+| `movies` | nhiều — nhiều | `movie_genres` | `movie_genre_links(movie_id, genre_id)` |
 | `movies` | 1 — nhiều | `showtimes` | `movie_id` |
 | `cinemas` | 1 — nhiều | `rooms` | `cinema_id` |
 | `rooms` | 1 — nhiều | `showtimes` | `room_id` |
@@ -150,9 +150,9 @@ Ví dụ: **Hành động → Phim A → Suất 19:00, phòng 1 → Vé ghế 12
 
 ## Kiểm tra lại 2 bảng hiện tại
 
-`Movie` và `MovieGenre` đang ánh xạ đúng quan hệ **một thể loại có nhiều phim** qua `genre_id`. Có thể giữ nguyên cấu trúc cột.
+`Movie` và `MovieGenre` ánh xạ `@ManyToMany` qua `movie_genre_links`. `Movie` quản lý bảng nối; mỗi phim cần ít nhất một thể loại theo kiểm tra của service. Không cascade xóa phim hoặc thể loại khi xóa liên kết. Thể loại đang có phim bị chặn xóa.
 
-Trong `MovieGenre.java`, khi triển khai mô hình này nên bỏ `CascadeType.REMOVE` (đang nằm trong `CascadeType.ALL`) và `orphanRemoval=true` để tránh tự xóa phim khi xóa thể loại hoặc bỏ phim khỏi danh sách. Nếu vẫn tạo phim cùng thể loại, có thể giữ cascade `PERSIST` và `MERGE`. Cần sửa helper `removeMovie()` và test liên quan cho phù hợp vì phim bắt buộc phải có thể loại.
+Bảng nối có hai cột `movie_id`, `genre_id`, khóa duy nhất trên cặp này để không gán trùng. Database cũ được `MovieGenreMigration` sao chép liên kết rồi bỏ cột `movies.genre_id` khi khởi động BE.
 
 ## Giới hạn để giữ dự án đơn giản
 

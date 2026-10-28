@@ -123,6 +123,30 @@
   margin-top: 10px;
 }
 
+.movie-genre-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 16px;
+  padding: 12px;
+  border: 1px solid var(--cms-line);
+  border-radius: 8px;
+}
+
+.movie-field .movie-genre-option {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 0;
+  cursor: pointer;
+}
+
+.movie-genre-option input {
+  flex: 0 0 auto;
+  width: 16px;
+  height: 16px;
+  accent-color: var(--cms-accent);
+}
+
 .movie-editor-fields textarea {
   min-height: 108px;
   resize: vertical;

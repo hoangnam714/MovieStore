@@ -134,7 +134,7 @@
         const meta = [
           movie.releaseDate ? movie.releaseDate.slice(0, 4) : movie.releaseYear,
           movie.duration + " phút",
-          movie.genreName || "Điện ảnh"
+          movie.genres.map((genre) => genre.name).join(", ") || "Điện ảnh"
         ]
           .filter(Boolean)
           .map(
@@ -152,7 +152,7 @@
               <div class="hero-content">
                 <p class="eyebrow hero-kicker">
                   <span class="kicker-dot"></span>
-                  ${getSafeHtml(movie.subtitle || movie.genreName || movie.title)}
+                  ${getSafeHtml(movie.subtitle || movie.genres.map((genre) => genre.name).join(", ") || movie.title)}
                 </p>
                 <h1>${getSafeHtml(movie.title)}</h1>
                 <div class="hero-meta">${meta}</div>
@@ -372,7 +372,8 @@
       function onMovies() {
         const filteredMovies = movies.filter(function (movie) {
           const matchesKeyword = getNormalizedKeyword(movie.title).includes(searchKeyword);
-          const matchesGenre = !selectedGenre || String(movie.genreId) === selectedGenre;
+          const matchesGenre =
+            !selectedGenre || movie.genres.some((genre) => String(genre.id) === selectedGenre);
           const matchesSchedule =
             (!selectedDay && !selectedCinema) ||
             showtimes.some(function (showtime) {
@@ -413,7 +414,7 @@
             (!selectedCinema || String(showtime.cinemaId) === selectedCinema)
           );
         });
-        const genre = genres.find((genre) => genre.id === movie.genreId);
+        const genreNames = movie.genres.map((genre) => genre.name).join(", ");
         const bookingUrl =
           "../booking/index.html?movieId=" +
           movie.id +
@@ -443,7 +444,7 @@
                 <span class="badge">ĐANG CHIẾU</span>
               </a>
               <div class="movie-info">
-                <p class="film-category">${getSafeHtml(genre?.name || "Điện ảnh")} / ${movie.duration} phút</p>
+                <p class="film-category">${getSafeHtml(genreNames || "Điện ảnh")} / ${movie.duration} phút</p>
                 <h3><a href="${bookingUrl}">${getSafeHtml(movie.title)}</a></h3>
                 ${bookingAction}
               </div>

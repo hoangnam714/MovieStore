@@ -1,6 +1,6 @@
 package com.btlon.movie.store.entity;
 
-import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
@@ -9,7 +9,12 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.JoinTable;
+import jakarta.persistence.UniqueConstraint;
+import jakarta.persistence.OrderBy;
+import java.util.ArrayList;
+import java.util.List;
 import java.time.LocalDate;
 
 @Entity
@@ -47,10 +52,14 @@ public class Movie {
     @Column(name = "banner_position")
     private Integer bannerPosition;
 
-    @ManyToOne(fetch = FetchType.LAZY, optional = false)
-    @JoinColumn(name = "genre_id", nullable = false)
-    @JsonBackReference
-    private MovieGenre genre;
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(name = "movie_genre_links",
+            joinColumns = @JoinColumn(name = "movie_id"),
+            inverseJoinColumns = @JoinColumn(name = "genre_id"),
+            uniqueConstraints = @UniqueConstraint(columnNames = { "movie_id", "genre_id" }))
+    @OrderBy("name ASC, id ASC")
+    @JsonIgnore
+    private List<MovieGenre> genres = new ArrayList<>();
 
     public Movie() {
     }
@@ -60,7 +69,7 @@ public class Movie {
         this.title = title;
         this.duration = duration;
         this.releaseYear = releaseYear;
-        this.genre = genre;
+        if (genre != null) this.genres.add(genre);
     }
 
     public Long getId() {
@@ -135,16 +144,11 @@ public class Movie {
         this.bannerPosition = bannerPosition;
     }
 
-    public MovieGenre getGenre() {
-        return genre;
+    public List<MovieGenre> getGenres() {
+        return genres;
     }
 
-    public void setGenre(MovieGenre genre) {
-        this.genre = genre;
-    }
-
-    // Preserve the genreId field used by the frontend without mapping the FK twice.
-    public Long getGenreId() {
-        return genre == null ? null : genre.getId();
+    public void setGenres(List<MovieGenre> genres) {
+        this.genres = new ArrayList<>(genres);
     }
 }

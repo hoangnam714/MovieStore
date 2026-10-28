@@ -1,12 +1,13 @@
 package com.btlon.movie.store.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public class MovieRequest {
     private String title;
     private Integer duration;
     private LocalDate releaseDate;
-    private Long genreId;
+    private List<Long> genreIds;
     private String posterUrl;
     private String subtitle;
     private String description;
@@ -77,11 +78,11 @@ public class MovieRequest {
         this.bannerPosition = bannerPosition;
     }
 
-    public Long getGenreId() {
-        return genreId;
+    public List<Long> getGenreIds() {
+        return genreIds;
     }
 
-    public void setGenreId(Long genreId) {
-        this.genreId = genreId;
+    public void setGenreIds(List<Long> genreIds) {
+        this.genreIds = genreIds;
     }
 }
