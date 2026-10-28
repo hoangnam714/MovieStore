@@ -21,7 +21,9 @@ function onAdminLayout() {
           <span class="nav-link" id="admin-name"></span>
         </li>
         <li class="nav-item">
-          <button class="btn btn-link nav-link" id="logout-btn" onclick="onAdminLogout()">Đăng xuất</button>
+          <button class="btn btn-link nav-link" id="logout-btn" onclick="onAdminLogout()">
+            Đăng xuất
+          </button>
         </li>
       </ul>
     </nav>
@@ -128,8 +130,9 @@ function onAdminPage(getPage) {
     })
     .catch((error) => {
       console.error(error);
-      const pageError = document.getElementById('page-error');
-      const message = error?.response?.data?.message || 'Không tải được dữ liệu. Vui lòng tải lại trang.';
+      const pageError = document.getElementById("page-error");
+      const message =
+        error?.response?.data?.message || "Không tải được dữ liệu. Vui lòng tải lại trang.";
       if (pageError) pageError.textContent = message;
       else onAdminMessage(message);
     });

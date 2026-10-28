@@ -29,31 +29,65 @@
           <div class="container-fluid">
             <p id="page-error" class="text-danger" role="alert"></p>
             <div id="main-content">
-              <div class="card"><div class="card-body">
-                <div class="row mb-3">
-                  <div class="col-md-4 mb-2"><input id="ticket-search" class="form-control" placeholder="Tìm khách, email, SĐT, phim hoặc mã vé" oninput="renderTickets()" aria-label="Tìm vé"></div>
-                  <div class="col-md-3 mb-2"><select id="ticket-cinema" class="form-control" onchange="renderTickets()" aria-label="Lọc cụm rạp"><option value="">Tất cả cụm rạp</option></select></div>
-                  <div class="col-md-3 mb-2"><input id="ticket-date" class="form-control" type="date" onchange="renderTickets()" aria-label="Lọc ngày chiếu"></div>
-                  <div class="col-md-2 mb-2"><button class="btn btn-outline-secondary btn-block" onclick="resetFilters()">Xóa lọc</button></div>
+              <div class="card">
+                <div class="card-body">
+                  <div class="row mb-3">
+                    <div class="col-md-4 mb-2">
+                      <input
+                        id="ticket-search"
+                        class="form-control"
+                        placeholder="Tìm khách, email, SĐT, phim hoặc mã vé"
+                        oninput="onRenderTickets()"
+                        aria-label="Tìm vé"
+                      />
+                    </div>
+                    <div class="col-md-3 mb-2">
+                      <select
+                        id="ticket-cinema"
+                        class="form-control"
+                        onchange="onRenderTickets()"
+                        aria-label="Lọc cụm rạp"
+                      >
+                        <option value="">Tất cả cụm rạp</option>
+                      </select>
+                    </div>
+                    <div class="col-md-3 mb-2">
+                      <input
+                        id="ticket-date"
+                        class="form-control"
+                        type="date"
+                        onchange="onRenderTickets()"
+                        aria-label="Lọc ngày chiếu"
+                      />
+                    </div>
+                    <div class="col-md-2 mb-2">
+                      <button
+                        class="btn btn-outline-secondary btn-block"
+                        onclick="onResetFilters()"
+                      >
+                        Xóa lọc
+                      </button>
+                    </div>
+                  </div>
+                  <p id="ticket-summary" class="font-weight-bold"></p>
+                  <table class="table table-bordered table-sm table-hover">
+                    <thead>
+                      <tr>
+                        <th>Khách</th>
+                        <th>Phim</th>
+                        <th>Phòng</th>
+                        <th>Cụm rạp</th>
+                        <th>Suất</th>
+                        <th>Ghế</th>
+                        <th>Thanh toán</th>
+                        <th>Đặt lúc</th>
+                        <th>Thao tác</th>
+                      </tr>
+                    </thead>
+                    <tbody id="tickets-rows"></tbody>
+                  </table>
                 </div>
-                <p id="ticket-summary" class="font-weight-bold"></p>
-              <table class="table table-bordered table-sm table-hover">
-                <thead>
-                  <tr>
-                    <th>Khách</th>
-                    <th>Phim</th>
-                    <th>Phòng</th>
-                    <th>Cụm rạp</th>
-                    <th>Suất</th>
-                    <th>Ghế</th>
-                    <th>Thanh toán</th>
-                    <th>Đặt lúc</th>
-                    <th>Thao tác</th>
-                  </tr>
-                </thead>
-                <tbody id="tickets-rows"></tbody>
-              </table>
-              </div></div>
+              </div>
             </div>
           </div>
         </section>
@@ -70,22 +104,45 @@
       function onTickets() {
         return Promise.all([ticketApi.list(), cinemaApi.list()]).then(([response, cinemas]) => {
           tickets = response.data;
-          document.getElementById('ticket-cinema').innerHTML += cinemas.data.map(c => `<option value="${c.id}">${getSafeHtml(c.name)}</option>`).join('');
-          renderTickets();
+          document.getElementById("ticket-cinema").innerHTML += cinemas.data
+            .map(
+              (c) => `
+                  <option value="${c.id}">${getSafeHtml(c.name)}</option>
+                `
+            )
+            .join("");
+          onRenderTickets();
         });
       }
 
-      function renderTickets() {
-        const keyword = document.getElementById('ticket-search').value.trim().toLocaleLowerCase('vi');
-        const cinemaId = document.getElementById('ticket-cinema').value;
-        const day = document.getElementById('ticket-date').value;
-        const data = tickets.filter(ticket =>
-          (!cinemaId || String(ticket.cinemaId) === cinemaId) &&
-          (!day || getDateKey(ticket.startTime) === day) &&
-          (!keyword || [ticket.id, ticket.userFullName, ticket.userEmail, ticket.customerPhone, ticket.movieTitle].some(value => String(value || '').toLocaleLowerCase('vi').includes(keyword)))
+      function onRenderTickets() {
+        const keyword = document
+          .getElementById("ticket-search")
+          .value.trim()
+          .toLocaleLowerCase("vi");
+        const cinemaId = document.getElementById("ticket-cinema").value;
+        const day = document.getElementById("ticket-date").value;
+        const data = tickets.filter(
+          (ticket) =>
+            (!cinemaId || String(ticket.cinemaId) === cinemaId) &&
+            (!day || getDateKey(ticket.startTime) === day) &&
+            (!keyword ||
+              [
+                ticket.id,
+                ticket.userFullName,
+                ticket.userEmail,
+                ticket.customerPhone,
+                ticket.movieTitle
+              ].some((value) =>
+                String(value || "")
+                  .toLocaleLowerCase("vi")
+                  .includes(keyword)
+              ))
         );
-        document.getElementById('ticket-summary').textContent = `${data.length} vé · Doanh thu ${getMoney(data.reduce((total, ticket) => total + Number(ticket.totalAmount), 0))}`;
-        document.getElementById("tickets-rows").innerHTML = `${data
+        document.getElementById("ticket-summary").textContent =
+          `${data.length} vé · Doanh thu ${getMoney(data.reduce((total, ticket) => total + Number(ticket.totalAmount), 0))}`;
+        document.getElementById("tickets-rows").innerHTML = `${
+          data
             .map(
               (ticket) => `
                 <tr>
@@ -93,38 +150,64 @@
                     ${ticket.guest ? '<span class="badge badge-secondary">Khách vãng lai</span>' : getSafeHtml(ticket.userFullName)}
                     <small class="text-muted">#${ticket.id}</small>
                     <br />
-                    <small>${getSafeHtml([ticket.userEmail, ticket.customerPhone].filter(Boolean).join(' · '))}</small>
+                    <small>${getSafeHtml([ticket.userEmail, ticket.customerPhone].filter(Boolean).join(" · "))}</small>
                   </td>
                   <td>${getSafeHtml(ticket.movieTitle)}</td>
                   <td>${getSafeHtml(ticket.roomName)}</td>
-                  <td>${getSafeHtml(ticket.cinemaName || 'Chưa phân cụm')}</td>
+                  <td>${getSafeHtml(ticket.cinemaName || "Chưa phân cụm")}</td>
                   <td>${getDateTime(ticket.startTime)}</td>
                   <td>${getSeatLabel(ticket.seatNumber)}</td>
                   <td>
                     ${getMoney(ticket.totalAmount)}
                     <br />
-                    <small class="text-muted">Gốc ${getMoney(ticket.price)}${Number(ticket.discountAmount) ? ' · Giảm ' + getMoney(ticket.discountAmount) : ''}${ticket.discountCode ? ' (' + getSafeHtml(ticket.discountCode) + ')' : ''} · VAT ${getMoney(ticket.vatAmount)}</small>
+                    <small class="text-muted">
+                      Gốc ${getMoney(ticket.price)}${
+                        Number(ticket.discountAmount)
+                          ? " · Giảm " + getMoney(ticket.discountAmount)
+                          : ""
+                      }${
+                        ticket.discountCode ? " (" + getSafeHtml(ticket.discountCode) + ")" : ""
+                      } · VAT ${getMoney(ticket.vatAmount)}
+                    </small>
                   </td>
                   <td>${getDateTime(ticket.bookedAt)}</td>
-                  <td><button class="btn btn-sm btn-outline-danger" ${new Date(ticket.startTime) <= new Date() ? 'disabled' : ''} onclick="cancelTicket(${ticket.id})">Hủy vé</button></td>
+                  <td>
+                    <button
+                      class="btn btn-sm btn-outline-danger"
+                      ${new Date(ticket.startTime) <= new Date() ? "disabled" : ""}
+                      onclick="onCancelTicket(${ticket.id})"
+                    >
+                      Hủy vé
+                    </button>
+                  </td>
                 </tr>
               `
             )
-            .join("") || '<tr><td colspan="9" class="text-center">Không có vé phù hợp.</td></tr>'}`;
+            .join("") || '<tr><td colspan="9" class="text-center">Không có vé phù hợp.</td></tr>'
+        }`;
       }
-      function resetFilters() {
-        document.getElementById('ticket-search').value = '';
-        document.getElementById('ticket-cinema').value = '';
-        document.getElementById('ticket-date').value = '';
-        renderTickets();
+
+      function onResetFilters() {
+        document.getElementById("ticket-search").value = "";
+        document.getElementById("ticket-cinema").value = "";
+        document.getElementById("ticket-date").value = "";
+        onRenderTickets();
       }
-      function cancelTicket(id) {
+
+      function onCancelTicket(id) {
         if (!confirm(`Hủy vé #${id}? Ghế sẽ mở lại cho khách khác.`)) return;
-        ticketApi.cancel(id).then(() => ticketApi.list()).then(({data}) => {
-          tickets = data;
-          renderTickets();
-          onAdminMessage('Đã hủy vé và mở lại ghế.');
-        }).catch(error => { document.getElementById('page-error').textContent = error?.response?.data?.message || 'Không thể hủy vé.'; });
+        ticketApi
+          .cancel(id)
+          .then(() => ticketApi.list())
+          .then(({ data }) => {
+            tickets = data;
+            onRenderTickets();
+            onAdminMessage("Đã hủy vé và mở lại ghế.");
+          })
+          .catch((error) => {
+            document.getElementById("page-error").textContent =
+              error?.response?.data?.message || "Không thể hủy vé.";
+          });
       }
 
       onAdminPage(onTickets);

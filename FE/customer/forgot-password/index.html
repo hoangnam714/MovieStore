@@ -15,9 +15,7 @@
     <main id="main">
       <div class="auth-layout">
         <section class="auth-art">
-          <h1>
-            Quên mật khẩu cũng không sao.
-          </h1>
+          <h1>Quên mật khẩu cũng không sao.</h1>
           <p>Xác nhận email và số điện thoại đã đăng ký để đặt mật khẩu mới.</p>
           <img
             class="film-poster"
@@ -106,7 +104,8 @@
         data.phone = data.phone.replace(/[\s.-]/g, "");
         errorNode.textContent = "";
         if (!PHONE_PATTERN.test(data.phone)) {
-          errorNode.textContent = accountErrorMessages["Phone number must be a valid Vietnamese mobile number"];
+          errorNode.textContent =
+            accountErrorMessages["Phone number must be a valid Vietnamese mobile number"];
           form.elements.phone.focus();
           return;
         }
@@ -125,7 +124,10 @@
             location.href = "../login/index.html?reset=1";
           })
           .catch((error) => {
-            errorNode.textContent = getAccountErrorMessage(error, "Chưa đặt lại được mật khẩu. Vui lòng thử lại.");
+            errorNode.textContent = getAccountErrorMessage(
+              error,
+              "Chưa đặt lại được mật khẩu. Vui lòng thử lại."
+            );
             submitButton.disabled = false;
           });
       }

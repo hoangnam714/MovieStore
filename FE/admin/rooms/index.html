@@ -32,7 +32,9 @@
               <div class="card">
                 <div class="card-body">
                   <form id="room-form" onsubmit="onCreateRoom(event)" class="form-inline">
-                    <select class="form-control mr-2" name="cinemaId" id="room-cinema" required><option value="">Chọn cụm rạp</option></select>
+                    <select class="form-control mr-2" name="cinemaId" id="room-cinema" required>
+                      <option value="">Chọn cụm rạp</option>
+                    </select>
                     <input class="form-control mr-2" name="name" placeholder="Tên phòng" required />
                     <input
                       class="form-control mr-2"
@@ -71,7 +73,15 @@
     <script>
       function onRooms() {
         return Promise.all([roomApi.list(), cinemaApi.list()]).then(([response, cinemas]) => {
-          document.getElementById("room-cinema").innerHTML = '<option value="">Chọn cụm rạp</option>' + cinemas.data.map(c => `<option value="${c.id}">${getSafeHtml(c.name)}</option>`).join("");
+          document.getElementById("room-cinema").innerHTML =
+            '<option value="">Chọn cụm rạp</option>' +
+            cinemas.data
+              .map(
+                (c) => `
+                  <option value="${c.id}">${getSafeHtml(c.name)}</option>
+                `
+              )
+              .join("");
           const data = response.data;
           document.getElementById("rooms-rows").innerHTML = `${data
             .map(
@@ -81,7 +91,10 @@
                   <td>${getSafeHtml(room.cinemaName || "Chưa phân cụm")}</td>
                   <td>${room.seatCount}</td>
                   <td>
-                    <button class="btn btn-sm btn-outline-primary mr-2" onclick="onEditRoom(${room.id})">Sửa</button><button class="btn btn-sm btn-danger" onclick="onDeleteRoom(${room.id})">Xóa</button>
+                    <button class="btn btn-sm btn-outline-primary mr-2" onclick="onEditRoom(${room.id})">
+                      Sửa
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="onDeleteRoom(${room.id})">Xóa</button>
                   </td>
                 </tr>
               `
@@ -92,31 +105,33 @@
 
       let editingRoomId = null;
       function onEditRoom(id) {
-        roomApi.list().then(({data}) => {
-          const room = data.find(item => item.id === id);
+        roomApi.list().then(({ data }) => {
+          const room = data.find((item) => item.id === id);
           if (!room) return;
           editingRoomId = id;
-          const form = document.getElementById('room-form');
+          const form = document.getElementById("room-form");
           form.elements.name.value = room.name;
           form.elements.seatCount.value = room.seatCount;
-          form.elements.cinemaId.value = room.cinemaId || '';
-          form.querySelector('button').textContent = 'Lưu phòng';
-          form.scrollIntoView({behavior:'smooth'});
+          form.elements.cinemaId.value = room.cinemaId || "";
+          form.querySelector("button").textContent = "Lưu phòng";
+          form.scrollIntoView({ behavior: "smooth" });
         });
       }
+
       function onCreateRoom(event) {
         event.preventDefault();
         const form = event.target;
 
         const data = {
-            name: form.elements.name.value.trim(),
-            seatCount: Number(form.elements.seatCount.value),
-            cinemaId: Number(form.elements.cinemaId.value)
-          };
-        return (editingRoomId ? roomApi.update(editingRoomId, data) : roomApi.create(data))
-          .then(() => {
+          name: form.elements.name.value.trim(),
+          seatCount: Number(form.elements.seatCount.value),
+          cinemaId: Number(form.elements.cinemaId.value)
+        };
+        return (editingRoomId ? roomApi.update(editingRoomId, data) : roomApi.create(data)).then(
+          () => {
             onAdminNavigate("rooms");
-          });
+          }
+        );
       }
 
       function onDeleteRoom(id) {

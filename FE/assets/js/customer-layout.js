@@ -5,7 +5,9 @@
   const homeActive = ticketsPage || accountPage ? "" : "active";
   const accountLinks = currentUser
     ? `
-      <a class="account-link" href="/customer/account/index.html" title="Tài khoản và đổi mật khẩu">${getSafeHtml(currentUser.fullName)}</a>
+      <a class="account-link" href="/customer/account/index.html" title="Tài khoản và đổi mật khẩu">
+        ${getSafeHtml(currentUser.fullName)}
+      </a>
       <button class="btn light" id="logout" onclick="onCustomerLogout()">Đăng xuất</button>
     `
     : `
@@ -17,7 +19,11 @@
     <nav class="topbar navbar">
       <div class="wrap container">
         <a href="/customer/home/index.html" class="brand" aria-label="Movie Store Cinema - trang chủ">
-          <span class="brand-line"><span class="brand-mark" aria-hidden="true">✦</span>MOVIE<span>STORE</span></span>
+          <span class="brand-line">
+            <span class="brand-mark" aria-hidden="true">✦</span>
+            MOVIE
+            <span>STORE</span>
+          </span>
           <small>CINEMA & TICKETS</small>
         </a>
         <div class="navlinks">
@@ -30,7 +36,13 @@
     <nav class="mobile-nav" aria-label="Điều hướng khách hàng">
       <a class="${homeActive}" href="/customer/home/index.html#movies">Phim & lịch chiếu</a>
       <a class="${ticketsPage ? "active" : ""}" href="/customer/my-tickets/index.html">Vé của tôi</a>
-      ${currentUser ? `<a class="${accountPage ? "active" : ""}" href="/customer/account/index.html">Tài khoản</a>` : ""}
+      ${
+        currentUser
+          ? `
+            <a class="${accountPage ? "active" : ""}" href="/customer/account/index.html">Tài khoản</a>
+          `
+          : ""
+      }
     </nav>
   `;
 }
@@ -45,7 +57,14 @@ function onCustomerFooter() {
     <footer>
       <div class="wrap container">
         <div>
-          <a class="brand" href="/customer/home/index.html"><span class="brand-line"><span class="brand-mark" aria-hidden="true">✦</span>MOVIE<span>STORE</span></span><small>CINEMA & TICKETS</small></a>
+          <a class="brand" href="/customer/home/index.html">
+            <span class="brand-line">
+              <span class="brand-mark" aria-hidden="true">✦</span>
+              MOVIE
+              <span>STORE</span>
+            </span>
+            <small>CINEMA & TICKETS</small>
+          </a>
           <p>Khoảnh khắc điện ảnh bắt đầu từ đây.</p>
         </div>
         <div class="footer-links">

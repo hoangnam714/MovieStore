@@ -31,11 +31,21 @@
             <div id="main-content">
               <div class="card">
                 <div class="card-body">
-                  <div class="cms-section-heading"><h2 id="movie-form-title">Thêm phim mới</h2><p>Thông tin phim được dùng khi tạo suất chiếu và hiển thị ở trang khách.</p></div>
+                  <div class="cms-section-heading">
+                    <h2 id="movie-form-title">Thêm phim mới</h2>
+                    <p>Thông tin phim được dùng khi tạo suất chiếu và hiển thị ở trang khách.</p>
+                  </div>
                   <form id="movie-form" onsubmit="onCreateMovie(event)">
                     <div class="form-row">
                       <div class="col-md-3">
-                        <label for="movie-title">Tên phim</label><input id="movie-title" class="form-control" name="title" placeholder="Tên phim" required />
+                        <label for="movie-title">Tên phim</label
+                        ><input
+                          id="movie-title"
+                          class="form-control"
+                          name="title"
+                          placeholder="Tên phim"
+                          required
+                        />
                       </div>
                       <div class="col-md-2">
                         <label for="movie-duration">Thời lượng (phút)</label>
@@ -72,9 +82,30 @@
                       </div>
                     </div>
                     <p id="movie-form-error" class="text-danger mt-2 mb-0" role="alert"></p>
-                    <button type="button" id="movie-cancel" class="btn btn-outline-secondary mt-2" onclick="onCancelMovieEdit()" hidden>Hủy sửa</button>
+                    <button
+                      type="button"
+                      id="movie-cancel"
+                      class="btn btn-outline-secondary mt-2"
+                      onclick="onCancelMovieEdit()"
+                      hidden
+                    >
+                      Hủy sửa
+                    </button>
                   </form>
-                  <div class="cms-list-toolbar"><div><h2>Danh sách phim</h2><p id="movie-count" aria-live="polite"></p></div><input id="movie-search" class="form-control" type="search" placeholder="Tìm tên phim..." aria-label="Tìm tên phim" oninput="renderMovies()" /></div>
+                  <div class="cms-list-toolbar">
+                    <div>
+                      <h2>Danh sách phim</h2>
+                      <p id="movie-count" aria-live="polite"></p>
+                    </div>
+                    <input
+                      id="movie-search"
+                      class="form-control"
+                      type="search"
+                      placeholder="Tìm tên phim..."
+                      aria-label="Tìm tên phim"
+                      oninput="onRenderMovies()"
+                    />
+                  </div>
                   <table class="table table-striped table-hover">
                     <thead>
                       <tr>
@@ -105,31 +136,44 @@
       let movies = [];
       let editingMovieId = null;
 
-      function normalizeMovieSearch(value) {
-        return String(value || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/đ/g, 'd').replace(/Đ/g, 'D').toLocaleLowerCase('vi');
+      function getNormalizedMovieSearch(value) {
+        return String(value || "")
+          .normalize("NFD")
+          .replace(/[\u0300-\u036f]/g, "")
+          .replace(/đ/g, "d")
+          .replace(/Đ/g, "D")
+          .toLocaleLowerCase("vi");
       }
 
       function onMovies() {
-        return Promise.all([genreApi.list(), movieApi.list()]).then(([genreResponse, movieResponse]) => {
-          genres = genreResponse.data;
-          movies = movieResponse.data;
-          const genreOpts = genres
-            .map(
-              (genre) => `
-                <option value="${genre.id}">${getSafeHtml(genre.name)}</option>
-              `
-            )
-            .join("");
-          document.getElementById("movie-genre").insertAdjacentHTML("beforeend", genreOpts);
-          renderMovies();
-        });
+        return Promise.all([genreApi.list(), movieApi.list()]).then(
+          ([genreResponse, movieResponse]) => {
+            genres = genreResponse.data;
+            movies = movieResponse.data;
+            const genreOpts = genres
+              .map(
+                (genre) => `
+                  <option value="${genre.id}">${getSafeHtml(genre.name)}</option>
+                `
+              )
+              .join("");
+            document.getElementById("movie-genre").insertAdjacentHTML("beforeend", genreOpts);
+            onRenderMovies();
+          }
+        );
       }
 
-      function renderMovies() {
-        const keyword = normalizeMovieSearch(document.getElementById('movie-search').value.trim());
-        const data = movies.filter(movie => normalizeMovieSearch(movie.title).includes(keyword));
-        document.getElementById('movie-count').textContent = `${data.length} trong ${movies.length} phim`;
-        document.getElementById("movies-rows").innerHTML = `${data
+      function onRenderMovies() {
+        const keyword = getNormalizedMovieSearch(
+          document.getElementById("movie-search").value.trim()
+        );
+        const data = movies.filter((movie) =>
+          getNormalizedMovieSearch(movie.title).includes(keyword)
+        );
+        document.getElementById("movie-count").textContent =
+          `${data.length} trong ${movies.length} phim`;
+        document.getElementById("movies-rows").innerHTML = `${
+          data
             .map(
               (movie) => `
                 <tr>
@@ -138,36 +182,41 @@
                   <td>${movie.releaseYear}</td>
                   <td>${getSafeHtml(genres.find((genre) => genre.id === movie.genreId)?.name ?? "")}</td>
                   <td>
-                    <button class="btn btn-sm btn-outline-secondary mr-2" onclick="onEditMovie(${movie.id})">Sửa</button><button class="btn btn-sm btn-danger" onclick="onDeleteMovie(${movie.id})">Xóa</button>
+                    <button class="btn btn-sm btn-outline-secondary mr-2" onclick="onEditMovie(${movie.id})">
+                      Sửa
+                    </button>
+                    <button class="btn btn-sm btn-danger" onclick="onDeleteMovie(${movie.id})">Xóa</button>
                   </td>
                 </tr>
               `
             )
-            .join("") || '<tr><td colspan="5" class="text-center text-muted py-4">Không có phim phù hợp.</td></tr>'}`;
+            .join("") ||
+          '<tr><td colspan="5" class="text-center text-muted py-4">Không có phim phù hợp.</td></tr>'
+        }`;
       }
 
       function onEditMovie(id) {
-        const movie = movies.find(item => item.id === id);
+        const movie = movies.find((item) => item.id === id);
         if (!movie) return;
         editingMovieId = id;
-        const form = document.getElementById('movie-form');
+        const form = document.getElementById("movie-form");
         form.elements.title.value = movie.title;
         form.elements.duration.value = movie.duration;
         form.elements.releaseYear.value = movie.releaseYear;
         form.elements.genreId.value = movie.genreId;
-        document.getElementById('movie-form-title').textContent = `Sửa phim #${id}`;
-        document.getElementById('movie-save').textContent = 'Lưu phim';
-        document.getElementById('movie-cancel').hidden = false;
-        form.scrollIntoView({behavior:'smooth', block:'start'});
+        document.getElementById("movie-form-title").textContent = `Sửa phim #${id}`;
+        document.getElementById("movie-save").textContent = "Lưu phim";
+        document.getElementById("movie-cancel").hidden = false;
+        form.scrollIntoView({ behavior: "smooth", block: "start" });
       }
 
       function onCancelMovieEdit() {
         editingMovieId = null;
-        document.getElementById('movie-form').reset();
-        document.getElementById('movie-form-title').textContent = 'Thêm phim mới';
-        document.getElementById('movie-save').textContent = 'Thêm phim';
-        document.getElementById('movie-cancel').hidden = true;
-        document.getElementById('movie-form-error').textContent = '';
+        document.getElementById("movie-form").reset();
+        document.getElementById("movie-form-title").textContent = "Thêm phim mới";
+        document.getElementById("movie-save").textContent = "Thêm phim";
+        document.getElementById("movie-cancel").hidden = true;
+        document.getElementById("movie-form-error").textContent = "";
       }
 
       function onCreateMovie(event) {
@@ -180,26 +229,40 @@
           releaseYear: Number(form.elements.releaseYear.value),
           genreId: Number(form.elements.genreId.value)
         };
-        const request = editingMovieId ? movieApi.update(editingMovieId, payload) : movieApi.create(payload);
-        const save = document.getElementById('movie-save');
+        const request = editingMovieId
+          ? movieApi.update(editingMovieId, payload)
+          : movieApi.create(payload);
+        const save = document.getElementById("movie-save");
         save.disabled = true;
-        return request.then(() => movieApi.list()).then(({data}) => {
-          movies = data;
-          onAdminMessage(editingMovieId ? 'Đã cập nhật phim.' : 'Đã thêm phim.');
-          onCancelMovieEdit();
-          renderMovies();
-        }).catch(error => {
-          document.getElementById('movie-form-error').textContent = error?.response?.data?.message || 'Không lưu được phim.';
-        }).finally(() => { save.disabled = false; });
+        return request
+          .then(() => movieApi.list())
+          .then(({ data }) => {
+            movies = data;
+            onAdminMessage(editingMovieId ? "Đã cập nhật phim." : "Đã thêm phim.");
+            onCancelMovieEdit();
+            onRenderMovies();
+          })
+          .catch((error) => {
+            document.getElementById("movie-form-error").textContent =
+              error?.response?.data?.message || "Không lưu được phim.";
+          })
+          .finally(() => {
+            save.disabled = false;
+          });
       }
 
       function onDeleteMovie(id) {
         if (!confirm("Xóa phim?")) return;
         return movieApi
           .remove(id)
-          .then(() => { movies = movies.filter(movie => movie.id !== id); renderMovies(); onAdminMessage('Đã xóa phim.'); })
+          .then(() => {
+            movies = movies.filter((movie) => movie.id !== id);
+            onRenderMovies();
+            onAdminMessage("Đã xóa phim.");
+          })
           .catch((error) => {
-            document.getElementById('movie-form-error').textContent = error?.response?.data?.message || 'Không thể xóa phim đang có suất chiếu.';
+            document.getElementById("movie-form-error").textContent =
+              error?.response?.data?.message || "Không thể xóa phim đang có suất chiếu.";
           });
       }
 

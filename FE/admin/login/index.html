@@ -18,12 +18,20 @@
   <body class="hold-transition login-page">
     <main class="login-shell">
       <section class="login-story" aria-label="Giới thiệu Movie Store CMS">
-        <div class="story-brand"><span class="brand-mark">M</span><span>MOVIE STORE <small>CINEMA MANAGEMENT</small></span></div>
+        <div class="story-brand">
+          <span class="brand-mark">M</span><span>MOVIE STORE <small>CINEMA MANAGEMENT</small></span>
+        </div>
         <div class="story-content">
           <span class="story-kicker">KHÔNG GIAN QUẢN LÝ RẠP CHIẾU</span>
           <h2>Mỗi suất chiếu,<br /><em>một trải nghiệm.</em></h2>
-          <p>Theo dõi phim, rạp và vé đặt trong một nơi. Sắp lịch chiếu nhanh hơn cho từng cụm rạp.</p>
-          <div class="story-features"><span><i class="fas fa-film"></i> Danh mục phim</span><span><i class="fas fa-calendar-check"></i> Lịch chiếu</span><span><i class="fas fa-ticket-alt"></i> Vé đã đặt</span></div>
+          <p>
+            Theo dõi phim, rạp và vé đặt trong một nơi. Sắp lịch chiếu nhanh hơn cho từng cụm rạp.
+          </p>
+          <div class="story-features">
+            <span><i class="fas fa-film"></i> Danh mục phim</span
+            ><span><i class="fas fa-calendar-check"></i> Lịch chiếu</span
+            ><span><i class="fas fa-ticket-alt"></i> Vé đã đặt</span>
+          </div>
         </div>
         <div class="story-footer">MOVIE STORE · QUẢN TRỊ RẠP</div>
       </section>
@@ -35,20 +43,49 @@
           <form id="login-form" onsubmit="onLogin(event)">
             <div class="form-group">
               <label for="email">Email quản trị</label>
-              <input type="email" id="email" class="form-control" placeholder="admin@moviestore.vn" autocomplete="username" required value="admin@moviestore.vn" />
+              <input
+                type="email"
+                id="email"
+                class="form-control"
+                placeholder="admin@moviestore.vn"
+                autocomplete="username"
+                required
+                value="admin@moviestore.vn"
+              />
             </div>
             <div class="form-group">
               <label for="password">Mật khẩu</label>
               <div class="password-field">
-                <input type="password" id="password" class="form-control" placeholder="Nhập mật khẩu" autocomplete="current-password" required value="admin123" />
-                <button type="button" class="password-toggle" onclick="onTogglePassword()" aria-label="Hiện mật khẩu"><i class="fas fa-eye"></i></button>
+                <input
+                  type="password"
+                  id="password"
+                  class="form-control"
+                  placeholder="Nhập mật khẩu"
+                  autocomplete="current-password"
+                  required
+                  value="admin123"
+                />
+                <button
+                  type="button"
+                  class="password-toggle"
+                  onclick="onTogglePassword()"
+                  aria-label="Hiện mật khẩu"
+                >
+                  <i class="fas fa-eye"></i>
+                </button>
               </div>
             </div>
-            <p class="text-right small"><a href="/customer/forgot-password/index.html">Quên mật khẩu?</a></p>
+            <p class="text-right small">
+              <a href="/customer/forgot-password/index.html">Quên mật khẩu?</a>
+            </p>
             <p id="login-error" class="text-danger" role="alert" aria-live="polite"></p>
-            <button id="login-submit" type="submit" class="btn btn-primary btn-block">Vào trang quản trị <i class="fas fa-arrow-right ml-2"></i></button>
+            <button id="login-submit" type="submit" class="btn btn-primary btn-block">
+              Vào trang quản trị <i class="fas fa-arrow-right ml-2"></i>
+            </button>
           </form>
-          <a class="back-link" href="../../customer/home/index.html"><i class="fas fa-arrow-left mr-1"></i> Về trang khách</a>
+          <a class="back-link" href="../../customer/home/index.html"
+            ><i class="fas fa-arrow-left mr-1"></i> Về trang khách</a
+          >
         </div>
       </section>
     </main>
@@ -57,9 +94,9 @@
     <script>
       function onLogin(event) {
         event.preventDefault();
-        const errorNode = document.getElementById('login-error');
-        const button = document.getElementById('login-submit');
-        errorNode.textContent = '';
+        const errorNode = document.getElementById("login-error");
+        const button = document.getElementById("login-submit");
+        errorNode.textContent = "";
         button.disabled = true;
 
         return userApi
@@ -70,25 +107,31 @@
           .then((response) => {
             const data = response.data;
             if (data.role !== "ADMIN") {
-              api.post("/users/logout", null, { headers: { Authorization: "Bearer " + data.token } }).catch(() => {});
-              errorNode.textContent = 'Tài khoản này không có quyền quản trị.';
+              api
+                .post("/users/logout", null, { headers: { Authorization: "Bearer " + data.token } })
+                .catch(() => {});
+              errorNode.textContent = "Tài khoản này không có quyền quản trị.";
               return;
             }
             onSaveUser(data);
             location.href = "../dashboard/index.html";
           })
           .catch((error) => {
-            errorNode.textContent = error?.response?.data?.message || 'Email hoặc mật khẩu chưa đúng. Vui lòng thử lại.';
-          }).finally(() => { button.disabled = false; });
+            errorNode.textContent =
+              error?.response?.data?.message || "Email hoặc mật khẩu chưa đúng. Vui lòng thử lại.";
+          })
+          .finally(() => {
+            button.disabled = false;
+          });
       }
 
       function onTogglePassword() {
-        const input = document.getElementById('password');
-        const button = document.querySelector('.password-toggle');
-        const visible = input.type === 'password';
-        input.type = visible ? 'text' : 'password';
-        button.setAttribute('aria-label', visible ? 'Ẩn mật khẩu' : 'Hiện mật khẩu');
-        button.querySelector('i').className = visible ? 'fas fa-eye-slash' : 'fas fa-eye';
+        const input = document.getElementById("password");
+        const button = document.querySelector(".password-toggle");
+        const visible = input.type === "password";
+        input.type = visible ? "text" : "password";
+        button.setAttribute("aria-label", visible ? "Ẩn mật khẩu" : "Hiện mật khẩu");
+        button.querySelector("i").className = visible ? "fas fa-eye-slash" : "fas fa-eye";
       }
     </script>
   </body>

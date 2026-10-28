@@ -15,9 +15,7 @@
     <main id="main">
       <div class="auth-layout">
         <section class="auth-art">
-          <h1>
-            Mỗi buổi xem là một câu chuyện đáng nhớ.
-          </h1>
+          <h1>Mỗi buổi xem là một câu chuyện đáng nhớ.</h1>
           <p>Chọn bộ phim bạn yêu thích, giữ chỗ và tìm lại vé bất cứ lúc nào.</p>
           <img
             class="film-poster"
@@ -54,8 +52,12 @@
                 placeholder="Tối thiểu 6 ký tự"
               />
             </label>
-            <p class="text-end tiny mb-0"><a href="../forgot-password/index.html">Quên mật khẩu?</a></p>
-            <p id="auth-success" class="success-message tiny" role="status" hidden>Đã đặt lại mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.</p>
+            <p class="text-end tiny mb-0">
+              <a href="../forgot-password/index.html">Quên mật khẩu?</a>
+            </p>
+            <p id="auth-success" class="success-message tiny" role="status" hidden>
+              Đã đặt lại mật khẩu. Vui lòng đăng nhập bằng mật khẩu mới.
+            </p>
             <p id="auth-error" class="error tiny" role="alert"></p>
             <button id="auth-submit" class="btn full" type="submit">Đăng nhập ↗</button>
           </form>
@@ -95,12 +97,15 @@
             location.href = isCustomerPage ? destination.href : "../home/index.html";
           })
           .catch((error) => {
-            errorMessage.textContent = error?.response?.data?.message || "Đăng nhập chưa thành công. Vui lòng kiểm tra email và mật khẩu.";
+            errorMessage.textContent =
+              error?.response?.data?.message ||
+              "Đăng nhập chưa thành công. Vui lòng kiểm tra email và mật khẩu.";
             submitButton.disabled = false;
           });
       }
 
-      document.getElementById("auth-success").hidden = new URLSearchParams(location.search).get("reset") !== "1";
+      document.getElementById("auth-success").hidden =
+        new URLSearchParams(location.search).get("reset") !== "1";
     </script>
   </body>
 </html>

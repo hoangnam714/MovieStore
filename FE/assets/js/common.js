@@ -18,7 +18,8 @@ api.interceptors.response.use(
       const isAdminPage = location.pathname.startsWith("/admin/");
       location.href = isAdminPage
         ? "/admin/login/index.html"
-        : "/customer/login/index.html?next=" + encodeURIComponent(location.pathname + location.search);
+        : "/customer/login/index.html?next=" +
+          encodeURIComponent(location.pathname + location.search);
     }
     return Promise.reject(error);
   }
@@ -94,12 +95,15 @@ const ticketApi = {
 // Vietnamese text for account/password errors returned by the backend.
 const accountErrorMessages = {
   "Email already registered": "Email này đã được đăng ký.",
-  "Phone number must be a valid Vietnamese mobile number": "Số điện thoại không hợp lệ (10 số, VD: 0912345678).",
+  "Phone number must be a valid Vietnamese mobile number":
+    "Số điện thoại không hợp lệ (10 số, VD: 0912345678).",
   "Password confirmation does not match": "Mật khẩu xác nhận không khớp.",
   "Password must be at least 6 characters": "Mật khẩu tối thiểu 6 ký tự.",
-  "Email or phone number is incorrect": "Email hoặc số điện thoại không khớp với tài khoản đã đăng ký. Tài khoản tạo trước khi có số điện thoại cần liên hệ quầy vé để được hỗ trợ.",
+  "Email or phone number is incorrect":
+    "Email hoặc số điện thoại không khớp với tài khoản đã đăng ký. Tài khoản tạo trước khi có số điện thoại cần liên hệ quầy vé để được hỗ trợ.",
   "Current password is incorrect": "Mật khẩu hiện tại không đúng.",
-  "New password must be different from the current password": "Mật khẩu mới phải khác mật khẩu hiện tại."
+  "New password must be different from the current password":
+    "Mật khẩu mới phải khác mật khẩu hiện tại."
 };
 
 const getAccountErrorMessage = (error, fallback) => {
@@ -123,7 +127,8 @@ const getUser = () => {
 const onSaveUser = (user) => {
   // A backend older than token login answers without a token; saving that would look like a silent logout.
   if (!user?.token) {
-    const message = "Máy chủ chưa trả về phiên đăng nhập. Vui lòng khởi động lại backend bằng bản mới nhất.";
+    const message =
+      "Máy chủ chưa trả về phiên đăng nhập. Vui lòng khởi động lại backend bằng bản mới nhất.";
     throw Object.assign(new Error(message), { response: { data: { message } } });
   }
   sessionStorage.setItem(AUTH_KEY, JSON.stringify(user));

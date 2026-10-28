@@ -17,19 +17,25 @@
     <main id="main">
       <p id="booking-loading" class="loading">Đang tải phòng chiếu…</p>
       <div id="booking-content" hidden>
-        <div class="booking-intro"><div class="wrap">
-          <div class="section-head">
-            <div>
-              <a href="/customer/home/index.html#movies" class="back-link tiny">
-                ← Quay lại danh sách phim
-              </a>
-              <span class="eyebrow">ĐẶT VÉ XEM PHIM</span>
-              <h2><span id="movie-title"></span></h2>
-              <p class="muted"><span id="movie-description"></span></p>
+        <div class="booking-intro">
+          <div class="wrap">
+            <div class="section-head">
+              <div>
+                <a href="/customer/home/index.html#movies" class="back-link tiny">
+                  ← Quay lại danh sách phim
+                </a>
+                <span class="eyebrow">ĐẶT VÉ XEM PHIM</span>
+                <h2><span id="movie-title"></span></h2>
+                <p class="muted"><span id="movie-description"></span></p>
+              </div>
+              <div class="booking-steps">
+                <span class="current">01 <b>Suất chiếu</b></span
+                ><span>02 <b>Chọn ghế</b></span
+                ><span>03 <b>Nhận vé</b></span>
+              </div>
             </div>
-            <div class="booking-steps"><span class="current">01 <b>Suất chiếu</b></span><span>02 <b>Chọn ghế</b></span><span>03 <b>Nhận vé</b></span></div>
           </div>
-        </div></div>
+        </div>
         <div class="wrap">
           <div class="booking-layout">
             <section>
@@ -37,7 +43,12 @@
                 <span class="eyebrow">01 · LỊCH CHIẾU</span>
                 <h2>Chọn suất chiếu</h2>
                 <label for="book-cinema" class="field-label">Cụm rạp bạn muốn đến</label>
-                <select id="book-cinema" class="form-select booking-cinema" onchange="onSelectCinema(this.value)" aria-label="Chọn cụm rạp"></select>
+                <select
+                  id="book-cinema"
+                  class="form-select booking-cinema"
+                  onchange="onSelectCinema(this.value)"
+                  aria-label="Chọn cụm rạp"
+                ></select>
                 <div class="dates" id="book-dates"></div>
                 <div class="showtimes" id="times"></div>
               </div>
@@ -62,7 +73,10 @@
                     Có thể chọn tiếp
                   </span>
                 </div>
-                <p class="muted seat-hint">Chọn tối đa 8 ghế nối với nhau theo 4 hướng: trên, dưới, trái, phải. Ghế viền sáng là vị trí có thể chọn tiếp.</p>
+                <p class="muted seat-hint">
+                  Chọn tối đa 8 ghế nối với nhau theo 4 hướng: trên, dưới, trái, phải. Ghế viền sáng
+                  là vị trí có thể chọn tiếp.
+                </p>
                 <div class="screen">MÀN HÌNH</div>
                 <div class="seat-scroll">
                   <div class="seat-grid" id="seat-grid"></div>
@@ -91,20 +105,44 @@
                 </div>
               </dl>
               <div id="guest-box" class="customer-box" hidden>
-                <label for="customer-phone" class="field-label">Số điện thoại <span class="required">*</span></label>
-                <input id="customer-phone" class="form-control" type="tel" inputmode="tel" maxlength="15"
-                       autocomplete="tel" placeholder="VD: 0912 345 678" aria-describedby="guest-hint">
+                <label for="customer-phone" class="field-label"
+                  >Số điện thoại <span class="required">*</span></label
+                >
+                <input
+                  id="customer-phone"
+                  class="form-control"
+                  type="tel"
+                  inputmode="tel"
+                  maxlength="15"
+                  autocomplete="tel"
+                  placeholder="VD: 0912 345 678"
+                  aria-describedby="guest-hint"
+                />
                 <p id="guest-hint" class="muted tiny">
-                  Bạn đang đặt vé không cần tài khoản; nhân viên dùng số điện thoại để đối chiếu vé tại quầy.
-                  <a id="member-login" href="/customer/login/index.html">Đăng nhập</a> để được giảm 5%.
+                  Bạn đang đặt vé không cần tài khoản; nhân viên dùng số điện thoại để đối chiếu vé
+                  tại quầy.
+                  <a id="member-login" href="/customer/login/index.html">Đăng nhập</a> để được giảm
+                  5%.
                 </p>
               </div>
               <p id="member-box" class="member-box tiny" hidden>Thành viên được giảm 5% tự động.</p>
               <label for="discount-code" class="field-label">Mã giảm giá</label>
               <div class="input-group discount-group">
-                <input id="discount-code" class="form-control text-uppercase" maxlength="30" placeholder="Nhập mã"
-                       onkeydown="if (event.key === 'Enter') onApplyDiscountCode()">
-                <button id="apply-code" class="btn light" type="button" onclick="onApplyDiscountCode()">Áp dụng</button>
+                <input
+                  id="discount-code"
+                  class="form-control text-uppercase"
+                  maxlength="30"
+                  placeholder="Nhập mã"
+                  onkeydown="if (event.key === 'Enter') onApplyDiscountCode();"
+                />
+                <button
+                  id="apply-code"
+                  class="btn light"
+                  type="button"
+                  onclick="onApplyDiscountCode()"
+                >
+                  Áp dụng
+                </button>
               </div>
               <p id="discount-message" class="tiny" role="status"></p>
               <dl class="price-lines">
@@ -140,8 +178,16 @@
           <div class="checkmark">✓</div>
           <h2>Hẹn bạn tại rạp!</h2>
           <p id="success-message"></p>
-          <a id="success-link" class="btn full" href="/customer/my-tickets/index.html">Xem vé của tôi ↗</a>
-          <button class="btn light full mt-2" type="button" onclick="document.getElementById('success').close()">Đặt thêm vé</button>
+          <a id="success-link" class="btn full" href="/customer/my-tickets/index.html"
+            >Xem vé của tôi ↗</a
+          >
+          <button
+            class="btn light full mt-2"
+            type="button"
+            onclick="document.getElementById('success').close()"
+          >
+            Đặt thêm vé
+          </button>
         </dialog>
       </div>
       <p id="page-error" class="wrap error" role="alert"></p>
@@ -193,7 +239,7 @@
         return neighbors;
       }
 
-      function seatsAreTogether(seats) {
+      function getSeatsAreTogether(seats) {
         if (seats.size <= 1) return true;
         const visited = new Set();
         const queue = [seats.values().next().value];
@@ -220,11 +266,23 @@
             const movie = movieResponse.data.find((item) => item.id === movieId);
             if (!movie) throw new Error("Không tìm thấy phim.");
             movieTimes = schedule.filter((item) => item.movieId === movieId);
-            const availableCinemas = cinemaResponse.data.filter(cinema => movieTimes.some(item => item.cinemaId === cinema.id));
-            selectedCinemaId = String(params.get('cinemaId') || requested?.cinemaId || availableCinemas[0]?.id || '');
-            if (!availableCinemas.some(cinema => String(cinema.id) === selectedCinemaId)) selectedCinemaId = String(availableCinemas[0]?.id || '');
-            document.getElementById('book-cinema').innerHTML = availableCinemas.map(cinema => `<option value="${cinema.id}">${getSafeHtml(cinema.name)} · ${getSafeHtml(cinema.address)}</option>`).join('') || '<option value="">Chưa có cụm rạp</option>';
-            document.getElementById('book-cinema').value = selectedCinemaId;
+            const availableCinemas = cinemaResponse.data.filter((cinema) =>
+              movieTimes.some((item) => item.cinemaId === cinema.id)
+            );
+            selectedCinemaId = String(
+              params.get("cinemaId") || requested?.cinemaId || availableCinemas[0]?.id || ""
+            );
+            if (!availableCinemas.some((cinema) => String(cinema.id) === selectedCinemaId))
+              selectedCinemaId = String(availableCinemas[0]?.id || "");
+            document.getElementById("book-cinema").innerHTML =
+              availableCinemas
+                .map(
+                  (cinema) => `
+                    <option value="${cinema.id}">${getSafeHtml(cinema.name)} · ${getSafeHtml(cinema.address)}</option>
+                  `
+                )
+                .join("") || '<option value="">Chưa có cụm rạp</option>';
+            document.getElementById("book-cinema").value = selectedCinemaId;
             document.getElementById("movie-title").textContent = movie.title;
             document.getElementById("summary-movie-title").textContent = movie.title;
             document.getElementById("movie-description").textContent =
@@ -234,28 +292,32 @@
             onCustomerBox();
             requestedShowtimeId = requested?.id;
             let date = params.get("date");
-            onSelectCinema(selectedCinemaId, date || (requested ? getDateKey(requested.startTime) : null));
+            onSelectCinema(
+              selectedCinemaId,
+              date || (requested ? getDateKey(requested.startTime) : null)
+            );
           })
           .catch((error) => {
-            document.getElementById('booking-loading').hidden = true;
-            document.getElementById('page-error').textContent = error?.response?.data?.message || error.message || 'Không tải được lịch chiếu.';
+            document.getElementById("booking-loading").hidden = true;
+            document.getElementById("page-error").textContent =
+              error?.response?.data?.message || error.message || "Không tải được lịch chiếu.";
           });
       }
 
       function onSelectCinema(id, preferredDate) {
         selectedCinemaId = id;
-        const cinemaTimes = movieTimes.filter(item => String(item.cinemaId) === id);
-        bookingDays = [...new Set(cinemaTimes.map(item => getDateKey(item.startTime)))];
+        const cinemaTimes = movieTimes.filter((item) => String(item.cinemaId) === id);
+        bookingDays = [...new Set(cinemaTimes.map((item) => getDateKey(item.startTime)))];
         const date = bookingDays.includes(preferredDate) ? preferredDate : bookingDays[0];
         activeShowtime = null;
         selectedSeats.clear();
-        document.getElementById('confirm').disabled = true;
-        document.getElementById('sum-cinema').textContent = '—';
-        document.getElementById('sum-time').textContent = '—';
-        document.getElementById('sum-room').textContent = '—';
-        document.getElementById('sum-seats').textContent = '—';
+        document.getElementById("confirm").disabled = true;
+        document.getElementById("sum-cinema").textContent = "—";
+        document.getElementById("sum-time").textContent = "—";
+        document.getElementById("sum-room").textContent = "—";
+        document.getElementById("sum-seats").textContent = "—";
         getBookingQuote();
-        document.getElementById('seat-grid').innerHTML = 'Chọn suất chiếu để xem ghế.';
+        document.getElementById("seat-grid").innerHTML = "Chọn suất chiếu để xem ghế.";
         onSelectDay(date);
       }
 
@@ -267,7 +329,11 @@
             `
           )
           .join("");
-        const todayTimes = movieTimes.filter((item) => String(item.cinemaId) === selectedCinemaId && getDateKey(item.startTime) === selectedDate);
+        const todayTimes = movieTimes.filter(
+          (item) =>
+            String(item.cinemaId) === selectedCinemaId &&
+            getDateKey(item.startTime) === selectedDate
+        );
         document.getElementById("times").innerHTML =
           todayTimes
             .map(
@@ -280,12 +346,14 @@
             )
             .join("") || "<p>Chưa có suất chiếu.</p>";
         if (todayTimes.length) {
-          const showtime = todayTimes.find((item) => item.id === requestedShowtimeId) || todayTimes[0];
+          const showtime =
+            todayTimes.find((item) => item.id === requestedShowtimeId) || todayTimes[0];
           onSelectShowtime(showtime.id);
         } else {
           ++seatRequest;
           activeShowtime = null;
-          document.getElementById('times').innerHTML = '<p class="muted">Chưa có suất chiếu tại cụm rạp này.</p>';
+          document.getElementById("times").innerHTML =
+            '<p class="muted">Chưa có suất chiếu tại cụm rạp này.</p>';
         }
       }
 
@@ -315,16 +383,20 @@
             onBookingSummary();
           })
           .catch((error) => {
-            if (requestId === seatRequest) document.getElementById('seat-grid').textContent = error?.response?.data?.message || 'Không tải được sơ đồ ghế.';
+            if (requestId === seatRequest)
+              document.getElementById("seat-grid").textContent =
+                error?.response?.data?.message || "Không tải được sơ đồ ghế.";
           });
       }
 
       function onSeats() {
         const suggested = new Set();
         if (selectedSeats.size && selectedSeats.size < 8) {
-          selectedSeats.forEach(seat => getNeighborSeats(seat, activeShowtime.seatCount)
-            .filter(neighbor => !selectedSeats.has(neighbor) && !occupied.has(neighbor))
-            .forEach(neighbor => suggested.add(neighbor)));
+          selectedSeats.forEach((seat) =>
+            getNeighborSeats(seat, activeShowtime.seatCount)
+              .filter((neighbor) => !selectedSeats.has(neighbor) && !occupied.has(neighbor))
+              .forEach((neighbor) => suggested.add(neighbor))
+          );
         }
         document.getElementById("seat-grid").innerHTML = Array.from(
           { length: activeShowtime.seatCount },
@@ -348,14 +420,17 @@
         if (nextSeats.has(seatNumber)) nextSeats.delete(seatNumber);
         else if (nextSeats.size < 8) nextSeats.add(seatNumber);
         else return onBookingMessage("Mỗi lần vui lòng chọn tối đa 8 ghế.");
-        if (!seatsAreTogether(nextSeats)) return onBookingMessage("Các ghế phải nối với nhau theo 4 hướng: trên, dưới, trái, phải. Không thể bỏ ghế làm tách nhóm.");
+        if (!getSeatsAreTogether(nextSeats))
+          return onBookingMessage(
+            "Các ghế phải nối với nhau theo 4 hướng: trên, dưới, trái, phải. Không thể bỏ ghế làm tách nhóm."
+          );
         selectedSeats = nextSeats;
         onSeats();
         onBookingSummary();
       }
 
       function onBookingSummary() {
-        document.getElementById("sum-cinema").textContent = activeShowtime.cinemaName || '—';
+        document.getElementById("sum-cinema").textContent = activeShowtime.cinemaName || "—";
         document.getElementById("sum-time").textContent = getDateTime(activeShowtime.startTime);
         document.getElementById("sum-room").textContent = activeShowtime.roomName;
         document.getElementById("sum-seats").textContent =
@@ -373,7 +448,8 @@
         document.getElementById("guest-box").hidden = Boolean(currentUser);
         document.getElementById("member-box").hidden = !currentUser;
         document.getElementById("member-login").href =
-          "/customer/login/index.html?next=" + encodeURIComponent(location.pathname + location.search);
+          "/customer/login/index.html?next=" +
+          encodeURIComponent(location.pathname + location.search);
       }
 
       function getBookingRequest() {
@@ -386,13 +462,19 @@
 
       function onPriceLines(quote) {
         const discountParts = [];
-        if (quote?.memberDiscountPercent) discountParts.push(`thành viên ${quote.memberDiscountPercent}%`);
-        if (quote?.codeDiscountPercent) discountParts.push(`mã ${quote.discountCode} ${quote.codeDiscountPercent}%`);
+        if (quote?.memberDiscountPercent)
+          discountParts.push(`thành viên ${quote.memberDiscountPercent}%`);
+        if (quote?.codeDiscountPercent)
+          discountParts.push(`mã ${quote.discountCode} ${quote.codeDiscountPercent}%`);
         document.getElementById("sum-subtotal").textContent = getMoney(quote?.subtotal ?? 0);
-        document.getElementById("sum-discount-label").textContent =
-          discountParts.length ? `Giảm giá (${discountParts.join(" + ")})` : "Giảm giá";
-        document.getElementById("sum-discount").textContent = "−" + getMoney(quote?.discountAmount ?? 0);
-        document.getElementById("sum-vat-label").textContent = quote ? `Thuế VAT ${quote.vatPercent}%` : "Thuế VAT";
+        document.getElementById("sum-discount-label").textContent = discountParts.length
+          ? `Giảm giá (${discountParts.join(" + ")})`
+          : "Giảm giá";
+        document.getElementById("sum-discount").textContent =
+          "−" + getMoney(quote?.discountAmount ?? 0);
+        document.getElementById("sum-vat-label").textContent = quote
+          ? `Thuế VAT ${quote.vatPercent}%`
+          : "Thuế VAT";
         document.getElementById("sum-vat").textContent = getMoney(quote?.vatAmount ?? 0);
         document.getElementById("sum-total").textContent = getMoney(quote?.total ?? 0);
       }
@@ -404,15 +486,20 @@
       }
 
       const bookingErrorMessages = {
-        "One or more seats are already booked for this showtime": "Ghế bạn chọn vừa có người đặt. Sơ đồ ghế đã được cập nhật, vui lòng chọn ghế khác.",
-        "Cannot book tickets after showtime has started": "Suất chiếu đã bắt đầu, không thể đặt vé.",
+        "One or more seats are already booked for this showtime":
+          "Ghế bạn chọn vừa có người đặt. Sơ đồ ghế đã được cập nhật, vui lòng chọn ghế khác.",
+        "Cannot book tickets after showtime has started":
+          "Suất chiếu đã bắt đầu, không thể đặt vé.",
         "Phone number is required when booking without an account": "Vui lòng nhập số điện thoại.",
-        "Phone number must be a valid Vietnamese mobile number": "Số điện thoại không hợp lệ (10 số, VD: 0912345678).",
+        "Phone number must be a valid Vietnamese mobile number":
+          "Số điện thoại không hợp lệ (10 số, VD: 0912345678).",
         "Discount code does not exist": "Mã giảm giá không tồn tại.",
-        "Discount code is inactive, expired or used up": "Mã giảm giá đã tắt, hết hạn hoặc hết lượt.",
+        "Discount code is inactive, expired or used up":
+          "Mã giảm giá đã tắt, hết hạn hoặc hết lượt.",
         "Discount code is used up": "Mã giảm giá đã hết lượt.",
         "Maximum 8 seats per booking": "Mỗi lần đặt tối đa 8 ghế.",
-        "Seats in one booking must connect horizontally or vertically": "Các ghế phải nối với nhau theo 4 hướng."
+        "Seats in one booking must connect horizontally or vertically":
+          "Các ghế phải nối với nhau theo 4 hướng."
       };
 
       function getBookingErrorMessage(error, fallback) {
@@ -443,8 +530,10 @@
               return getBookingQuote();
             }
             onPriceLines(null);
-            document.getElementById("booking-error").textContent =
-              getBookingErrorMessage(error, "Không tính được giá vé. Vui lòng tải lại trang.");
+            document.getElementById("booking-error").textContent = getBookingErrorMessage(
+              error,
+              "Không tính được giá vé. Vui lòng tải lại trang."
+            );
           });
       }
 
@@ -466,7 +555,8 @@
 
       function onBooking() {
         if (!activeShowtime || !selectedSeats.size) return;
-        if (!seatsAreTogether(selectedSeats)) return onBookingMessage("Vui lòng chọn các ghế nối với nhau theo 4 hướng.");
+        if (!getSeatsAreTogether(selectedSeats))
+          return onBookingMessage("Vui lòng chọn các ghế nối với nhau theo 4 hướng.");
         const request = getBookingRequest();
         const isGuest = !getUser();
         if (isGuest) {
@@ -489,7 +579,9 @@
       // Kept apart from onBookingFailure: a rendering error here must never be reported as a failed booking.
       function onBookingSuccess({ data }) {
         const isGuest = !getUser();
-        const codes = data.tickets.map((ticket) => "#" + String(ticket.id).padStart(6, "0")).join(", ");
+        const codes = data.tickets
+          .map((ticket) => "#" + String(ticket.id).padStart(6, "0"))
+          .join(", ");
         const phone = data.tickets[0]?.customerPhone;
         document.getElementById("success-message").textContent = isGuest
           ? `Đặt vé thành công, tổng thanh toán ${getMoney(data.pricing.total)}. Mã vé: ${codes}. Vui lòng đọc số điện thoại ${phone} tại quầy để nhận vé.`
@@ -504,8 +596,10 @@
       }
 
       function onBookingFailure(error) {
-        document.getElementById("booking-error").textContent =
-          getBookingErrorMessage(error, "Đặt vé chưa thành công. Vui lòng thử lại.");
+        document.getElementById("booking-error").textContent = getBookingErrorMessage(
+          error,
+          "Đặt vé chưa thành công. Vui lòng thử lại."
+        );
         onSelectShowtime(activeShowtime.id);
       }
 

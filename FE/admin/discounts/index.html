@@ -4,8 +4,14 @@
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Mã giảm giá | Movie Store CMS</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css" />
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css" />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/admin-lte@3.2/dist/css/adminlte.min.css"
+    />
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6/css/all.min.css"
+    />
     <link rel="stylesheet" href="../../assets/css/admin.css" />
   </head>
   <body class="hold-transition sidebar-mini layout-fixed" data-page="discounts">
@@ -24,50 +30,97 @@
             <div id="main-content" class="card">
               <div class="card-body">
                 <p class="text-muted mb-3">
-                  Khách có tài khoản luôn được giảm 5%; phần trăm của mã được cộng thêm. VAT tính trên giá sau giảm.
+                  Khách có tài khoản luôn được giảm 5%; phần trăm của mã được cộng thêm. VAT tính
+                  trên giá sau giảm.
                 </p>
                 <form id="discount-form" class="mb-4" onsubmit="onSaveDiscountCode(event)">
                   <div class="form-row">
                     <div class="form-group col-md-3">
                       <label for="discount-code">Mã</label>
-                      <input id="discount-code" class="form-control text-uppercase" name="code" required
-                             minlength="3" maxlength="30" pattern="[A-Za-z0-9_\-]{3,30}" placeholder="VD: WELCOME10">
+                      <input
+                        id="discount-code"
+                        class="form-control text-uppercase"
+                        name="code"
+                        required
+                        minlength="3"
+                        maxlength="30"
+                        pattern="[A-Za-z0-9_\-]{3,30}"
+                        placeholder="VD: WELCOME10"
+                      />
                     </div>
                     <div class="form-group col-md-2">
                       <label for="discount-percent">Giảm (%)</label>
-                      <input id="discount-percent" class="form-control" name="discountPercent" type="number"
-                             min="1" max="100" required>
+                      <input
+                        id="discount-percent"
+                        class="form-control"
+                        name="discountPercent"
+                        type="number"
+                        min="1"
+                        max="100"
+                        required
+                      />
                     </div>
                     <div class="form-group col-md-7">
                       <label for="discount-description">Mô tả</label>
-                      <input id="discount-description" class="form-control" name="description" maxlength="255"
-                             placeholder="Nội dung chương trình">
+                      <input
+                        id="discount-description"
+                        class="form-control"
+                        name="description"
+                        maxlength="255"
+                        placeholder="Nội dung chương trình"
+                      />
                     </div>
                   </div>
                   <div class="form-row align-items-end">
                     <div class="form-group col-md-3">
                       <label for="discount-start">Từ ngày</label>
-                      <input id="discount-start" class="form-control" name="startDate" type="date">
+                      <input
+                        id="discount-start"
+                        class="form-control"
+                        name="startDate"
+                        type="date"
+                      />
                     </div>
                     <div class="form-group col-md-3">
                       <label for="discount-end">Đến ngày</label>
-                      <input id="discount-end" class="form-control" name="endDate" type="date">
+                      <input id="discount-end" class="form-control" name="endDate" type="date" />
                     </div>
                     <div class="form-group col-md-2">
                       <label for="discount-limit">Số lượt tối đa</label>
-                      <input id="discount-limit" class="form-control" name="usageLimit" type="number" min="1"
-                             placeholder="Không giới hạn">
+                      <input
+                        id="discount-limit"
+                        class="form-control"
+                        name="usageLimit"
+                        type="number"
+                        min="1"
+                        placeholder="Không giới hạn"
+                      />
                     </div>
                     <div class="form-group col-md-2">
                       <div class="custom-control custom-switch mb-2">
-                        <input id="discount-active" class="custom-control-input" name="active" type="checkbox" checked>
-                        <label class="custom-control-label" for="discount-active">Đang áp dụng</label>
+                        <input
+                          id="discount-active"
+                          class="custom-control-input"
+                          name="active"
+                          type="checkbox"
+                          checked
+                        />
+                        <label class="custom-control-label" for="discount-active"
+                          >Đang áp dụng</label
+                        >
                       </div>
                     </div>
                     <div class="form-group col-md-2">
                       <button class="btn btn-primary btn-block" id="save-button">Thêm mã</button>
-                      <button class="btn btn-outline-secondary btn-block" id="cancel-button" type="button"
-                              onclick="onResetDiscountForm()" hidden>Hủy sửa</button>
+                      <button
+                        class="btn btn-outline-secondary btn-block"
+                        id="cancel-button"
+                        type="button"
+                        onclick="onResetDiscountForm()"
+                        hidden
+                      >
+                        Hủy sửa
+                      </button>
                     </div>
                   </div>
                 </form>
@@ -103,72 +156,84 @@
       let editingId = null;
 
       function onDiscountError(error) {
-        document.getElementById('discount-error').textContent =
-          error?.response?.data?.message || 'Không thể lưu mã giảm giá.';
+        document.getElementById("discount-error").textContent =
+          error?.response?.data?.message || "Không thể lưu mã giảm giá.";
       }
 
       function getDateLabel(value) {
-        return value ? new Date(value + 'T00:00:00').toLocaleDateString('vi-VN') : '';
+        return value ? new Date(value + "T00:00:00").toLocaleDateString("vi-VN") : "";
       }
 
       function getValidity(code) {
-        if (!code.startDate && !code.endDate) return 'Không giới hạn';
-        return `${getDateLabel(code.startDate) || '…'} → ${getDateLabel(code.endDate) || '…'}`;
+        if (!code.startDate && !code.endDate) return "Không giới hạn";
+        return `${getDateLabel(code.startDate) || "…"} → ${getDateLabel(code.endDate) || "…"}`;
       }
 
       function getStatus(code) {
-        const today = new Date().toLocaleDateString('sv-SE');
+        const today = new Date().toLocaleDateString("sv-SE");
         if (!code.active) return '<span class="badge badge-secondary">Đã tắt</span>';
-        if (code.endDate && code.endDate < today) return '<span class="badge badge-warning">Hết hạn</span>';
-        if (code.startDate && code.startDate > today) return '<span class="badge badge-info">Chưa bắt đầu</span>';
-        if (code.usageLimit != null && code.usedCount >= code.usageLimit) return '<span class="badge badge-warning">Hết lượt</span>';
+        if (code.endDate && code.endDate < today)
+          return '<span class="badge badge-warning">Hết hạn</span>';
+        if (code.startDate && code.startDate > today)
+          return '<span class="badge badge-info">Chưa bắt đầu</span>';
+        if (code.usageLimit != null && code.usedCount >= code.usageLimit)
+          return '<span class="badge badge-warning">Hết lượt</span>';
         return '<span class="badge badge-success">Đang áp dụng</span>';
       }
 
       function getDiscountCodes() {
         return discountApi.list().then(({ data }) => {
           discountCodes = data;
-          document.getElementById('discount-rows').innerHTML = data.map(code => `
-            <tr>
-              <td><strong>${getSafeHtml(code.code)}</strong></td>
-              <td>${code.discountPercent}%</td>
-              <td>${getSafeHtml(code.description || '')}</td>
-              <td>${getValidity(code)}</td>
-              <td>${code.usedCount}${code.usageLimit != null ? ' / ' + code.usageLimit : ''}</td>
-              <td>${getStatus(code)}</td>
-              <td class="text-nowrap">
-                <button class="btn btn-sm btn-outline-primary mr-2" onclick="onEditDiscountCode(${code.id})">Sửa</button>
-                <button class="btn btn-sm btn-outline-danger" onclick="onDeleteDiscountCode(${code.id})">Xóa</button>
-              </td>
-            </tr>
-          `).join('') || '<tr><td colspan="7" class="text-center">Chưa có mã giảm giá.</td></tr>';
+          document.getElementById("discount-rows").innerHTML =
+            data
+              .map(
+                (code) => `
+                  <tr>
+                    <td><strong>${getSafeHtml(code.code)}</strong></td>
+                    <td>${code.discountPercent}%</td>
+                    <td>${getSafeHtml(code.description || "")}</td>
+                    <td>${getValidity(code)}</td>
+                    <td>${code.usedCount}${code.usageLimit != null ? " / " + code.usageLimit : ""}</td>
+                    <td>${getStatus(code)}</td>
+                    <td class="text-nowrap">
+                      <button class="btn btn-sm btn-outline-primary mr-2" onclick="onEditDiscountCode(${code.id})">
+                        Sửa
+                      </button>
+                      <button class="btn btn-sm btn-outline-danger" onclick="onDeleteDiscountCode(${code.id})">
+                        Xóa
+                      </button>
+                    </td>
+                  </tr>
+                `
+              )
+              .join("") || '<tr><td colspan="7" class="text-center">Chưa có mã giảm giá.</td></tr>';
         });
       }
 
       function onResetDiscountForm() {
         editingId = null;
-        const form = document.getElementById('discount-form');
+        const form = document.getElementById("discount-form");
         form.reset();
-        document.getElementById('save-button').textContent = 'Thêm mã';
-        document.getElementById('cancel-button').hidden = true;
-        document.getElementById('discount-error').textContent = '';
+        document.getElementById("save-button").textContent = "Thêm mã";
+        document.getElementById("cancel-button").hidden = true;
+        document.getElementById("discount-error").textContent = "";
       }
 
       function onEditDiscountCode(id) {
-        const code = discountCodes.find(item => item.id === id);
+        const code = discountCodes.find((item) => item.id === id);
         if (!code) return;
         editingId = id;
-        const form = document.getElementById('discount-form');
+        const form = document.getElementById("discount-form");
         form.elements.code.value = code.code;
         form.elements.discountPercent.value = code.discountPercent;
-        form.elements.description.value = code.description || '';
-        form.elements.startDate.value = code.startDate || '';
-        form.elements.endDate.value = code.endDate || '';
-        form.elements.usageLimit.value = code.usageLimit ?? '';
+        form.elements.description.value = code.description || "";
+        form.elements.startDate.value = code.startDate || "";
+        form.elements.endDate.value = code.endDate || "";
+        form.elements.usageLimit.value = code.usageLimit ?? "";
         form.elements.active.checked = code.active;
-        document.getElementById('save-button').textContent = 'Lưu thay đổi';
-        document.getElementById('cancel-button').hidden = false;
-        form.scrollIntoView({ behavior: 'smooth' });
+        document.getElementById("save-button").textContent = "Lưu thay đổi";
+        document.getElementById("cancel-button").hidden = false;
+        form.scrollIntoView({ behavior: "smooth" });
       }
 
       function onSaveDiscountCode(event) {
@@ -180,16 +245,19 @@
           description: form.elements.description.value.trim(),
           startDate: form.elements.startDate.value || null,
           endDate: form.elements.endDate.value || null,
-          usageLimit: form.elements.usageLimit.value ? Number(form.elements.usageLimit.value) : null,
+          usageLimit: form.elements.usageLimit.value
+            ? Number(form.elements.usageLimit.value)
+            : null,
           active: form.elements.active.checked
         };
         if (data.startDate && data.endDate && data.endDate < data.startDate) {
-          document.getElementById('discount-error').textContent = 'Ngày kết thúc phải sau ngày bắt đầu.';
+          document.getElementById("discount-error").textContent =
+            "Ngày kết thúc phải sau ngày bắt đầu.";
           return;
         }
         (editingId ? discountApi.update(editingId, data) : discountApi.create(data))
           .then(() => {
-            onAdminMessage(editingId ? 'Đã cập nhật mã giảm giá.' : 'Đã thêm mã giảm giá.');
+            onAdminMessage(editingId ? "Đã cập nhật mã giảm giá." : "Đã thêm mã giảm giá.");
             onResetDiscountForm();
             return getDiscountCodes();
           })
@@ -197,7 +265,7 @@
       }
 
       function onDeleteDiscountCode(id) {
-        if (!confirm('Xóa mã giảm giá này? Mã đã dùng cho vé chỉ có thể tắt.')) return;
+        if (!confirm("Xóa mã giảm giá này? Mã đã dùng cho vé chỉ có thể tắt.")) return;
         discountApi.remove(id).then(getDiscountCodes).catch(onDiscountError);
       }
 

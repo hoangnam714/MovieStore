@@ -103,63 +103,67 @@
     <script src="../../assets/js/admin-layout.js"></script>
     <script>
       function onDashboard(content) {
-        return Promise.all([movieApi.list(), roomApi.list(), showtimeApi.list(), ticketApi.list()]).then(
-          ([movies, rooms, showtimes, tickets]) => {
-            const upcoming = showtimes.data
-              .filter((showtime) => new Date(showtime.startTime) > new Date())
-              .sort((a, b) => a.startTime.localeCompare(b.startTime));
-            const revenue = tickets.data.reduce((sum, ticket) => sum + Number(ticket.totalAmount), 0);
+        return Promise.all([
+          movieApi.list(),
+          roomApi.list(),
+          showtimeApi.list(),
+          ticketApi.list()
+        ]).then(([movies, rooms, showtimes, tickets]) => {
+          const upcoming = showtimes.data
+            .filter((showtime) => new Date(showtime.startTime) > new Date())
+            .sort((a, b) => a.startTime.localeCompare(b.startTime));
+          const revenue = tickets.data.reduce((sum, ticket) => sum + Number(ticket.totalAmount), 0);
 
-            document.getElementById("dashboard-summary").textContent =
-              `${new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · ${upcoming.length} suất chiếu đang mở bán`;
+          document.getElementById("dashboard-summary").textContent =
+            `${new Date().toLocaleDateString("vi-VN", { weekday: "long", day: "numeric", month: "long", year: "numeric" })} · ${upcoming.length} suất chiếu đang mở bán`;
 
-            document.getElementById("dashboard-stats").innerHTML = `${[
-              [movies.data.length, "Phim trong danh mục", "film"],
-              [rooms.data.length, "Phòng chiếu", "door-open"],
-              [upcoming.length, "Suất chiếu sắp tới", "calendar-alt"],
-              [tickets.data.length, "Vé đã bán", "ticket-alt"]
-            ]
-              .map(([count, label, icon]) =>
-                  `
-                    <div class="col-6 col-xl-3">
-                      <div class="stat-card">
-                        <i class="fas fa-${icon}"></i>
-                        <div>
-                          <strong>${count}</strong>
-                          <span>${label}</span>
-                        </div>
+          document.getElementById("dashboard-stats").innerHTML = `${[
+            [movies.data.length, "Phim trong danh mục", "film"],
+            [rooms.data.length, "Phòng chiếu", "door-open"],
+            [upcoming.length, "Suất chiếu sắp tới", "calendar-alt"],
+            [tickets.data.length, "Vé đã bán", "ticket-alt"]
+          ]
+            .map(
+              ([count, label, icon]) =>
+                `
+                  <div class="col-6 col-xl-3">
+                    <div class="stat-card">
+                      <i class="fas fa-${icon}"></i>
+                      <div>
+                        <strong>${count}</strong>
+                        <span>${label}</span>
                       </div>
                     </div>
+                  </div>
+                `
+            )
+            .join("")}`;
+
+          document.getElementById("dashboard-showtimes").innerHTML = `${
+            upcoming
+              .slice(0, 8)
+              .map(
+                (showtime) =>
+                  `
+                    <tr>
+                      <td>
+                        <strong>${getSafeHtml(showtime.movieTitle)}</strong>
+                      </td>
+                      <td>${getSafeHtml(showtime.roomName)}</td>
+                      <td>${getDateTime(showtime.startTime)}</td>
+                      <td>${getMoney(showtime.ticketPrice)}</td>
+                    </tr>
                   `
               )
-              .join("")}`;
-
-            document.getElementById("dashboard-showtimes").innerHTML = `${
-              upcoming
-                .slice(0, 8)
-                .map(
-                  (showtime) =>
-                    `
-                      <tr>
-                        <td>
-                          <strong>${getSafeHtml(showtime.movieTitle)}</strong>
-                        </td>
-                        <td>${getSafeHtml(showtime.roomName)}</td>
-                        <td>${getDateTime(showtime.startTime)}</td>
-                        <td>${getMoney(showtime.ticketPrice)}</td>
-                      </tr>
-                    `
-                )
-                .join("") ||
-              `
-                <tr>
-                  <td colspan="4">Chưa có lịch chiếu.</td>
-                </tr>
-              `
-            }`;
-            document.getElementById("dashboard-revenue").textContent = getMoney(revenue);
-          }
-        );
+              .join("") ||
+            `
+              <tr>
+                <td colspan="4">Chưa có lịch chiếu.</td>
+              </tr>
+            `
+          }`;
+          document.getElementById("dashboard-revenue").textContent = getMoney(revenue);
+        });
       }
 
       onAdminPage(onDashboard);

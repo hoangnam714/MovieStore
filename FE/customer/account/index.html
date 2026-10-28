@@ -15,9 +15,7 @@
     <main id="main">
       <div class="auth-layout">
         <section class="auth-art">
-          <h1>
-            Tài khoản của bạn, an toàn của bạn.
-          </h1>
+          <h1>Tài khoản của bạn, an toàn của bạn.</h1>
           <p>Đổi mật khẩu định kỳ. Các thiết bị khác đang đăng nhập sẽ bị đăng xuất sau khi đổi.</p>
           <img
             class="film-poster"
@@ -66,7 +64,9 @@
               />
             </label>
             <p id="auth-error" class="error tiny" role="alert"></p>
-            <p id="auth-success" class="success-message tiny" role="status" hidden>Đã đổi mật khẩu.</p>
+            <p id="auth-success" class="success-message tiny" role="status" hidden>
+              Đã đổi mật khẩu.
+            </p>
             <button id="auth-submit" class="btn full" type="submit">Đổi mật khẩu ↗</button>
           </form>
           <p class="auth-foot">
@@ -88,7 +88,9 @@
         }
         document.getElementById("account-name").textContent = currentUser.fullName;
         document.getElementById("account-email").textContent = currentUser.email;
-        document.getElementById("account-phone").textContent = currentUser.phone ? " · " + currentUser.phone : "";
+        document.getElementById("account-phone").textContent = currentUser.phone
+          ? " · " + currentUser.phone
+          : "";
       }
 
       function onChangePassword(event) {
@@ -113,9 +115,14 @@
             document.getElementById("auth-success").hidden = false;
           })
           .catch((error) => {
-            errorNode.textContent = getAccountErrorMessage(error, "Chưa đổi được mật khẩu. Vui lòng thử lại.");
+            errorNode.textContent = getAccountErrorMessage(
+              error,
+              "Chưa đổi được mật khẩu. Vui lòng thử lại."
+            );
           })
-          .finally(() => { submitButton.disabled = false; });
+          .finally(() => {
+            submitButton.disabled = false;
+          });
       }
 
       getAccountPage();
