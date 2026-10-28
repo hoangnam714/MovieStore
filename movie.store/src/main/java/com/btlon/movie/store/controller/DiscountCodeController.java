@@ -12,7 +12,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/discount-codes")
 @AdminOnly
-@CrossOrigin(origins = "*")
 public class DiscountCodeController {
     private final DiscountCodeService service;
 

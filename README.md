@@ -2,6 +2,11 @@
 
 Ứng dụng đặt vé xem phim gồm backend Spring Boot (`movie.store`) và frontend HTML/CSS/JavaScript thuần (`FE`). Có thể chạy bằng terminal tích hợp trong Cursor, VS Code hoặc IDE khác.
 
+Chạy nhanh từ thư mục gốc `MovieStore` trong hai terminal PowerShell riêng:
+
+- **BE:** `.\movie.store\mvnw.cmd -f .\movie.store\pom.xml spring-boot:run`
+- **FE:** `node FE/server.cjs`
+
 ## Chuẩn bị
 
 - JDK 17 trở lên và Node.js 18 trở lên.
