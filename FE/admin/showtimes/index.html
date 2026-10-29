@@ -71,7 +71,7 @@
                       </select>
                     </div>
                     <div class="col-lg-4 col-md-6">
-                      <label for="showtime-room">Phòng chiếu</label>
+                      <label for="showtime-room">Phòng</label>
                       <select id="showtime-room" class="form-control" name="roomId" required>
                         <option value="">Chọn phòng</option>
                       </select>
@@ -433,7 +433,7 @@
         const button = document.getElementById("save-showtime");
         errorNode.textContent = "";
         if (!form.elements.movieId.value || !form.elements.roomId.value) {
-          errorNode.textContent = "Vui lòng chọn phim và phòng chiếu trong danh sách.";
+          errorNode.textContent = "Vui lòng chọn phim và phòng trong danh sách.";
           return;
         }
         if (!editingShowtimeId && new Date(form.elements.startTime.value) <= new Date()) {

@@ -2,6 +2,14 @@
   "version": "2.0.0",
   "tasks": [
     {
+      "label": "MovieStore: Database (Docker)",
+      "type": "shell",
+      "command": "docker compose up -d mysql",
+      "options": { "cwd": "${workspaceFolder}" },
+      "problemMatcher": [],
+      "presentation": { "reveal": "always", "panel": "dedicated" }
+    },
+    {
       "label": "MovieStore: Backend",
       "type": "shell",
       "command": "bash",

@@ -10,13 +10,21 @@ Chạy nhanh từ thư mục gốc `MovieStore` trong hai terminal PowerShell ri
 ## Chuẩn bị
 
 - JDK 17 trở lên và Node.js 18 trở lên.
-- MySQL đang chạy ở `localhost:3306`. Tạo database nếu chưa có:
+- Cách nhanh trên macOS: mở Docker Desktop, đợi ứng dụng báo Engine đang chạy, rồi tại thư mục gốc `MovieStore` chạy:
+
+  ```bash
+  docker compose up -d mysql
+  docker compose ps
+  ```
+
+  Compose tạo MySQL 8.4 và database `movie_store_db` trên cổng `localhost:3307`, dùng tài khoản `root` / `123456` khớp với [application.properties](movie.store/src/main/resources/application.properties). Cổng 3307 tránh xung đột với một MySQL khác đang dùng cổng 3306. Dữ liệu được giữ trong Docker volume khi dừng container. Đợi trạng thái `healthy` trong `docker compose ps` trước khi chạy backend. Nếu container đã có, dùng `docker compose up -d mysql` để khởi động lại.
+- Nếu dùng MySQL cài trực tiếp trên máy thay cho Docker, hãy khởi động dịch vụ và tạo database nếu chưa có:
 
   ```sql
   CREATE DATABASE IF NOT EXISTS movie_store_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
   ```
 
-- Kiểm tra URL, tài khoản và mật khẩu MySQL trong [application.properties](movie.store/src/main/resources/application.properties). Hibernate sẽ tạo/cập nhật bảng khi backend khởi động.
+- Với MySQL cài trực tiếp, kiểm tra tài khoản trong [application.properties](movie.store/src/main/resources/application.properties). Nếu MySQL dùng cổng 3306, chạy backend với `MOVIESTORE_DB_URL=jdbc:mysql://localhost:3306/movie_store_db` hoặc đổi URL trong file cấu hình. Hibernate sẽ tạo/cập nhật bảng khi backend khởi động.
 - Mở **thư mục gốc `MovieStore`** trong Cursor hoặc VS Code để các đường dẫn bên dưới hoạt động.
 
 ## Chạy bằng terminal trong Cursor / VS Code
@@ -55,9 +63,11 @@ node FE/server.cjs
 
 Truy cập [trang khách](http://localhost:8080/customer/home/index.html) hoặc [trang admin](http://localhost:8080/admin/login/index.html). Backend dùng cổng `5173`; frontend dùng cổng `8080` và chuyển tiếp `/api` sang backend. Dừng mỗi server bằng `Ctrl+C` trong terminal tương ứng.
 
+Nếu dùng Docker, dừng database bằng `docker compose down` (dữ liệu vẫn còn trong volume). Kiểm tra lỗi bằng `docker compose logs mysql`. Nếu cổng 3307 đã được sử dụng, hãy đổi cổng host trong `compose.yaml` và URL backend cho khớp.
+
 ## Chạy bằng nút Run Task trong Cursor / VS Code
 
-Repo có sẵn [.vscode/tasks.json](.vscode/tasks.json). Chọn `Terminal → Run Task… → MovieStore: Full Stack` để chạy backend và frontend. Bạn cũng có thể chọn `MovieStore: Backend` hoặc `MovieStore: Frontend` để chạy riêng từng phần. Lần đầu dùng Maven Wrapper có thể cần tải Maven và dependencies.
+Repo có sẵn [.vscode/tasks.json](.vscode/tasks.json). Nếu dùng Docker, chạy `Terminal → Run Task… → MovieStore: Database (Docker)` và đợi database `healthy`. Sau đó chọn `MovieStore: Full Stack` để chạy backend và frontend. Bạn cũng có thể chọn `MovieStore: Backend` hoặc `MovieStore: Frontend` để chạy riêng từng phần. Lần đầu dùng Maven Wrapper có thể cần tải Maven và dependencies.
 
 ## Poster phim và banner trang chủ
 

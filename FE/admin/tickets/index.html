@@ -75,7 +75,6 @@
                       <tr>
                         <th>Khách</th>
                         <th>Phim</th>
-                        <th>Phòng</th>
                         <th>Cụm rạp</th>
                         <th>Suất</th>
                         <th>Ghế</th>
@@ -153,7 +152,6 @@
                     <small>${getSafeHtml([ticket.userEmail, ticket.customerPhone].filter(Boolean).join(" · "))}</small>
                   </td>
                   <td>${getSafeHtml(ticket.movieTitle)}</td>
-                  <td>${getSafeHtml(ticket.roomName)}</td>
                   <td>${getSafeHtml(ticket.cinemaName || "Chưa phân cụm")}</td>
                   <td>${getDateTime(ticket.startTime)}</td>
                   <td>${getSeatLabel(ticket.seatNumber)}</td>

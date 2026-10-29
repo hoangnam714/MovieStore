@@ -15,7 +15,7 @@
   <body>
     <header id="header"></header>
     <main id="main">
-      <p id="booking-loading" class="loading">Đang tải phòng chiếu…</p>
+      <p id="booking-loading" class="loading">Đang tải lịch chiếu…</p>
       <div id="booking-content" hidden>
         <div class="booking-intro">
           <div class="wrap">
@@ -94,10 +94,6 @@
                 <div>
                   <dt>Suất chiếu</dt>
                   <dd id="sum-time">—</dd>
-                </div>
-                <div>
-                  <dt>Phòng</dt>
-                  <dd id="sum-room">—</dd>
                 </div>
                 <div>
                   <dt>Ghế</dt>
@@ -314,7 +310,6 @@
         document.getElementById("confirm").disabled = true;
         document.getElementById("sum-cinema").textContent = "—";
         document.getElementById("sum-time").textContent = "—";
-        document.getElementById("sum-room").textContent = "—";
         document.getElementById("sum-seats").textContent = "—";
         getBookingQuote();
         document.getElementById("seat-grid").innerHTML = "Chọn suất chiếu để xem ghế.";
@@ -340,7 +335,7 @@
               (item) => `
                 <button class="showtime" data-time="${item.id}" onclick="onSelectShowtime(${item.id})">
                   ${getTime(item.startTime)}
-                  <small>${getSafeHtml(item.roomName)} · ${getMoney(item.ticketPrice)}</small>
+                  <small>${getMoney(item.ticketPrice)}</small>
                 </button>
               `
             )
@@ -432,7 +427,6 @@
       function onBookingSummary() {
         document.getElementById("sum-cinema").textContent = activeShowtime.cinemaName || "—";
         document.getElementById("sum-time").textContent = getDateTime(activeShowtime.startTime);
-        document.getElementById("sum-room").textContent = activeShowtime.roomName;
         document.getElementById("sum-seats").textContent =
           [...selectedSeats]
             .sort((first, second) => first - second)

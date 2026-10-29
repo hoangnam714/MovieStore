@@ -50,7 +50,6 @@
                       <thead>
                         <tr>
                           <th>Phim</th>
-                          <th>Phòng</th>
                           <th>Giờ chiếu</th>
                           <th>Giá vé</th>
                         </tr>
@@ -105,10 +104,9 @@
       function onDashboard(content) {
         return Promise.all([
           movieApi.list(),
-          roomApi.list(),
           showtimeApi.list(),
           ticketApi.list()
-        ]).then(([movies, rooms, showtimes, tickets]) => {
+        ]).then(([movies, showtimes, tickets]) => {
           const upcoming = showtimes.data
             .filter((showtime) => new Date(showtime.startTime) > new Date())
             .sort((a, b) => a.startTime.localeCompare(b.startTime));
@@ -119,14 +117,13 @@
 
           document.getElementById("dashboard-stats").innerHTML = `${[
             [movies.data.movies.length, "Phim trong danh mục", "film"],
-            [rooms.data.length, "Phòng chiếu", "door-open"],
             [upcoming.length, "Suất chiếu sắp tới", "calendar-alt"],
             [tickets.data.length, "Vé đã bán", "ticket-alt"]
           ]
             .map(
               ([count, label, icon]) =>
                 `
-                  <div class="col-6 col-xl-3">
+                  <div class="col-12 col-md-4">
                     <div class="stat-card">
                       <i class="fas fa-${icon}"></i>
                       <div>
@@ -149,7 +146,6 @@
                       <td>
                         <strong>${getSafeHtml(showtime.movieTitle)}</strong>
                       </td>
-                      <td>${getSafeHtml(showtime.roomName)}</td>
                       <td>${getDateTime(showtime.startTime)}</td>
                       <td>${getMoney(showtime.ticketPrice)}</td>
                     </tr>
@@ -158,7 +154,7 @@
               .join("") ||
             `
               <tr>
-                <td colspan="4">Chưa có lịch chiếu.</td>
+                <td colspan="3">Chưa có lịch chiếu.</td>
               </tr>
             `
           }`;
