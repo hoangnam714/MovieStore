@@ -68,15 +68,10 @@ function getMoviePosterUrl(value) {
 }
 
 const roomApi = {
-  // Room data remains an internal dependency of showtime scheduling.
-  list: () => api.get("/rooms")
-};
-
-const cinemaApi = {
-  list: () => api.get("/cinemas"),
-  create: (data) => api.post("/cinemas", data),
-  update: (id, data) => api.put(`/cinemas/${id}`, data),
-  remove: (id) => api.delete(`/cinemas/${id}`)
+  list: () => api.get("/rooms"),
+  create: (data) => api.post("/rooms", data),
+  update: (id, data) => api.put(`/rooms/${id}`, data),
+  remove: (id) => api.delete(`/rooms/${id}`)
 };
 
 const showtimeApi = {

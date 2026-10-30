@@ -36,20 +36,10 @@
                       <input
                         id="ticket-search"
                         class="form-control"
-                        placeholder="Tìm khách, email, SĐT, phim hoặc mã vé"
+                        placeholder="Tìm khách, email, SĐT, phim, phòng hoặc mã vé"
                         oninput="onRenderTickets()"
                         aria-label="Tìm vé"
                       />
-                    </div>
-                    <div class="col-md-3 mb-2">
-                      <select
-                        id="ticket-cinema"
-                        class="form-control"
-                        onchange="onRenderTickets()"
-                        aria-label="Lọc cụm rạp"
-                      >
-                        <option value="">Tất cả cụm rạp</option>
-                      </select>
                     </div>
                     <div class="col-md-3 mb-2">
                       <input
@@ -75,7 +65,7 @@
                       <tr>
                         <th>Khách</th>
                         <th>Phim</th>
-                        <th>Cụm rạp</th>
+                        <th>Phòng chiếu</th>
                         <th>Suất</th>
                         <th>Ghế</th>
                         <th>Thanh toán</th>
@@ -101,15 +91,8 @@
     <script>
       let tickets = [];
       function onTickets() {
-        return Promise.all([ticketApi.list(), cinemaApi.list()]).then(([response, cinemas]) => {
-          tickets = response.data;
-          document.getElementById("ticket-cinema").innerHTML += cinemas.data
-            .map(
-              (c) => `
-                  <option value="${c.id}">${getSafeHtml(c.name)}</option>
-                `
-            )
-            .join("");
+        return ticketApi.list().then(({ data }) => {
+          tickets = data;
           onRenderTickets();
         });
       }
@@ -119,11 +102,9 @@
           .getElementById("ticket-search")
           .value.trim()
           .toLocaleLowerCase("vi");
-        const cinemaId = document.getElementById("ticket-cinema").value;
         const day = document.getElementById("ticket-date").value;
         const data = tickets.filter(
           (ticket) =>
-            (!cinemaId || String(ticket.cinemaId) === cinemaId) &&
             (!day || getDateKey(ticket.startTime) === day) &&
             (!keyword ||
               [
@@ -131,7 +112,8 @@
                 ticket.userFullName,
                 ticket.userEmail,
                 ticket.customerPhone,
-                ticket.movieTitle
+                ticket.movieTitle,
+                ticket.roomName
               ].some((value) =>
                 String(value || "")
                   .toLocaleLowerCase("vi")
@@ -152,7 +134,7 @@
                     <small>${getSafeHtml([ticket.userEmail, ticket.customerPhone].filter(Boolean).join(" · "))}</small>
                   </td>
                   <td>${getSafeHtml(ticket.movieTitle)}</td>
-                  <td>${getSafeHtml(ticket.cinemaName || "Chưa phân cụm")}</td>
+                  <td>${getSafeHtml(ticket.roomName)}</td>
                   <td>${getDateTime(ticket.startTime)}</td>
                   <td>${getSeatLabel(ticket.seatNumber)}</td>
                   <td>
@@ -187,7 +169,6 @@
 
       function onResetFilters() {
         document.getElementById("ticket-search").value = "";
-        document.getElementById("ticket-cinema").value = "";
         document.getElementById("ticket-date").value = "";
         onRenderTickets();
       }

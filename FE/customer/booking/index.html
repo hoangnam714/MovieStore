@@ -42,13 +42,6 @@
               <div class="panel">
                 <span class="eyebrow">01 · LỊCH CHIẾU</span>
                 <h2>Chọn suất chiếu</h2>
-                <label for="book-cinema" class="field-label">Cụm rạp bạn muốn đến</label>
-                <select
-                  id="book-cinema"
-                  class="form-select booking-cinema"
-                  onchange="onSelectCinema(this.value)"
-                  aria-label="Chọn cụm rạp"
-                ></select>
                 <div class="dates" id="book-dates"></div>
                 <div class="showtimes" id="times"></div>
               </div>
@@ -88,8 +81,8 @@
               <h2><span id="summary-movie-title"></span></h2>
               <dl>
                 <div>
-                  <dt>Cụm rạp</dt>
-                  <dd id="sum-cinema">—</dd>
+                  <dt>Phòng chiếu</dt>
+                  <dd id="sum-room">—</dd>
                 </div>
                 <div>
                   <dt>Suất chiếu</dt>
@@ -208,7 +201,6 @@
       let movieTimes = [];
       let bookingDays = [];
       let requestedShowtimeId = null;
-      let selectedCinemaId = "";
 
       function onBookingMessage(message) {
         const node = document.createElement("div");
@@ -254,31 +246,14 @@
       function getBookingPage() {
         const params = new URLSearchParams(location.search);
 
-        return Promise.all([showtimeApi.upcoming(), movieApi.list(), cinemaApi.list()])
-          .then(([showtimeResponse, movieResponse, cinemaResponse]) => {
+        return Promise.all([showtimeApi.upcoming(), movieApi.list()])
+          .then(([showtimeResponse, movieResponse]) => {
             schedule = showtimeResponse.data;
             const requested = schedule.find((item) => item.id === Number(params.get("showtimeId")));
             const movieId = Number(params.get("movieId")) || requested?.movieId;
             const movie = movieResponse.data.movies.find((item) => item.id === movieId);
             if (!movie) throw new Error("Không tìm thấy phim.");
             movieTimes = schedule.filter((item) => item.movieId === movieId);
-            const availableCinemas = cinemaResponse.data.filter((cinema) =>
-              movieTimes.some((item) => item.cinemaId === cinema.id)
-            );
-            selectedCinemaId = String(
-              params.get("cinemaId") || requested?.cinemaId || availableCinemas[0]?.id || ""
-            );
-            if (!availableCinemas.some((cinema) => String(cinema.id) === selectedCinemaId))
-              selectedCinemaId = String(availableCinemas[0]?.id || "");
-            document.getElementById("book-cinema").innerHTML =
-              availableCinemas
-                .map(
-                  (cinema) => `
-                    <option value="${cinema.id}">${getSafeHtml(cinema.name)} · ${getSafeHtml(cinema.address)}</option>
-                  `
-                )
-                .join("") || '<option value="">Chưa có cụm rạp</option>';
-            document.getElementById("book-cinema").value = selectedCinemaId;
             document.getElementById("movie-title").textContent = movie.title;
             document.getElementById("summary-movie-title").textContent = movie.title;
             document.getElementById("movie-description").textContent =
@@ -288,8 +263,7 @@
             onCustomerBox();
             requestedShowtimeId = requested?.id;
             let date = params.get("date");
-            onSelectCinema(
-              selectedCinemaId,
+            onLoadBookingDays(
               date || (requested ? getDateKey(requested.startTime) : null)
             );
           })
@@ -300,15 +274,13 @@
           });
       }
 
-      function onSelectCinema(id, preferredDate) {
-        selectedCinemaId = id;
-        const cinemaTimes = movieTimes.filter((item) => String(item.cinemaId) === id);
-        bookingDays = [...new Set(cinemaTimes.map((item) => getDateKey(item.startTime)))];
+      function onLoadBookingDays(preferredDate) {
+        bookingDays = [...new Set(movieTimes.map((item) => getDateKey(item.startTime)))];
         const date = bookingDays.includes(preferredDate) ? preferredDate : bookingDays[0];
         activeShowtime = null;
         selectedSeats.clear();
         document.getElementById("confirm").disabled = true;
-        document.getElementById("sum-cinema").textContent = "—";
+        document.getElementById("sum-room").textContent = "—";
         document.getElementById("sum-time").textContent = "—";
         document.getElementById("sum-seats").textContent = "—";
         getBookingQuote();
@@ -326,7 +298,6 @@
           .join("");
         const todayTimes = movieTimes.filter(
           (item) =>
-            String(item.cinemaId) === selectedCinemaId &&
             getDateKey(item.startTime) === selectedDate
         );
         document.getElementById("times").innerHTML =
@@ -335,7 +306,7 @@
               (item) => `
                 <button class="showtime" data-time="${item.id}" onclick="onSelectShowtime(${item.id})">
                   ${getTime(item.startTime)}
-                  <small>${getMoney(item.ticketPrice)}</small>
+                  <small>${getSafeHtml(item.roomName)} · ${getMoney(item.ticketPrice)}</small>
                 </button>
               `
             )
@@ -348,7 +319,7 @@
           ++seatRequest;
           activeShowtime = null;
           document.getElementById("times").innerHTML =
-            '<p class="muted">Chưa có suất chiếu tại cụm rạp này.</p>';
+            '<p class="muted">Chưa có suất chiếu vào ngày này.</p>';
         }
       }
 
@@ -425,7 +396,7 @@
       }
 
       function onBookingSummary() {
-        document.getElementById("sum-cinema").textContent = activeShowtime.cinemaName || "—";
+        document.getElementById("sum-room").textContent = activeShowtime.roomName || "—";
         document.getElementById("sum-time").textContent = getDateTime(activeShowtime.startTime);
         document.getElementById("sum-seats").textContent =
           [...selectedSeats]

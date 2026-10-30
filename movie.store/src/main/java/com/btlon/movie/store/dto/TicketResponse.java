@@ -14,8 +14,6 @@ public class TicketResponse {
     private Long showtimeId;
     private String movieTitle;
     private String roomName;
-    private Long cinemaId;
-    private String cinemaName;
     private LocalDateTime startTime;
     private Integer seatNumber;
     private BigDecimal price;
@@ -37,8 +35,6 @@ public class TicketResponse {
         response.showtimeId = ticket.getShowtimeId();
         response.movieTitle = ticket.getShowtime().getMovie().getTitle();
         response.roomName = ticket.getShowtime().getRoom().getName();
-        response.cinemaId = ticket.getShowtime().getRoom().getCinemaId();
-        response.cinemaName = ticket.getShowtime().getRoom().getCinemaName();
         response.startTime = ticket.getShowtime().getStartTime();
         response.seatNumber = ticket.getSeatNumber();
         response.price = ticket.getPrice();
@@ -84,14 +80,6 @@ public class TicketResponse {
 
     public String getRoomName() {
         return roomName;
-    }
-
-    public Long getCinemaId() {
-        return cinemaId;
-    }
-
-    public String getCinemaName() {
-        return cinemaName;
     }
 
     public LocalDateTime getStartTime() {

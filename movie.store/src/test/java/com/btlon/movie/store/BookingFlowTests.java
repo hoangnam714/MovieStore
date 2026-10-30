@@ -18,7 +18,6 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.NONE)
 class BookingFlowTests {
-    @Autowired CinemaRepository cinemas;
     @Autowired RoomRepository rooms;
     @Autowired MovieGenreRepository genres;
     @Autowired MovieRepository movies;
@@ -29,9 +28,7 @@ class BookingFlowTests {
 
     @Test
     void booksOnlyFreeSeatsAndReopensSeatAfterCancellation() {
-        Cinema cinema = cinemas.save(new Cinema("Test Cinema", "Test Address"));
         Room room = new Room("Test Room", 20);
-        room.setCinema(cinema);
         room = rooms.save(room);
         MovieGenre genre = genres.save(new MovieGenre(null, "Test Genre"));
         Movie movie = movies.save(new Movie(null, "Test Movie", 110, 2026, genre));
@@ -59,7 +56,7 @@ class BookingFlowTests {
         request.setSeatNumbers(List.of(1, 11, 12));
         var booked = tickets.bookTickets(request, member).getTickets();
         assertEquals(3, booked.size());
-        assertEquals(cinema.getId(), booked.get(0).getCinemaId());
+        assertEquals(room.getName(), booked.get(0).getRoomName());
         assertEquals(List.of(1, 11, 12), tickets.getBookedSeats(showtime.getId()));
         assertThrows(ConflictException.class, () -> tickets.bookTickets(request, member));
 
@@ -72,9 +69,7 @@ class BookingFlowTests {
     }
 
     private Showtime createShowtime(String suffix, BigDecimal price) {
-        Cinema cinema = cinemas.save(new Cinema("Pricing Cinema " + suffix, "Address"));
         Room room = new Room("Pricing Room " + suffix, 20);
-        room.setCinema(cinema);
         room = rooms.save(room);
         MovieGenre genre = genres.save(new MovieGenre(null, "Pricing Genre " + suffix));
         Movie movie = movies.save(new Movie(null, "Pricing Movie " + suffix, 100, 2026, genre));

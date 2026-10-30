@@ -27,7 +27,7 @@
       <section class="experience-strip wrap container" aria-label="Thông tin trải nghiệm đặt vé">
         <div>
           <span class="experience-icon" aria-hidden="true">01</span>
-          <p><strong>Chọn phim yêu thích</strong><span>Lịch chiếu cập nhật theo cụm rạp</span></p>
+          <p><strong>Chọn phim yêu thích</strong><span>Lịch chiếu cập nhật theo phòng chiếu</span></p>
         </div>
         <div>
           <span class="experience-icon" aria-hidden="true">02</span>
@@ -61,20 +61,12 @@
         <div class="catalog-toolbar">
           <div class="filter-heading">
             <span class="eyebrow">LỌC LỊCH CHIẾU</span
-            ><span class="muted tiny">Chọn ngày và cụm rạp để xem suất phù hợp</span>
+            ><span class="muted tiny">Chọn ngày để xem suất phù hợp</span>
           </div>
           <div id="date-tabs" class="filters"></div>
           <div class="filter-divider"></div>
           <div>
             <div class="searchbar">
-              <select
-                id="cinema"
-                onchange="onCinemaChange(this.value)"
-                class="input form-select"
-                aria-label="Cụm rạp"
-              >
-                <option value="">Tất cả cụm rạp</option>
-              </select>
               <input
                 id="search"
                 oninput="onSearch(this.value)"
@@ -121,7 +113,6 @@
       let genres = [];
       let selectedDay = "";
       let selectedGenre = "";
-      let selectedCinema = "";
       let searchKeyword = "";
       let hotMovies = [];
       let heroIndex = 0;
@@ -274,25 +265,17 @@
           movieApi.list(),
           showtimeApi.upcoming(),
           genreApi.list(),
-          cinemaApi.list(),
           movieApi.banners().catch((error) => {
             console.error(error);
             return { data: [] };
           })
         ])
           .then(
-            ([movieResponse, showtimeResponse, genreResponse, cinemaResponse, bannerResponse]) => {
+            ([movieResponse, showtimeResponse, genreResponse, bannerResponse]) => {
               movies = movieResponse.data.movies;
               hotMovies = bannerResponse.data;
               showtimes = showtimeResponse.data;
               genres = genreResponse.data;
-              document.getElementById("cinema").innerHTML += cinemaResponse.data
-                .map(
-                  (cinema) => `
-                  <option value="${cinema.id}">${getSafeHtml(cinema.name)}</option>
-                `
-                )
-                .join("");
               onHotMovies();
               document.getElementById("genre").innerHTML += genres
                 .map(function (genre) {
@@ -350,11 +333,9 @@
       function onResetFilters() {
         selectedDay = "";
         selectedGenre = "";
-        selectedCinema = "";
         searchKeyword = "";
         document.getElementById("search").value = "";
         document.getElementById("genre").value = "";
-        document.getElementById("cinema").value = "";
         onDateFilters();
         onMovies();
       }
@@ -364,10 +345,6 @@
         onMovies();
       }
 
-      function onCinemaChange(value) {
-        selectedCinema = value;
-        onMovies();
-      }
 
       function onMovies() {
         const filteredMovies = movies.filter(function (movie) {
@@ -375,12 +352,11 @@
           const matchesGenre =
             !selectedGenre || movie.genres.some((genre) => String(genre.id) === selectedGenre);
           const matchesSchedule =
-            (!selectedDay && !selectedCinema) ||
+            !selectedDay ||
             showtimes.some(function (showtime) {
               return (
                 showtime.movieId === movie.id &&
-                (!selectedDay || getDateKey(showtime.startTime) === selectedDay) &&
-                (!selectedCinema || String(showtime.cinemaId) === selectedCinema)
+                (!selectedDay || getDateKey(showtime.startTime) === selectedDay)
               );
             });
           return matchesKeyword && matchesGenre && matchesSchedule;
@@ -401,7 +377,6 @@
         document.getElementById("reset-filters").hidden = !(
           selectedDay ||
           selectedGenre ||
-          selectedCinema ||
           searchKeyword
         );
       }
@@ -410,15 +385,13 @@
         const movieShowtimes = showtimes.filter(function (showtime) {
           return (
             showtime.movieId === movie.id &&
-            (!selectedDay || getDateKey(showtime.startTime) === selectedDay) &&
-            (!selectedCinema || String(showtime.cinemaId) === selectedCinema)
+            (!selectedDay || getDateKey(showtime.startTime) === selectedDay)
           );
         });
         const genreNames = movie.genres.map((genre) => genre.name).join(", ");
         const bookingUrl =
           "../booking/index.html?movieId=" +
-          movie.id +
-          (selectedCinema ? "&cinemaId=" + selectedCinema : "");
+          movie.id;
         let bookingAction = '<span class="muted tiny">Chưa có lịch chiếu</span>';
         if (movieShowtimes.length) {
           const minimumPrice = Math.min(...movieShowtimes.map((showtime) => showtime.ticketPrice));

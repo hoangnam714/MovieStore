@@ -53,9 +53,9 @@ function onAdminLayout() {
               </a>
             </li>
             <li class="nav-item">
-              <a href="/admin/cinemas/index.html" class="nav-link" data-view="cinemas">
-                <i class="nav-icon fas fa-map-marker-alt"></i>
-                <p>Cụm rạp</p>
+              <a href="/admin/rooms/index.html" class="nav-link" data-view="rooms">
+                <i class="nav-icon fas fa-door-open"></i>
+                <p>Phòng chiếu</p>
               </a>
             </li>
             <li class="nav-item">

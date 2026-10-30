@@ -24,8 +24,7 @@ public class Room {
     @Column(name = "seat_count", nullable = false)
     private Integer seatCount;
 
-    // Nullable while existing databases are upgraded; new rooms must select a
-    // cinema.
+    // Retained only for existing database compatibility. New rooms are independent.
     @ManyToOne(fetch = FetchType.EAGER)
     @JoinColumn(name = "cinema_id")
     @JsonIgnore
@@ -71,10 +70,12 @@ public class Room {
         this.cinema = cinema;
     }
 
+    @JsonIgnore
     public Long getCinemaId() {
         return cinema == null ? null : cinema.getId();
     }
 
+    @JsonIgnore
     public String getCinemaName() {
         return cinema == null ? null : cinema.getName();
     }

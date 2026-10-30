@@ -32,6 +32,25 @@ class AuthSecurityTests {
     private final HttpClient client = HttpClient.newHttpClient();
 
     @Test
+    void roomsCanBeManagedWithoutCinemaAndCinemaApiIsRemoved() throws Exception {
+        createUser("room-admin@example.test", UserRole.ADMIN);
+        String token = login("room-admin@example.test");
+        String body = "{\"name\":\"Independent room\",\"seatCount\":40}";
+        assertEquals(401, request("POST", "/api/rooms", body, null).statusCode());
+        var created = request("POST", "/api/rooms", body, token);
+        assertEquals(201, created.statusCode());
+        var room = mapper.readTree(created.body());
+        assertFalse(room.has("cinemaId"));
+        assertFalse(room.has("cinemaName"));
+        String path = "/api/rooms/" + room.get("id").asLong();
+        assertEquals(40, room.get("seatCount").asInt());
+        assertEquals(200, request("PUT", path,
+                "{\"name\":\"Updated independent room\",\"seatCount\":60}", token).statusCode());
+        assertEquals(204, request("DELETE", path, null, token).statusCode());
+        assertEquals(404, request("GET", "/api/cinemas", null, token).statusCode());
+    }
+
+    @Test
     void adminEndpointsRejectGuestsAndCustomers() throws Exception {
         createUser("auth-admin@example.test", UserRole.ADMIN);
         createUser("auth-customer@example.test", UserRole.CUSTOMER);

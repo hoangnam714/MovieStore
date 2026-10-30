@@ -33,7 +33,7 @@
                   <div>
                     <span class="section-kicker">LÊN LỊCH CHIẾU</span>
                     <h2 id="form-title">Tạo suất chiếu mới</h2>
-                    <p>Tìm phim theo tên, chọn cụm rạp và kiểm tra thời gian trước khi lưu.</p>
+                    <p>Tìm phim theo tên, chọn phòng chiếu và kiểm tra thời gian trước khi lưu.</p>
                   </div>
                   <span class="section-symbol" aria-hidden="true"
                     ><i class="fas fa-calendar-plus"></i
@@ -60,18 +60,7 @@
                       </select>
                     </div>
                     <div class="col-lg-4 col-md-6">
-                      <label for="showtime-cinema">Cụm rạp</label>
-                      <select
-                        id="showtime-cinema"
-                        class="form-control"
-                        onchange="onCinemaChanged()"
-                        required
-                      >
-                        <option value="">Chọn cụm rạp</option>
-                      </select>
-                    </div>
-                    <div class="col-lg-4 col-md-6">
-                      <label for="showtime-room">Phòng</label>
+                      <label for="showtime-room">Phòng chiếu</label>
                       <select id="showtime-room" class="form-control" name="roomId" required>
                         <option value="">Chọn phòng</option>
                       </select>
@@ -142,14 +131,6 @@
                       oninput="onListFilter()"
                     />
                   </div>
-                  <select
-                    id="list-cinema"
-                    class="form-control"
-                    aria-label="Lọc cụm rạp"
-                    onchange="onListFilter()"
-                  >
-                    <option value="">Tất cả cụm rạp</option>
-                  </select>
                   <input
                     id="list-date"
                     class="form-control"
@@ -169,7 +150,7 @@
                   <thead>
                     <tr>
                       <th>Phim</th>
-                      <th>Phòng / cụm rạp</th>
+                      <th>Phòng chiếu</th>
                       <th>Bắt đầu</th>
                       <th>Giá vé</th>
                       <th>Thao tác</th>
@@ -231,22 +212,13 @@
       }
 
       function onShowtimes() {
-        return Promise.all([showtimeApi.list(), movieApi.list(), roomApi.list(), cinemaApi.list()])
-          .then(([showtimeResponse, movieResponse, roomResponse, cinemaResponse]) => {
+        return Promise.all([showtimeApi.list(), movieApi.list(), roomApi.list()])
+          .then(([showtimeResponse, movieResponse, roomResponse]) => {
             showtimes = showtimeResponse.data;
             movies = movieResponse.data.movies;
             rooms = roomResponse.data;
-            const options = cinemaResponse.data
-              .map(
-                (cinema) => `
-                  <option value="${cinema.id}">${getSafeHtml(cinema.name)}</option>
-                `
-              )
-              .join("");
-            document.getElementById("showtime-cinema").insertAdjacentHTML("beforeend", options);
-            document.getElementById("list-cinema").insertAdjacentHTML("beforeend", options);
             onMovieSearch();
-            onCinemaChanged();
+            onRoomOptions();
             onCancelEdit();
             onRenderShowtimes();
           })
@@ -280,11 +252,10 @@
           : "Không tìm thấy phim. Thử từ khóa khác.";
       }
 
-      function onCinemaChanged() {
-        const cinemaId = document.getElementById("showtime-cinema").value;
+      function onRoomOptions() {
         const select = document.getElementById("showtime-room");
         const selected = select.value;
-        const matches = rooms.filter((room) => cinemaId && String(room.cinemaId) === cinemaId);
+        const matches = rooms;
         select.innerHTML =
           '<option value="">Chọn phòng</option>' +
           matches
@@ -294,7 +265,6 @@
               `
             )
             .join("");
-        select.disabled = !cinemaId;
         if (matches.some((room) => String(room.id) === selected)) select.value = selected;
       }
 
@@ -305,22 +275,19 @@
 
       function onClearFilters() {
         document.getElementById("list-search").value = "";
-        document.getElementById("list-cinema").value = "";
         document.getElementById("list-date").value = "";
         onListFilter();
       }
 
       function onRenderShowtimes() {
         const keyword = getNormalizedSearch(document.getElementById("list-search").value.trim());
-        const cinemaId = document.getElementById("list-cinema").value;
         const date = document.getElementById("list-date").value;
         const filtered = showtimes.filter(
           (showtime) =>
-            (!cinemaId || String(showtime.cinemaId) === cinemaId) &&
             (!date || getDateKey(showtime.startTime) === date) &&
             (!keyword ||
               getNormalizedSearch(
-                `${showtime.movieTitle} ${showtime.roomName} ${showtime.cinemaName}`
+                `${showtime.movieTitle} ${showtime.roomName}`
               ).includes(keyword))
         );
         const pages = Math.max(1, Math.ceil(filtered.length / pageSize));
@@ -339,7 +306,6 @@
                   </td>
                   <td>
                     ${getSafeHtml(showtime.roomName)}
-                    <small class="d-block text-muted">${getSafeHtml(showtime.cinemaName || "Chưa phân cụm")}</small>
                   </td>
                   <td>${getDateTime(showtime.startTime)}</td>
                   <td><strong>${getMoney(showtime.ticketPrice)}</strong></td>
@@ -387,8 +353,7 @@
         document.getElementById("movie-search").value = showtime.movieTitle;
         onMovieSearch();
         form.elements.movieId.value = String(showtime.movieId);
-        document.getElementById("showtime-cinema").value = String(showtime.cinemaId || "");
-        onCinemaChanged();
+        onRoomOptions();
         form.elements.roomId.value = String(showtime.roomId);
         form.elements.startTime.value = showtime.startTime.slice(0, 16);
         form.elements.ticketPrice.value = showtime.ticketPrice;
@@ -408,9 +373,8 @@
         const form = document.getElementById("st-form");
         form.reset();
         document.getElementById("movie-search").value = "";
-        document.getElementById("showtime-cinema").value = "";
         onMovieSearch();
-        onCinemaChanged();
+        onRoomOptions();
         document.getElementById("form-title").textContent = "Tạo suất chiếu mới";
         document.getElementById("save-showtime").innerHTML =
           '<i class="fas fa-plus mr-1"></i> Tạo suất chiếu';

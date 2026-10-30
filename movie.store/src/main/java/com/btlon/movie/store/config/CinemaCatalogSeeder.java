@@ -23,30 +23,18 @@ public class CinemaCatalogSeeder implements CommandLineRunner {
     private final MovieGenreRepository genres;
     private final RoomRepository rooms;
     private final ShowtimeRepository showtimes;
-    private final CinemaRepository cinemas;
 
     public CinemaCatalogSeeder(MovieRepository movies, MovieGenreRepository genres,
-                               RoomRepository rooms, ShowtimeRepository showtimes, CinemaRepository cinemas) {
+                               RoomRepository rooms, ShowtimeRepository showtimes) {
         this.movies = movies;
         this.genres = genres;
         this.rooms = rooms;
         this.showtimes = showtimes;
-        this.cinemas = cinemas;
     }
 
     @Override
     @Transactional
     public void run(String... args) {
-        Cinema downtown = cinemas.findAll().stream().filter(c -> c.getName().equals("Movie Store Quận 1"))
-                .findFirst()
-                .orElseGet(() -> cinemas.save(new Cinema("Movie Store Quận 1", "12 Nguyễn Huệ, Quận 1, TP.HCM")));
-        Cinema riverside = cinemas.findAll().stream().filter(c -> c.getName().equals("Movie Store Thủ Đức"))
-                .findFirst().orElseGet(
-                        () -> cinemas.save(new Cinema("Movie Store Thủ Đức", "25 Võ Văn Ngân, TP. Thủ Đức, TP.HCM")));
-        rooms.findAll().stream().filter(r -> r.getCinema() == null).forEach(r -> {
-            r.setCinema(r.getName().startsWith("Nova") ? riverside : downtown);
-            rooms.save(r);
-        });
         Map<String, MovieGenre> genreMap = new HashMap<>();
         genres.findAll().forEach(g -> genreMap.put(g.getName(), g));
         String[][] catalog = {
@@ -80,7 +68,6 @@ public class CinemaCatalogSeeder implements CommandLineRunner {
             Room room = existingRooms.stream().filter(r -> r.getName().equals(name)).findFirst()
                     .orElseGet(() -> {
                         Room created = new Room(name, 60);
-                        created.setCinema(name.startsWith("Nova") ? riverside : downtown);
                         return rooms.save(created);
                     });
             seedRooms.add(room);
